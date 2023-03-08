@@ -1,0 +1,153 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Group_refference;
+use Illuminate\Support\Facades\Validator;
+use DataTables;
+use fidpro\builder\Create;
+
+class Group_refferenceController extends Controller
+{
+    public $model   = "Group_refference";
+    public $folder  = "group_refference";
+    public $route   = "group_refference";
+
+    public $param = [
+        'group_reff'   =>  'required',
+        'group_desc'   =>  '',
+        'group_reff_active'   =>  'required'
+    ];
+    public $defaultValue = [
+        'id'   =>  '',
+        'group_reff'   =>  '',
+        'group_desc'   =>  '',
+        'group_reff_active'   =>  ''
+    ];
+    public function index()
+    {
+        return $this->themes($this->folder . '.komponen_group', null, $this);
+    }
+
+    public function get_dataTable(Request $request)
+    {
+        $data = Group_refference::select([
+            'id',
+            'group_reff',
+            'group_desc',
+            'group_reff_active'
+        ]);
+
+        $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
+            $button = Create::action("<i class=\"fas fa-edit\"></i>", [
+                "class"     => "btn btn-primary btn-xs",
+                "onclick"   => "set_edit(this)",
+                "data-url"  => route($this->route . ".edit", $data->id),
+                "ajax-url"  => route($this->route . '.update', $data->id),
+                "data-target"  => "page_group_refference"
+            ]);
+
+            $button .= Create::action("<i class=\"fas fa-trash\"></i>", [
+                "class"     => "btn btn-danger btn-xs",
+                "onclick"   => "delete_row(this)",
+                "x-token"   => csrf_token(),
+                "data-url"  => route($this->route . ".destroy", $data->id),
+            ]);
+            return $button;
+        })->rawColumns(['action']);
+        return $datatables->make(true);
+    }
+
+    public function create()
+    {
+        $group_refference = (object)$this->defaultValue;
+        return view($this->folder . '.form', compact('group_refference'));
+    }
+
+    public function store(Request $request)
+    {
+        $valid = $this->form_validasi($request->all());
+        if ($valid['code'] != 200) {
+            return response()->json([
+                'success' => false,
+                'message' => $valid['message']
+            ]);
+        }
+        try {
+            Group_refference::create($valid['data']);
+            $resp = [
+                'success' => true,
+                'message' => 'Data Berhasil Disimpan!'
+            ];
+        } catch (\Exception $e) {
+            $resp = [
+                'success' => false,
+                'message' => 'Data Gagal Disimpan! <br>' . $e->getMessage()
+            ];
+        }
+        return response()->json($resp);
+    }
+
+    private function form_validasi($data)
+    {
+        $validator = Validator::make($data, $this->param);
+        //check if validation fails
+        if ($validator->fails()) {
+            return [
+                "code"      => "201",
+                "message"   => implode("<br>", $validator->errors()->all())
+            ];
+        }
+        //filter
+        $filter = array_keys($this->param);
+        $input = array_filter(
+            $data,
+            fn ($key) => in_array($key, $filter),
+            ARRAY_FILTER_USE_KEY
+        );
+        return [
+            "code"      => "200",
+            "data"      => $input
+        ];
+    }
+
+    public function edit(Group_refference $group_refference)
+    {
+        return view($this->folder . '.form', compact('group_refference'));
+    }
+    public function update(Request $request, Group_refference $group_refference)
+    {
+        $valid = $this->form_validasi($request->all());
+        if ($valid['code'] != 200) {
+            return response()->json([
+                'success' => false,
+                'message' => $this->form_validasi($request->all())['message']
+            ]);
+        }
+        try {
+            $data = Group_refference::findOrFail($group_refference->id);
+            $data->update($valid['data']);
+            $resp = [
+                'success' => true,
+                'message' => 'Data Berhasil Diupdate!'
+            ];
+        } catch (\Exception $e) {
+            $resp = [
+                'success' => false,
+                'message' => 'Data Gagal Diupdate! <br>' . $e->getMessage()
+            ];
+        }
+        return response()->json($resp);
+    }
+
+    public function destroy($id)
+    {
+        $data = Group_refference::findOrFail($id);
+        $data->delete();
+        return response()->json([
+            'success' => true,
+            'message' => 'Data Berhasil Dihapus!'
+        ]);
+    }
+}

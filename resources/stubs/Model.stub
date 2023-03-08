@@ -1,0 +1,16 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class {{ModelName}} extends Model
+{
+    use HasFactory;
+
+    public $timestamps = false;
+    protected $primaryKey = '{{ModelPrimaryKey}}';
+    protected $table = '{{ModelTable}}';
+    protected $fillable = {{ModelField}};
+}

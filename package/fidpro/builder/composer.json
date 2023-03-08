@@ -1,0 +1,18 @@
+{
+    "name": "fidpro/builder",
+    "description": "Laravel form builder",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Fidpro\\Builder\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "fidpro91",
+            "email": "ufi.alfi@gmail.com"
+        }
+    ],
+    "require": {}
+}
