@@ -97,8 +97,13 @@ function confirmForm(txt,callback,body) {
 }
 
 function set_edit(row) {
+  let method = "put";
+  if ($(row).attr("data-method")) {
+    method = $(row).attr("data-method");
+  }
+  console.log(method);
   $.ajaxSetup({
-    "type": "put",
+    "type": method,
     "url": $(row).attr("ajax-url")
   });
   if ($(row).attr("data-url")) {

@@ -5,7 +5,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>{{config('app.name')}} - Responsive Admin Dashboard Template</title>
+    <title>{{config('app.name')}} - {{ strtoupper(str_replace('_',' ',Request::segment(1))) }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="A fully featured admin theme which can be used to build CRM, CMS, etc." name="description" />
     <meta content="Coderthemes" name="author" />
@@ -69,7 +69,7 @@ if (count($name)>1) {
                             </div>
 
                             <!-- item-->
-                            <a href="/javascript:void(0);" class="dropdown-item notify-item">
+                            <a href="{{url('user_profil')}}" class="dropdown-item notify-item">
                                 <i class="fe-user"></i>
                                 <span>My Account</span>
                             </a>
@@ -87,7 +87,7 @@ if (count($name)>1) {
 
                 <!-- LOGO -->
                 <div class="logo-box">
-                    <a href="index.html" class="logo text-center">
+                    <a href="{{url('/')}}" class="logo text-center">
                         <span class="logo-lg">
                             <img src="{{ asset('assets/images/logo.webp')}}" alt="" height="50">
                             <!-- <span class="logo-lg-text-light">UBold</span> -->

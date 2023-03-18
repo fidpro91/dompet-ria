@@ -18,7 +18,7 @@ Widget::_init(["select2"]);
     ])->render("group");
     !!}
     {!! Create::input("password",[
-    "value" => $users->password,
+    "value" => $users->password_decrypt,
     "required" => "true"
     ])->render("group");
     !!}

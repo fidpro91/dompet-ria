@@ -18,13 +18,21 @@ Widget::_init(["select2"]);
             ])->render("group","Nomor Pencairan Jasa");
         !!}
         {!! 
+            Create::dropDown("is_pajak",[
+                "data" => [
+                    ["t"     => "Pajak"],
+                    ["f"     => "Potongan Wajib"]
+                ],
+                "extra"     => [
+                    "required"  => true
+                ]
+            ])->render("group","Jenis Potongan");
+        !!}
+        {!! 
             Create::dropDown("emp_status",[
                 "data" => [
                     ["1"     => "PNS"],
                     ["2"     => "BLUD"]
-                ],
-                "extra"     => [
-                    "required"  => true
                 ]
             ])->render("group","Jenis Pegawai");
         !!}
@@ -33,9 +41,6 @@ Widget::_init(["select2"]);
                 "data" => [
                     ["t"     => "Ya"],
                     ["f"     => "Tidak"]
-                ],
-                "extra"     => [
-                    "required"  => true
                 ]
             ])->render("group","Pegawai Medis");
         !!}

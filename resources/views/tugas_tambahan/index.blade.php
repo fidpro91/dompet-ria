@@ -20,7 +20,7 @@ use \fidpro\builder\Bootstrap;
                 Bootstrap::table("table-data",[
                     "class" => "table table-hover"
                 ],[
-                    '#','NO','nomor_sk','nama_tugas','pemberi_tugas','petugas','tanggal_awal','tanggal_akhir','deskripsi_tugas','jabatan_tugas','skor'
+                    '#','STATUS','NO','nomor_sk','nama_tugas','pemberi_tugas','petugas','tanggal_awal','tanggal_akhir','deskripsi_tugas','jabatan_tugas','skor'
                 ])
             }}
         </div>
@@ -35,6 +35,12 @@ use \fidpro\builder\Bootstrap;
             columns: [{
                     data: 'action',
                     name: 'action',
+                    width: '20%',
+                    orderable: false,
+                    searchable: false
+                },
+                {
+                    "data": 'is_active',
                     orderable: false,
                     searchable: false
                 },

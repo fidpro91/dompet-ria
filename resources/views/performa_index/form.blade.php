@@ -18,6 +18,15 @@ Widget::_init(["select2","datepicker"]);
         ])->render("group","Tanggal")
     !!}
     {!! 
+        Widget::datepicker("expired_date",[
+            "format"		=>"dd-mm-yyyy",
+            "autoclose"		=>true
+        ],[
+            "readonly"      => true,
+            "value"         => $performa_index->expired_date
+        ])->render("group","Berlaku Sampai Tanggal")
+    !!}
+    {!! 
         Widget::select2("emp_id",[
             "data" => [
                 "model"     => "Employee",

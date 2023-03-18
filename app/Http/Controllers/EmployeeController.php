@@ -7,6 +7,7 @@ use App\Models\Employee;
 use Illuminate\Support\Facades\Validator;
 use DataTables;
 use fidpro\builder\Create;
+use Illuminate\Support\Facades\Storage;
 
 class EmployeeController extends Controller
 {
@@ -42,7 +43,12 @@ class EmployeeController extends Controller
         'updated_at'   =>  '',
         'created_by'   =>  '',
         'jabatan_type'   =>  '',
-        'pendidikan'   =>  'required'
+        'pendidikan'   =>  'required',
+        'profesi_id'   =>  'required',
+        'gaji_add'   =>  '',
+        'email'   =>  '',
+        'phone'   =>  '',
+        'photo'   =>  ''
     ];
     public $defaultValue = [
         'emp_id'   =>  '',
@@ -74,7 +80,11 @@ class EmployeeController extends Controller
         'created_by'   =>  '',
         'jabatan_type'   =>  '',
         'pendidikan'   =>  '',
-        'gaji_add'   =>  ''
+        'gaji_add'   =>  '',
+        'profesi_id'   =>  '',
+        'email'   =>  '',
+        'phone'   =>  '',
+        'photo'   =>  ''
     ];
     public function index()
     {
@@ -101,8 +111,9 @@ class EmployeeController extends Controller
                 "class"     => "btn btn-primary btn-xs",
                 "onclick"   => "set_edit(this)",
                 "data-url"  => route($this->route . ".edit", $data->emp_id),
-                "ajax-url"  => route($this->route . '.update', $data->emp_id),
-                "data-target"  => "page_employee"
+                "ajax-url"  => url($this->route . '/update_data'),
+                "data-target"  => "page_employee",
+                "data-method"  => "post"
             ]);
             $button .= Create::action("<i class=\"fas fa-trash\"></i>", [
                 "class"     => "btn btn-danger btn-xs",
@@ -138,11 +149,16 @@ class EmployeeController extends Controller
                 'message' => $valid['message']
             ]);
         }
-        print_r($valid);
-        die;
         try {
             $valid['data']['emp_birthdate'] = date('Y-m-d',strtotime($request->emp_birthdate));
             $valid['data']['tahun_masuk']   = date('Y-m-d',strtotime($request->tahun_masuk));
+            $valid['data']['gaji_pokok']   = (int)filter_var($request->gaji_pokok, FILTER_SANITIZE_NUMBER_INT);
+            $valid['data']['gaji_add']   = (int)filter_var($request->gaji_add, FILTER_SANITIZE_NUMBER_INT);
+            if ($request->file('photo')) {
+                $image = $request->file('photo');
+                $image->storeAs('public/uploads/photo_pegawai', $image->hashName());
+                $valid['data']['photo'] = $image->hashName();
+            }
             Employee::create($valid['data']);
             $resp = [
                 'success' => true,
@@ -182,11 +198,16 @@ class EmployeeController extends Controller
         ];
     }
 
+    public function custom_update()
+    {
+        return $this->themes($this->folder . '.form_custom',null,'Form Custom Edit');
+    }
+    
     public function edit(Employee $employee)
     {
         return view($this->folder . '.form', compact('employee'));
     }
-    public function update(Request $request, Employee $employee)
+    public function update_data(Request $request)
     {
         $valid = $this->form_validasi($request->all());
         if ($valid['code'] != 200) {
@@ -196,9 +217,20 @@ class EmployeeController extends Controller
             ]);
         }
         try {
-            $data = Employee::findOrFail($employee->emp_id);
+            $data = Employee::findOrFail($request->emp_id);
             $valid['data']['emp_birthdate'] = date('Y-m-d',strtotime($request->emp_birthdate));
             $valid['data']['tahun_masuk']   = date('Y-m-d',strtotime($request->tahun_masuk));
+            $valid['data']['gaji_pokok']   = (int)filter_var($request->gaji_pokok, FILTER_SANITIZE_NUMBER_INT);
+            $valid['data']['gaji_add']   = (int)filter_var($request->gaji_add, FILTER_SANITIZE_NUMBER_INT);
+            
+            if ($request->file('photo')) {
+                //hapus old image
+                Storage::disk('local')->delete('public/uploads/photo_pegawai/'.$data->photo);
+                //upload new image
+                $image = $request->file('photo');
+                $image->storeAs('public/uploads/photo_pegawai', $image->hashName());
+                $valid['data']['photo'] = $image->hashName();
+            }
             $data->update($valid['data']);
             $resp = [
                 'success' => true,

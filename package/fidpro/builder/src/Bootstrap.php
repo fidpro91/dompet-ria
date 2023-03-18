@@ -47,31 +47,57 @@ class Bootstrap
         echo $html;
     }
 
-    public static function tableData($data, $atrr)
+    public static function tableData($data, $atrr,$column = null)
     {
         if (empty($data)) {
             return false;
         }
         $html = '<table ' . self::array_to_attr($atrr) . '>';
-        $thead = "<thead>\n<tr><th>NO</th>";
         if (is_object($data)) {
             $data = $data->toArray();
         }
-        foreach ($data[0] as $key => $val) {
-            $thead .= '<th>' . $key . '</th>' . "\n";
+
+        if ($column) {
+            $thead = "<thead>\n<tr>";
+            $header = array_keys($column);
+            foreach ($header as $key => $value) {
+                $thead .= '<th>' . $value . '</th>' . "\n";
+            }
+        }else{
+            $thead = "<thead>\n<tr><th>NO</th>";
+            foreach ($data[0] as $key => $val) {
+                $thead .= '<th>' . Str::upper(Str::replace('_',' ',$key)) . '</th>' . "\n";
+            }
         }
         $thead .= "</tr>\n</thead>";
         //set body
         $tbody = "<tbody>\n";
         foreach ($data as $key => $val) {
-            if (is_array($val) || is_object($val)) {
-                $tbody .= "<tr>\n";
-                $tbody .= '<td>' . ($key+1) . '</td>';
-                foreach ($val as $rs) {
-                    $tbody .= '<td>' . $rs . '</td>' . "\n";
+            $tbody .= "<tr>\n";
+            if ($column) {
+                if (is_object($val)) {
+                    $val = $val->toArray();
                 }
-                $tbody .= "</tr>\n";
+                foreach ($column as $row) {
+                    if ($row['data'] == 'number') {
+                        $isi = ($key+1);
+                    }else{
+                        $isi = $val[$row['data']];
+                    }
+                    if (isset($row['custom'])) {
+                        $isi = call_user_func($row['custom'],$val);
+                    }
+                    $tbody .= '<td>' . $isi . '</td>' . "\n";
+                }
+            }else{
+                if (is_array($val) || is_object($val)) {
+                    $tbody .= '<td>' . ($key+1) . '</td>';
+                    foreach ($val as $rs) {
+                        $tbody .= '<td>' . $rs . '</td>' . "\n";
+                    }
+                }
             }
+            $tbody .= "</tr>\n";
         }
         $tbody .= "</tbody>";
         $html = $html . "\n" . $thead . "\n" . $tbody . "\n</table>";

@@ -47,3 +47,11 @@ function date_indo($date)
 {
 	return date('d-m-Y',strtotime($date));
 }
+
+function date_indo2($date)
+{
+	$indo = explode('-',date_indo($date));
+
+	$tanggal = $indo[0].' '.get_namaBulan($indo[1]).' '.$indo[2];
+	return  $tanggal;
+}

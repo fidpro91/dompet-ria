@@ -20,7 +20,8 @@ class Performa_indexController extends Controller
         'emp_id'   =>  'required',
         'perform_id'   =>  'required',
         'perform_skor'   =>  'required',
-        'perform_deskripsi'   =>  ''
+        'perform_deskripsi'   =>  '',
+        'expired_date'   =>  'required'
     ];
     public $defaultValue = [
         'id'   =>  '',
@@ -28,7 +29,8 @@ class Performa_indexController extends Controller
         'emp_id'   =>  '',
         'perform_id'   =>  '',
         'perform_skor'   =>  '',
-        'perform_deskripsi'   =>  ''
+        'perform_deskripsi'   =>  '',
+        'expired_date'  => ''
     ];
     public function index()
     {
@@ -53,6 +55,7 @@ class Performa_indexController extends Controller
                 'emp_name',
                 'perform_deskripsi',
                 'di.detail_name',
+                'di.skor',
             ]);
 
         $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
@@ -95,6 +98,7 @@ class Performa_indexController extends Controller
         }
         try {
             $valid['data']['tanggal_perform'] = date('Y-m-d',strtotime($request->tanggal_perform));
+            $valid['data']['expired_date'] = date_db($request->expired_date);
             Performa_index::create($valid['data']);
             $resp = [
                 'success' => true,

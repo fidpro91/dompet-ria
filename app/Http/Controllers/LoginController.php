@@ -15,7 +15,11 @@ class LoginController extends Controller
     public function login()
     {
         if (Auth::check()) {
-            return redirect('beranda/index');
+            if (Session::get('sesLogin')->group_type == 1) {
+                return redirect('beranda/index');
+            }else{
+                return redirect('mobile/index');
+            }
         }else{
             return view('login.login');
         }
@@ -23,7 +27,6 @@ class LoginController extends Controller
 
     public function actionlogin(Request $request)
     {
-        
         $data = [
             'email' => $request->input('email_log'),
             'password' => $request->input('password_log'),
@@ -42,13 +45,26 @@ class LoginController extends Controller
         }
         unset($data['captcha']);
         if (Auth::Attempt($data)) {
-            $data = User::where("email",$data["email"])->first();
-            $dataEmp = DB::table("employee")->where("emp_id",$data->emp_id)->first();
+            $dataEmp = DB::table("employee AS e")
+                       ->join("users as us","us.emp_id","=","e.emp_id")
+                       ->join("ms_group as mg","mg.group_id","=","us.group_id")
+                       ->join("ms_unit as mu","mu.unit_id","=","e.unit_id_kerja")
+                       ->leftJoin("detail_indikator as di","di.detail_id","=","e.jabatan_struktural")
+                       ->leftJoin("detail_indikator as di2","di2.detail_id","=","e.jabatan_fungsional")
+                       ->leftJoin("potongan_statis as ps","ps.pot_stat_code","=","e.kode_ptkp")
+                       ->select(["e.*","mg.*","mu.unit_name","di.detail_name AS jabatan_struktural_name","di2.detail_name AS jabatan_fungsional_name","ps.nama_potongan"])
+                       ->where("us.email",$data['email'])->first();
             Session::put('sesLogin',$dataEmp);
+            $groupMobile = [4,6];
+            if (in_array(Auth::user()->group_id,$groupMobile) ) {
+                $redirect = "mobile/index";
+            }else{
+                $redirect = "beranda/index";
+            }
             $resp = [
                 "code"      => 200,
                 "message"   => "ok",
-                "redirect"  => "beranda/index"
+                "redirect"  => $redirect
             ];
         }else{
             $resp = [

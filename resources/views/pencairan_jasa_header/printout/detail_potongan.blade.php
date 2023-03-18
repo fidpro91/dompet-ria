@@ -27,13 +27,13 @@ Widget::_init(["inputmask"]);
                     <td>{{$v->golongan}}</td>
                     <td>{{$v->jasa_brutto}}</td>
                     <td>
-                        <input type="text" class="form-control input-sm money" name="penghasilan_pajak" value="{{$v->penghasilan_pajak}}">
+                        <input type="text" class="form-control input-sm money penghasilan_pajak" name="penghasilan_pajak" onchange="hitung_pajak(this)" value="{{$v->penghasilan_pajak}}">
                     </td>
                     <td>
-                        <input type="text" class="form-control input-sm money" name="percentase_pajak" value="{{$v->percentase_pajak}}">
+                        <input type="text" class="form-control input-sm money percentase_pajak" name="percentase_pajak" onchange="hitung_pajak(this)" value="{{$v->percentase_pajak}}">
                     </td>
                     <td>
-                        <input type="text" class="form-control input-sm money" name="potongan_value" value="{{$v->potongan_value}}">    
+                        <input type="text" class="form-control input-sm money potongan_value" name="potongan_value" value="{{$v->potongan_value}}">    
                     </td>
                     <td>
                         <input type="text" class="form-control input-sm money" name="akumulasi_penghasilan_pajak" value="{{$v->akumulasi_penghasilan_pajak}}">       

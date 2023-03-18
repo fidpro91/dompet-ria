@@ -12,6 +12,9 @@ use \fidpro\builder\Bootstrap;
                 "data-url" => route("employee.create")
             ])
         !!}
+        {!!
+            link_to('employee/custom_update','Custom Edit',["class" => "btn btn-purple add-form"])
+        !!}
     </div>
     <div class="card-body">
         <div class="table-responsive">

@@ -25,7 +25,8 @@ Widget::_init(["select2","daterangepicker"]);
                 "model"     => "Detail_indikator",
                 "filter"    => ["indikator_id" => 4],
                 "column"    => ["detail_id","detail_name"]
-            ]
+            ],
+            "selected"  => $diklat->indikator_skor
         ])->render("group")
     !!}
     {!! 
@@ -34,7 +35,8 @@ Widget::_init(["select2","daterangepicker"]);
                 "model"     => "Employee",
                 "filter"    => ["emp_active" => "t"],
                 "column"    => ["emp_id","emp_name"]
-            ]
+            ],
+            "selected"  => $diklat->peserta_id
         ])->render("group","Nama Peserta")
     !!}
     {!! 

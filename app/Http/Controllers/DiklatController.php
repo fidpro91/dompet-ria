@@ -64,8 +64,9 @@ class DiklatController extends Controller
                 "class"     => "btn btn-primary btn-xs",
                 "onclick"   => "set_edit(this)",
                 "data-url"  => route($this->route . ".edit", $data->id),
-                "ajax-url"  => route($this->route . '.update', $data->id),
-                "data-target"  => "page_diklat"
+                "ajax-url"  => url($this->route . '/update_data'),
+                "data-target"  => "page_diklat",
+                "data-method"  => "post"
             ]);
 
             $button .= Create::action("<i class=\"fas fa-trash\"></i>", [
@@ -100,7 +101,7 @@ class DiklatController extends Controller
         try {
             if ($request->file('sertifikat_file')) {
                 $image = $request->file('sertifikat_file');
-                $image->storeAs('public/uploads', $image->hashName());
+                $image->storeAs('public/uploads/sertifikat', $image->hashName());
                 $valid['data']['sertifikat_file'] = $image->hashName();
             }
             Diklat::create($valid['data']);
@@ -124,7 +125,7 @@ class DiklatController extends Controller
         if ($validator->fails()) {
             return [
                 "code"      => "201",
-                "message"   => $validator->errors()
+                "message"   => implode(',',$validator->errors()->all())
             ];
         }
         //filter
@@ -144,8 +145,12 @@ class DiklatController extends Controller
     {
         return view($this->folder . '.form', compact('diklat'));
     }
-    public function update(Request $request, Diklat $diklat)
+
+    public function update_data(Request $request)
     {
+        list($tgl1,$tgl2) = explode('-',$request->tanggal_pelatihan);
+        $request['dari_tanggal'] = date('Y-m-d',strtotime($tgl1));
+        $request['sampai_tanggal'] = date('Y-m-d',strtotime($tgl2));
         $valid = $this->form_validasi($request->all());
         if ($valid['code'] != 200) {
             return response()->json([
@@ -154,7 +159,7 @@ class DiklatController extends Controller
             ]);
         }
         try {
-            $data = Diklat::findOrFail($diklat->id);
+            $data = Diklat::findOrFail($request->id);
             if ($request->file('sertifikat_file')) {
                 //hapus old image
                 Storage::disk('local')->delete('public/uploads/sertifikat/'.$data->sertifikat_file);

@@ -31,7 +31,30 @@ use \fidpro\builder\Bootstrap;
                             "orderable" => "false", 
                             "searchable" => "false"
                         ],
-                        'id','tanggal_perform','emp_no','emp_name','detail_name','perform_deskripsi'
+                        'tanggal_perform'=> [
+                            "data" => "tanggal_perform",
+                            "name" => "pi.tanggal_perform"
+                        ],
+                        'emp_no' => [
+                            "data" => "emp_no",
+                            "name" => "e.emp_no"
+                        ],
+                        'emp_name'=> [
+                            "data" => "emp_name",
+                            "name" => "e.emp_name"
+                        ],
+                        'detail_name'=> [
+                            "data" => "detail_name",
+                            "name" => "di.detail_name"
+                        ],
+                        'skor'=> [
+                            "data" => "skor",
+                            "name" => "di.skor"
+                        ],
+                        'perform_deskripsi' => [
+                            "data" => "perform_deskripsi",
+                            "name" => "pi.perform_deskripsi"
+                        ]
                     ]
                 ])
             }}

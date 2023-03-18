@@ -39,6 +39,10 @@ class Employee extends Model
         'created_by',
         'jabatan_type',
         'pendidikan',
-        'gaji_add'
+        'gaji_add',
+        'profesi_id',
+        'email',
+        'phone',
+        'photo'
     ];
 }

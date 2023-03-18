@@ -13,21 +13,21 @@ class Jasa_pelayanan extends Model
     protected $primaryKey = 'jaspel_id';
     protected $table = 'jasa_pelayanan';
     protected $fillable = [
-'jaspel_id',
-'tanggal_jaspel',
-'periode_jaspel',
-'jaspel_bulan',
-'jaspel_tahun',
-'kodejaminan',
-'namajaminan',
-'nominal_pendapatan',
-'percentase_jaspel',
-'nominal_jaspel',
-'created_by',
-'created_at',
-'status',
-'keterangan',
-'id_cair',
-'no_jasa'
-];
+        'jaspel_id',
+        'tanggal_jaspel',
+        'periode_jaspel',
+        'jaspel_bulan',
+        'jaspel_tahun',
+        'kodejaminan',
+        'namajaminan',
+        'nominal_pendapatan',
+        'percentase_jaspel',
+        'nominal_jaspel',
+        'created_by',
+        'created_at',
+        'status',
+        'keterangan',
+        'id_cair',
+        'no_jasa'
+    ];
 }

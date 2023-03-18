@@ -16,6 +16,7 @@ class Performa_index extends Model
         'perform_id',
         'perform_skor',
         'perform_deskripsi',
-        'created_by'
+        'created_by',
+        'expired_date'
     ];
 }

@@ -32,7 +32,11 @@ use \fidpro\builder\Bootstrap;
                             "orderable" => "false", 
                             "searchable" => "false"
                         ],
-                        'id','tanggal_perform','emp_id','perform_id','perform_skor','perform_deskripsi','created_by','created_at','updated_at'
+                        'tanggal_perform' => [
+                            "data" => "tanggal_perform",
+                            "name" => "pi.tanggal_perform",
+                        ],
+                        'emp_id','perform_id','perform_skor','perform_deskripsi','created_by','created_at','updated_at'
                     ]
                 ])
             }}

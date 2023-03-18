@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<title>Login EPOS</title>
+	<title>Login {{config('app.name')}}</title>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 <!--===============================================================================================-->	
@@ -58,10 +58,10 @@
 						<button type="button" class="btn btn-danger" onclick="reload_capcha()" class="reload" id="reload">
 							&#x21bb;
 						</button>
-						<input class="input100 upper" type="text" name="capcha_log" placeholder="Ketikkan capcha">
+						<input class="input100 upper" type="text" id="capcha_log" name="capcha_log" placeholder="Ketikkan capcha" autocomplete="off">
 					</div> 
 					<div class="container-login100-form-btn">
-						<button class="login100-form-btn">
+						<button class="login100-form-btn btn-block">
 							Login
 						</button>
 					</div>
@@ -77,11 +77,6 @@
 <!--===============================================================================================-->
 	<script src="{{asset('assets/login_temp')}}/vendor/bootstrap/js/popper.js"></script>
 	<script src="{{asset('assets/login_temp')}}/vendor/bootstrap/js/bootstrap.min.js"></script>
-<!--===============================================================================================-->
-	<script src="{{asset('assets/login_temp')}}/vendor/select2/select2.min.js"></script>
-<!--===============================================================================================-->
-	<script src="{{asset('assets/login_temp')}}/vendor/daterangepicker/moment.min.js"></script>
-	<script src="{{asset('assets/login_temp')}}/vendor/daterangepicker/daterangepicker.js"></script>
 <!--===============================================================================================-->
 	<script src="{{asset('assets/login_temp')}}/vendor/countdowntime/countdowntime.js"></script>
 <!--===============================================================================================-->
@@ -109,6 +104,7 @@
   });
 
   function reload_capcha() {
+	$('#capcha_log').val('');
 	$.get("login/reload_capcha",function(resp){
 		$(".captcha").html(resp.captcha);
 	});

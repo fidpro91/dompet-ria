@@ -27,7 +27,8 @@ class Tugas_tambahanController extends Controller
         'created_at'   =>  '',
         'updated_at'   =>  '',
         'created_by'   =>  '',
-        'file_sk'   =>  ''
+        'file_sk'   =>  '',
+        'is_active'   =>  'required'
     ];
     public $defaultValue = [
         'id'   =>  '',
@@ -42,7 +43,8 @@ class Tugas_tambahanController extends Controller
         'created_at'   =>  '',
         'updated_at'   =>  '',
         'created_by'   =>  '',
-        'file_sk'   =>  ''
+        'file_sk'   =>  '',
+        'is_active'   =>  't'
     ];
     public function index()
     {
@@ -66,7 +68,8 @@ class Tugas_tambahanController extends Controller
                     'deskripsi_tugas',
                     'di.detail_name as jabatan_tugas',
                     'di.skor',
-                    'file_sk'
+                    'file_sk',
+                    'is_active'
                 ]);
 
         $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
@@ -74,8 +77,9 @@ class Tugas_tambahanController extends Controller
                 "class"     => "btn btn-primary btn-xs",
                 "onclick"   => "set_edit(this)",
                 "data-url"  => route($this->route . ".edit", $data->id),
-                "ajax-url"  => route($this->route . '.update', $data->id),
-                "data-target"  => "page_tugas_tambahan"
+                "ajax-url"  => url($this->route.'/update_data'),
+                "data-target"  => "page_tugas_tambahan",
+                "data-method"  => "post"
             ]);
             $button .= Create::action("<i class=\"fas fa-trash\"></i>", [
                 "class"     => "btn btn-danger btn-xs",
@@ -88,7 +92,14 @@ class Tugas_tambahanController extends Controller
                 "onclick"   => "download_sk(this)"
             ]);
             return $button;
-        })->rawColumns(['action']);
+        })->editColumn('is_active',function($data){
+            if ($data->is_active == 't') {
+                $txt = '<span class="badge badge-info">Aktif</span>';
+            }else{
+                $txt = '<span class="badge badge-danger">Non Aktif</span>';
+            }
+            return $txt;
+        })->rawColumns(['action','is_active']);
         return $datatables->make(true);
     }
 
@@ -137,7 +148,7 @@ class Tugas_tambahanController extends Controller
         if ($validator->fails()) {
             return [
                 "code"      => "201",
-                "message"   => $validator->errors()
+                "message"   => implode(',',$validator->errors()->all())
             ];
         }
         //filter
@@ -157,8 +168,11 @@ class Tugas_tambahanController extends Controller
     {
         return view($this->folder . '.form', compact('tugas_tambahan'));
     }
-    public function update(Request $request, Tugas_tambahan $tugas_tambahan)
+    public function update_data(Request $request)
     {
+        list($tgl1,$tgl2) = explode('-',$request->tanggal_tugas);
+        $request['tanggal_awal'] = date('Y-m-d',strtotime($tgl1));
+        $request['tanggal_akhir'] = date('Y-m-d',strtotime($tgl2));
         $valid = $this->form_validasi($request->all());
         if ($valid['code'] != 200) {
             return response()->json([
@@ -167,7 +181,7 @@ class Tugas_tambahanController extends Controller
             ]);
         }
         try {
-            $data = Tugas_tambahan::findOrFail($tugas_tambahan->id);
+            $data = Tugas_tambahan::findOrFail($request->id);
             if ($request->file('file_sk')) {
                 //hapus old image
                 Storage::disk('local')->delete('public/uploads/sk_tugas/'.$data->file_sk);

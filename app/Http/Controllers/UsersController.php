@@ -27,6 +27,7 @@ class UsersController extends Controller
         'group_id'   =>  '',
         'user_active'   =>  ''
     ];
+    
     public $defaultValue = [
         'id'   =>  '',
         'name'   =>  '',
@@ -67,7 +68,7 @@ class UsersController extends Controller
             $button = Create::action("<i class=\"fas fa-edit\"></i>", [
                 "class"     => "btn btn-primary btn-xs",
                 "onclick"   => "set_edit(this)",
-                "data-url"  => route($this->route . ".edit", $data->id),
+                "data-url"  => url($this->route . "/edit_data/$data->id"),
                 "ajax-url"  => route($this->route . '.update', $data->id),
                 "data-target"  => "page_user"
             ]);
@@ -138,12 +139,13 @@ class UsersController extends Controller
         ];
     }
 
-    public function edit(Ms_user $users)
+    public function edit_data($id)
     {
+        $users = Ms_user::findOrFail($id);
         return view($this->folder . '.form', compact('users'));
     }
     
-    public function update(Request $request, Ms_user $users)
+    public function update(Request $request)
     {
         $valid = $this->form_validasi($request->all());
         if ($valid['code'] != 200) {
@@ -153,7 +155,7 @@ class UsersController extends Controller
             ]);
         }
         try {
-            $data = Ms_user::findOrFail($users->id);
+            $data = Ms_user::findOrFail($request->id);
             $valid['data']['password'] = bcrypt($request->password);
             $valid['data']['password_decrypt'] = ($request->password);
             $data->update($valid['data']);

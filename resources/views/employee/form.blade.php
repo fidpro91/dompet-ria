@@ -10,7 +10,7 @@ Widget::_init(["select2","datepicker","inputmask"]);
         <fieldset>
             <legend>DATA DASAR</legend>
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     {!! 
                         Create::input("emp_no",[
                             "value" => $employee->emp_no,
@@ -43,8 +43,6 @@ Widget::_init(["select2","datepicker","inputmask"]);
                             "value"         => date_indo($employee->emp_birthdate)
                         ])->render("group","Tanggal Lahir")
                     !!}
-                </div>
-                <div class="col-md-6">
                     {!!
                         Create::dropDown("emp_sex",[
                             "data" => [
@@ -57,6 +55,8 @@ Widget::_init(["select2","datepicker","inputmask"]);
                             ]
                         ])->render("group","Jenis Kelamin");
                     !!}
+                </div>
+                <div class="col-md-4">
                     {!! 
                         Create::dropDown("agama",[
                             "data" => [
@@ -80,17 +80,12 @@ Widget::_init(["select2","datepicker","inputmask"]);
                             ]
                         ])->render("group");
                     !!}
-                    {!! Create::input("nomor_rekening",[
-                        "value"     => $employee->nomor_rekening,
-                        "required"  => true
-                        ])->render("group");
-                    !!}
                     {!! 
                         Create::dropDown("kode_ptkp",[
                             "data" => [
                                 "model"     => "Potongan_statis",
                                 "filter"    => ["kategori_potongan"  => 3],
-                                "column"    => ["pot_stat_id","nama_potongan"]
+                                "column"    => ["pot_stat_code","nama_potongan"]
                             ],
                             "selected"  => $employee->kode_ptkp,
                             "extra"     => [
@@ -98,6 +93,30 @@ Widget::_init(["select2","datepicker","inputmask"]);
                             ]
                         ])->render("group");
                     !!}
+                    {!! Create::input("nomor_rekening",[
+                        "value"     => $employee->nomor_rekening,
+                        "required"  => true
+                        ])->render("group");
+                    !!}
+                    {!! Create::input("email",[
+                        "value"     => $employee->email
+                        ])->render("group");
+                    !!}
+                    {!! Create::input("phone",[
+                        "value"     => $employee->phone
+                        ])->render("group","Nomor Telp/Whatsapp");
+                    !!}
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="photo">Foto Pegawai</label>
+                        <img id="photo_preview" src="{{asset('storage/uploads/photo_pegawai/'.$employee->photo);}}" class="thumb-img img-fluid" alt="profile-image">
+                        {!! 
+                            Create::upload("photo",[
+                                "value" => $employee->photo
+                            ])->render();
+                        !!}
+                    </div>
                 </div>
             </div>
             </fieldset>
@@ -198,7 +217,6 @@ Widget::_init(["select2","datepicker","inputmask"]);
                         Widget::inputMask("gaji_add",[
                             "prop"      => [
                                 "value"     => $employee->gaji_add,
-                                "required"  => true,
                                 "placeholder"  => "Tunjangan profesi",
                             ],
                             "mask"      => [
@@ -210,6 +228,19 @@ Widget::_init(["select2","datepicker","inputmask"]);
                     !!}
                 </div>
                 <div class="col-md-4">
+                    {!! 
+                        Create::dropDown("profesi_id",[
+                            "data" => [
+                                "model"     => "Ms_reff",
+                                "filter"    => ["reffcat_id"  => 7],
+                                "column"    => ["reff_id","reff_name"]
+                            ],
+                            "selected"  => $employee->profesi_id,
+                            "extra"     => [
+                                "required"  => true
+                            ]
+                        ])->render("group","Profesi Pegawai");
+                    !!}
                     {!! 
                         Create::dropDown("jabatan_type",[
                             "data" => [
@@ -259,6 +290,13 @@ Widget::_init(["select2","datepicker","inputmask"]);
 
 <script>
     $(document).ready(() => {
+        $('#photo').change(function(){
+            let reader = new FileReader();
+            reader.onload = (e) => { 
+              $('#photo_preview').attr('src', e.target.result); 
+            }
+            reader.readAsDataURL(this.files[0]); 
+        });
         $('#form_employee').parsley().on('field:validated', function() {
                 var ok = $('.parsley-error').length === 0;
                 $('.bs-callout-info').toggleClass('hidden', !ok);
@@ -274,8 +312,14 @@ Widget::_init(["select2","datepicker","inputmask"]);
                     confirmButtonText: 'Yes'
                 }).then((result) => {
                     if (result.value) {
+                        var formData = new FormData($("#form_employee")[0]);
                         $.ajax({
-                            'data': $('#form_employee').serialize(),
+                            'data': formData,
+                            headers: {
+                                'X-CSRF-TOKEN': '<?=csrf_token()?>'
+                            },
+                            'processData': false,
+                            'contentType': false,
                             'dataType': 'json',
                             'success': function(data) {
                                 if (data.success) {

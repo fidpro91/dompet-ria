@@ -17,7 +17,8 @@ Widget::_init(["select2","daterangepicker"]);
                     "model"     => "Employee",
                     "filter"    => ["emp_active" => "t"],
                     "column"    => ["emp_id","emp_name"]
-                ]
+                ],
+                "selected"  => $tugas_tambahan->pemberi_tugas
             ])->render("group")
         !!}
         {!! Create::input("nomor_sk",[
@@ -31,7 +32,8 @@ Widget::_init(["select2","daterangepicker"]);
                     "model"     => "Employee",
                     "filter"    => ["emp_active" => "t"],
                     "column"    => ["emp_id","emp_name"]
-                ]
+                ],
+                "selected"  => $tugas_tambahan->emp_id
             ])->render("group","Yang Bertugas")
         !!}
         {!!
@@ -47,13 +49,26 @@ Widget::_init(["select2","daterangepicker"]);
                     "model"     => "Detail_indikator",
                     "filter"    => ["indikator_id" => 10],
                     "column"    => ["detail_id","detail_name"]
-                ]
+                ],
+                "selected"  => $tugas_tambahan->jabatan_tugas
             ])->render("group")
         !!}
         {!! Create::upload("file_sk",[
             "value"     => $tugas_tambahan->file_sk
             ])->render("group"); 
         !!}
+        {!! 
+        Create::dropDown("is_active",[
+            "data" => [
+                ["t"     => "Ya"],
+                ["f"     => "Tidak"]
+            ],
+            "selected"  => $tugas_tambahan->is_active,
+            "extra"     => [
+                "required"  => true
+            ]
+        ])->render("group","SK Aktif");
+    !!}
     </div>
     <div class="card-footer text-center">
         {!! Form::submit('Save',['class' => 'btn btn-success']); !!}
@@ -79,11 +94,12 @@ Widget::_init(["select2","daterangepicker"]);
             }).then((result) => {
                 if (result.value) {
                     var formData = new FormData($("#form_tugas_tambahan")[0]);
+                    // var formData = $("#form_tugas_tambahan").serialize();
                     $.ajax({
                         'data': formData,
                         headers: {
                                 'X-CSRF-TOKEN': '<?=csrf_token()?>'
-                            },
+                        },
                         'dataType': 'json',
                         'processData': false,
                         'contentType': false,

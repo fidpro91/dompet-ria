@@ -285,7 +285,7 @@ class Skor_pegawaiController extends Controller
                 $sertifikatNote = implode(',',$sertifikatNote);
                 $data[$key]['dataSkor']['certifycate'] = [
                     "skor"          => ($sertifikatSkor),
-                    "keterangan"    => "DIKLAT & SERTIFIKAT INDEX - ($sertifikatNote)"
+                    "keterangan"    => ($sertifikatSkor>0)?"DIKLAT & SERTIFIKAT INDEX - ($sertifikatNote)":NULL
                 ];
                 $data[$key]['totalSkor'] = $data[$key]['totalSkor'] +$sertifikatSkor;
                 //get unit skor
@@ -338,6 +338,7 @@ class Skor_pegawaiController extends Controller
                 //get tugas tambahan
                 $tugasTambahan = Tugas_tambahan::from("tugas_tambahan as tt")
                               ->where("emp_id",$pgw->emp_id)
+                              ->where("tt.is_active",'t')
                               ->join("detail_indikator as di","di.detail_id","=","tt.jabatan_tugas")
                               ->join("indikator as i","i.id","=","di.indikator_id");
                 $tugasSkor=0;
@@ -356,13 +357,14 @@ class Skor_pegawaiController extends Controller
                 $tugasNote = implode(',',$tugasNote);
                 $data[$key]['dataSkor']['tugas'] = [
                     "skor"          => ($tugasSkor),
-                    "keterangan"    => "TUGAS TAMBAHAN INDEX - ($tugasNote)"
+                    "keterangan"    => ($tugasSkor>0)?"TUGAS TAMBAHAN INDEX - ($tugasNote)":null
                 ];
                 $data[$key]['totalSkor'] = $data[$key]['totalSkor'] +$tugasSkor;
 
                 //get performa index
                 $performaIndex = Performa_index::from("performa_index as pi")
                               ->where("pi.emp_id",$pgw->emp_id)
+                              ->whereRaw("('".date('Y-m-d')."' <= pi.expired_date)")
                               ->join("detail_indikator as di","di.detail_id","=","pi.perform_skor")
                               ->join("indikator as i","i.id","=","di.indikator_id");
                 $performSkor=0;
@@ -376,7 +378,7 @@ class Skor_pegawaiController extends Controller
                 $performanNote = implode(',',$performanNote);
                 $data[$key]['dataSkor']['performa'] = [
                     "skor"          => ($performSkor),
-                    "keterangan"    => "($performanNote)"
+                    "keterangan"    => ($performSkor>0)?"($performanNote)":null
                 ];
                 $data[$key]['totalSkor'] = $data[$key]['totalSkor'] +$performSkor;
             }

@@ -133,3 +133,11 @@ Breadcrumbs::for("ms_classification", function (BreadcrumbTrail $trail) {
             $trail->parent("home");
             $trail->push("laporan", url("laporan"));
         });
+        Breadcrumbs::for("pencairan_jasa", function (BreadcrumbTrail $trail) {
+            $trail->parent("home");
+            $trail->push("pencairan_jasa", route("pencairan_jasa.index"));
+        });
+        Breadcrumbs::for("userprofil", function (BreadcrumbTrail $trail) {
+            $trail->parent("home");
+            $trail->push("user_profil", url("user_profil"));
+        });

@@ -110,6 +110,13 @@ use \fidpro\builder\Bootstrap;
         })
     })
 
+    function hitung_pajak(row) {
+        var pendapatan = $(row).closest('tr').find('.penghasilan_pajak').val();
+        var pajak = $(row).closest('tr').find('.percentase_pajak').val();
+        var hitungPajak = pajak/100*pendapatan;
+        $(row).closest('tr').find('.potongan_value').val(hitungPajak);
+    }
+    
     function update_row(row,id) {
         var data = $(row).closest('tr').find('input').serialize()+"&potongan_id="+id;
         $.ajax({
