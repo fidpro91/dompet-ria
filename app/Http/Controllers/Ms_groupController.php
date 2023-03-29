@@ -19,13 +19,15 @@ class Ms_groupController extends Controller
     public $param = [
         'group_code'   =>  '',
         'group_name'   =>  'required',
-        'group_active'   =>  ''
+        'group_active'   =>  'required',
+        'group_type'   =>  'required'
     ];
     public $defaultValue = [
         'group_id'   =>  '',
         'group_code'   =>  '',
         'group_name'   =>  '',
-        'group_active'   =>  ''
+        'group_active'   =>  '',
+        'group_type'   =>  ''
     ];
     public function index()
     {

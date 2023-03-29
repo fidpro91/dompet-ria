@@ -20,6 +20,18 @@ use \fidpro\builder\Bootstrap;
                 ])->render("group");
             !!}
             {!!
+                Create::dropDown("group_type",[
+                "data" => [
+                    ["1" => "Web"],
+                    ["2" => "Mobile"]
+                ],
+                "selected" => $ms_group->group_type,
+                "extra" => [
+                    "required" => true
+                ]
+                ])->render("group");
+            !!}
+            {!!
                 Create::dropDown("group_active",[
                 "data" => [
                     ["t" => "Aktif"],

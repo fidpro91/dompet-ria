@@ -13,9 +13,10 @@ class ms_group extends Model
     protected $primaryKey = 'group_id';
     protected $table = 'ms_group';
     protected $fillable = [
-'group_id',
-'group_code',
-'group_name',
-'group_active'
-];
+        'group_id',
+        'group_code',
+        'group_name',
+        'group_active',
+        'group_type'
+    ];
 }

@@ -279,7 +279,7 @@ class Jasa_pelayananController extends Controller
                     if (!empty($rs['id_tindakan'])) {
                         $billing_id = json_decode($rs['id_tindakan'],true);
                         DB::table('detail_tindakan_medis')
-                        ->whereIn('billing_id',$billing_id)
+                        ->whereIn('tindakan_id',$billing_id)
                         ->whereIn('repo_id',$input['repo_id'])
                         ->update([
                             "jp_medis_id"   => $jpMedisId
@@ -433,7 +433,7 @@ class Jasa_pelayananController extends Controller
                 $data = Detail_tindakan_medis::from("Detail_tindakan_medis as dm")
                 ->join("employee as e","e.emp_nip","=","dm.nip")
                 ->groupBy(["e.emp_no","e.emp_id","e.emp_name"])
-                ->select(["e.emp_id","e.emp_no","e.emp_name",DB::raw('SUM((dm.skor_jasa/10000)) AS total_skor'),DB::raw('json_arrayagg(dm.billing_id) AS id_tindakan')])
+                ->select(["e.emp_id","e.emp_no","e.emp_name",DB::raw('SUM((dm.skor_jasa/10000)) AS total_skor'),DB::raw('json_arrayagg(dm.tindakan_id) AS id_tindakan')])
                 ->whereRaw("(unit_vip = 'f' or (unit_vip = 't' and status_bayar='piutang'))")
                 ->whereIn("repo_id",$request->repo_id);
                 /* $query = str_replace(array('?'), array('\'%s\''), $data->toSql());
@@ -500,7 +500,7 @@ class Jasa_pelayananController extends Controller
         $data = Detail_tindakan_medis::from("Detail_tindakan_medis as dm")
                 ->join("employee as e","e.emp_nip","=","dm.nip")
                 ->groupBy(["e.emp_no","e.emp_id","e.emp_name"])
-                ->select(["e.emp_id","e.emp_no","e.emp_name",DB::raw('SUM(dm.skor_jasa) AS total_skor'),DB::raw('json_arrayagg(dm.billing_id) AS id_tindakan')])
+                ->select(["e.emp_id","e.emp_no","e.emp_name",DB::raw('SUM(dm.skor_jasa) AS total_skor'),DB::raw('json_arrayagg(dm.tindakan_id) AS id_tindakan')])
                 ->whereIn("repo_id",$request->repo_id)
                 ->where([
                     "unit_vip"              => "t",

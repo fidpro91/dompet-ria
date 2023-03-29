@@ -338,7 +338,7 @@ class Skor_pegawaiController extends Controller
                 //get tugas tambahan
                 $tugasTambahan = Tugas_tambahan::from("tugas_tambahan as tt")
                               ->where("emp_id",$pgw->emp_id)
-                              ->where("tt.is_active",'t')
+                              ->whereRaw("('".date('Y-m-d')."' <= tt.tanggal_akhir)")
                               ->join("detail_indikator as di","di.detail_id","=","tt.jabatan_tugas")
                               ->join("indikator as i","i.id","=","di.indikator_id");
                 $tugasSkor=0;

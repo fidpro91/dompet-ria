@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use App\Http\Controllers\LoginController;
 use App\Libraries\Servant;
+use App\Models\Detail_tindakan_medis;
 use Illuminate\Support\Facades\Config;
 
 /*
@@ -45,9 +46,6 @@ Route::group(['prefix'=>'mobile','middleware' => ['auth','client']], function(){
 });
 
 Route::get('/tes_package', function () {
-    echo '<img src="'.base_path().'\vendor\tes\logo.png" />';
-    echo asset('assets/themes/assets/libs/select2/css/select2.min.css');
-    die;
     // echo config('app.name');
     /* $data=DB::table("users")->get();
     ini_set('max_execution_time', -1);

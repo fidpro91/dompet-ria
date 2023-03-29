@@ -449,7 +449,7 @@ class Pencairan_jasa_headerController extends Controller
         try {
             $data=Pencairan_jasa_header::findOrfail($id);
             $data->update([
-                "is_published" => 0
+                "is_published" => 1
             ]);
             $ekseKutif = DB::select("SELECT 'EKSEKUTIF' AS penjamin,
             SUM(nominal_terima)total

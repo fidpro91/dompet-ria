@@ -7,11 +7,11 @@ use \fidpro\builder\Bootstrap;
 <div class="card border-0 shadow rounded" id="page_diklat">
     <div class="card-header">
         {!!
-        Form::button("Tambah",[
-        "class" => "btn btn-primary add-form",
-        "data-target" => "page_diklat",
-        "data-url" => route("diklat.create")
-        ])
+            Form::button("Tambah",[
+            "class" => "btn btn-primary add-form",
+            "data-target" => "page_diklat",
+            "data-url" => route("diklat.create")
+            ])
         !!}
     </div>
     <div class="card-body">

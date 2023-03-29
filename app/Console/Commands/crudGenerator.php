@@ -15,7 +15,7 @@ class crudGenerator extends Command
      *
      * @var string
      */
-    protected $signature = 'build:crud {name}';
+    protected $signature = 'build:crud {name} {--make="*"} {--routes=true} {--breadcrumbs=true}';
 
     /**
      * The console command description.
@@ -40,12 +40,34 @@ class crudGenerator extends Command
         return file_get_contents(resource_path("stubs/$type.stub"));
     }
 
-    protected function controller($name){
+    protected function generate_crud($make,$name){
         $results = DB::select("SHOW FIELDS FROM $name");
         $this->Field="[\n";
+        foreach($results as $x=>$rs){
+            if($rs->Key == "PRI"){
+                $this->primaryKey = $rs->Field;
+            }
+            $this->Field .= "'".$rs->Field."',\n";
+        }
+        $this->Field = rtrim($this->Field,",\n")."\n]";
+        if ($make == '*') {
+            $this->controller($name,$results);
+            $this->model($name);
+            $this->view($name,$results);
+        }elseif ($make == 'controller') {
+            $this->controller($name,$results);
+        }elseif ($make == 'model') {
+            $this->model($name);
+        }elseif ($make == 'view') {
+            $this->view($name,$results);
+        }
+    }
+
+    protected function controller($name,$table){
+        
         $ModelValidation = "[\n";
         $ModelDefaultValue = "[\n";
-        foreach($results as $x=>$rs){
+        foreach($table as $x=>$rs){
             if($rs->Key == "PRI"){
                 $this->primaryKey = $rs->Field;
             }
@@ -64,7 +86,7 @@ class crudGenerator extends Command
         }
         $ModelValidation = rtrim($ModelValidation,",\n")."\n]";
         $ModelDefaultValue = rtrim($ModelDefaultValue,",\n")."\n]";
-        $this->Field = rtrim($this->Field,",\n")."\n]";
+        
         $controllerTemplate = str_replace([
            '{{ModelName}}',
            '{{ModelGroup}}',
@@ -96,14 +118,14 @@ class crudGenerator extends Command
         file_put_contents(app_path("Models/{$name}.php"), $modelTemplate);
      }
      
-     protected function view($name){
+     protected function view($name,$table){
         $tableHeader = "";
         $name = strtolower($name);
         $field = Schema::getColumnListing($name);
         $tableHeader .= sprintf("'%s'", implode("','", $field ));
         $modelTemplate = str_replace(
            ['{{ModelCol}}', '{{ModelName}}'],
-           [$tableHeader, strtolower(Str::singular($name))],
+           [$tableHeader, strtolower(($name))],
            $this->getStub('v_index')
         );
         $patch = resource_path("views/{$name}");
@@ -117,8 +139,7 @@ class crudGenerator extends Command
         file_put_contents($patch."/index.blade.php", $modelTemplate);
         //Create view form
         $form =[];
-        $results = DB::select("SHOW FIELDS FROM $name");
-        foreach($results as $x=>$rs){
+        foreach($table as $x=>$rs){
             $required = '';
             if($rs->Null == 'NO'){
                $required = '"required"  => "true"';
@@ -148,19 +169,32 @@ class crudGenerator extends Command
     public function handle()
     {
         $name = $this->argument('name');
-        $this->controller($name);
-        $this->model($name);
-        $this->view($name);
-        File::append(base_path('routes/web.php'),
-        "
-        Route::get('" . Str::singular(strtolower($name)) . "/get_dataTable','{$name}Controller@get_dataTable');
-        Route::resource('" . Str::singular(strtolower($name)) . "', {$name}Controller::class);");
+        $make = $this->option('make');
+        $routes = $this->option('routes');
+        $breadcrumbs = $this->option('breadcrumbs');
+        $this->info("
+            You call create:user command \n
+            with First Argument : {$name}
+ 
+            with First Option : {$make} {$routes} {$breadcrumbs}
+        ");
 
-        File::append(base_path('routes/breadcrumbs.php'),
-        '
-        Breadcrumbs::for("'. Str::singular(strtolower($name)) .'", function (BreadcrumbTrail $trail) {
-            $trail->parent("home");
-            $trail->push("'. Str::singular(strtolower($name)) .'", route("'. Str::singular(strtolower($name)) .'.index"));
-        });');
+        $this->generate_crud($make,$name);
+
+        if ($routes == 'true') {
+            File::append(base_path('routes/web.php'),
+            "
+            Route::get('" . Str::singular(strtolower($name)) . "/get_dataTable','{$name}Controller@get_dataTable');
+            Route::resource('" . Str::singular(strtolower($name)) . "', {$name}Controller::class);");
+        }
+
+        if ($breadcrumbs == 'true') {
+            File::append(base_path('routes/breadcrumbs.php'),
+            '
+            Breadcrumbs::for("'. Str::singular(strtolower($name)) .'", function (BreadcrumbTrail $trail) {
+                $trail->parent("home");
+                $trail->push("'. Str::singular(strtolower($name)) .'", route("'. Str::singular(strtolower($name)) .'.index"));
+            });');
+        }
     }
 }

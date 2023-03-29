@@ -54,19 +54,23 @@ class Repository_downloadController extends Controller
             'periode_akhir',
             'group_penjamin',
             'jenis_pembayaran',
-            'download_by'
+            'download_by',
+            'is_used'
         ]);
         if ($request->is_used) {
             $data->where("is_used",$request->is_used);
         }
 
         $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
-            $button = Create::action("<i class=\"fas fa-trash\"></i>", [
-                "class"     => "btn btn-danger btn-xs",
-                "onclick"   => "delete_row(this)",
-                "x-token"   => csrf_token(),
-                "data-url"  => route($this->route . ".destroy", $data->id),
-            ]);
+            $button="";
+            if ($data->is_used == 'f') {
+                $button = Create::action("<i class=\"fas fa-trash\"></i>", [
+                    "class"     => "btn btn-danger btn-xs",
+                    "onclick"   => "delete_row(this)",
+                    "x-token"   => csrf_token(),
+                    "data-url"  => route($this->route . ".destroy", $data->id),
+                ]);
+            }
             return $button;
         })->editColumn('group_penjamin',function($data){
             $penjamin = "ALL";

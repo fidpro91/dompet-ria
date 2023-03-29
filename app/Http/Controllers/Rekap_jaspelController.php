@@ -19,12 +19,12 @@ class Rekap_jaspelController extends Controller
     public function detail(Request $request)
     {
         $sess = Session::get('sesLogin');
-        if (empty($sess->emp_id)) {
+        if (!empty($request->emp_id)) {
             $emp_id = $request->emp_id;
         }else{
             $emp_id = $sess->emp_id;
         }
-        $idHeader = Pencairan_jasa_header::whereRaw("DATE_FORMAT(tanggal_cair, '%m-%Y') = '".$request->jaspel_bulan."'")->first();
+        $idHeader = Pencairan_jasa_header::whereRaw("DATE_FORMAT(tanggal_cair, '%m-%Y') = '".$request->jaspel_bulan."' and is_published = 1")->latest()->first();
         $data["profil"] = DB::table("pencairan_jasa as pj")
                           ->join("employee as e","e.emp_id","=","pj.emp_id")
                           ->join("pencairan_jasa_header as ph","ph.id_cair_header","=","pj.id_header")
@@ -59,7 +59,7 @@ class Rekap_jaspelController extends Controller
                                 ->leftJoin("skor_pegawai as sp","sp.id","=","js.skor_id")
                                 ->leftJoin("detail_skor_pegawai as dp","dp.skor_id","=","sp.id")
                                 ->selectRaw("
-                                    sp.bulan_update as bulan,jm.skor,GROUP_CONCAT(DISTINCT dp.detail_skor)as detail
+                                    sp.bulan_update as bulan,jm.skor,GROUP_CONCAT(DISTINCT concat(dp.detail_skor,' (',dp.skor,')') SEPARATOR '<br>')as detail
                                 ")
                                 ->groupBy(["sp.bulan_update","jm.skor"])
                                 ->where([
@@ -84,6 +84,19 @@ class Rekap_jaspelController extends Controller
                                 "jm.emp_id"     => $emp_id
                             ])
                             ->get();
+        $data['jasa_by_penjamin'] = DB::select("
+                                    SELECT x.nama_komponen as pelayanan,x.nama_penjamin,x.skor_jasa,(x.skor_jasa/x.skor*x.nominal_terima)jasa_tunai FROM (
+                                        SELECT jm.komponen_id,ks.nama_komponen,dm.nama_penjamin,jm.skor,jm.nominal_terima,
+                                        sum(IF(jm.komponen_id = 9,dm.skor_jasa,dm.skor_jasa/10000))skor_jasa
+                                        FROM jp_byname_medis jm
+                                        JOIN employee e ON e.emp_id = jm.emp_id
+                                        JOIN jasa_pelayanan jp ON jm.jaspel_id = jp.jaspel_id
+                                        JOIN komponen_jasa_sistem ks ON ks.id = jm.komponen_id
+                                        JOIN detail_tindakan_medis dm ON dm.jp_medis_id = jm.jp_medis_id AND e.emp_nip = dm.nip
+                                        WHERE jm.emp_id = '$emp_id' AND jp.id_cair = $idHeader->id_cair_header
+                                        GROUP BY jm.komponen_id,ks.nama_komponen,dm.nama_penjamin,jm.skor,jm.nominal_terima
+                                        ORDER BY komponen_id
+                                    )x");
         return view('laporan.v_lap_detail_jaspel',$data);
         // $pdf = PDF::loadview("laporan.v_lap_detail_jaspel",$data);
         // return $pdf->stream();
