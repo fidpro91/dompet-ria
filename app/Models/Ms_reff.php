@@ -13,10 +13,10 @@ class Ms_reff extends Model
     protected $primaryKey = 'reff_id';
     protected $table = 'ms_reff';
     protected $fillable = [
-'reff_id',
-'reff_code',
-'reff_name',
-'reff_active',
-'reffcat_id'
-];
+        'reff_id',
+        'reff_code',
+        'reff_name',
+        'reff_active',
+        'reffcat_id'
+    ];
 }

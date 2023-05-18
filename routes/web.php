@@ -1,15 +1,13 @@
 <?php
 
 use App\Http\Controllers\Builder\Docs\Example;
-use App\Models\Ms_menu;
 use Illuminate\Support\Facades\Route;
-use Diglactic\Breadcrumbs\Breadcrumbs;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use App\Http\Controllers\LoginController;
 use App\Libraries\Servant;
-use App\Models\Detail_tindakan_medis;
-use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\SendEmail;
 
 /*
 |--------------------------------------------------------------------------
@@ -46,6 +44,15 @@ Route::group(['prefix'=>'mobile','middleware' => ['auth','client']], function(){
 });
 
 Route::get('/tes_package', function () {
+    $data = [
+        'name' => 'Syahrizal As',
+        'body' => 'Testing Kirim Email di Santri Koding'
+    ];
+   
+    Mail::to('ufi.alfi@gmail.com')->send(new SendEmail($data));
+   
+    dd("Email Berhasil dikirim.");
+    die;
     // echo config('app.name');
     /* $data=DB::table("users")->get();
     ini_set('max_execution_time', -1);

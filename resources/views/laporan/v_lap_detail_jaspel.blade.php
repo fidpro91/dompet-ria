@@ -107,9 +107,7 @@ use fidpro\builder\Bootstrap;
 </table>
 <p></p>
 <p>DETAIL SKOR INDIVIDU PEGAWAI</p>
-{!!
-    Bootstrap::tableData($skorPegawai,["class" => "table"])
-!!}
+
 @if(Session::get('sesLogin')->is_medis == 't' || Session::get('sesLogin')->group_type == 1)
 <p>JASA PELAYANAN BY PENJAMIN (BRUTTO)</p>
 {!!

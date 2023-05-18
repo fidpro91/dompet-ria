@@ -32,7 +32,7 @@ use \fidpro\builder\Bootstrap;
                             "orderable" => "false", 
                             "searchable" => "false"
                         ],
-                        'unit_id','unit_name','is_active','resiko_infeksi','resiko_admin','emergency_id'
+                        'unit_id','unit_name','is_active','resiko','admin_risk','emergency'
                     ]
                 ])
             }}

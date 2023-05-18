@@ -29,4 +29,14 @@ use \fidpro\builder\Bootstrap;
         ?>
     </div>
 </div>
+<table class="table">
+    <thead>
+        <tr>
+
+        </tr>
+    </thead>
+    <tbody>
+        
+    </tbody>
+</table>
 @endsection
