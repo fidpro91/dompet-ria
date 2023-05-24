@@ -59,6 +59,46 @@ print_r ($hasil);
 ?>
     </div>
 </div>
+
+<div class="card-body">
+    <?=Multirow::build([
+        "id"    => "multi-item",
+        "title" => "List Aset",
+        "data"  => [
+            "NAMA ASET"   => [
+                "name"      => "stock_id",
+                "type"      => "select",
+                "option"    => [
+                    "data" => [
+                        "model"     => "Ms_item",
+                        "filter"    => [
+                            "item_active"   => "t",
+                        ],
+                        "column"    => ["item_id","item_name"]
+                    ]
+                ]
+            ],
+            "STOCK"  => [
+                "type"  => "group",
+                "group" => [
+                    [
+                        "name"  => "hiden",
+                        "type"  => "hidden"
+                    ],
+                    [
+                        "name"  => "inputan",
+                        "type"  => "input"
+                    ]
+                ]
+            ],
+            "JUMLAH"  => [
+                "name"  => "qty",
+                "type"  => "input"
+            ]
+        ]
+    ])?>
+</div>
+
 {!! Create::dropDown("status",[
     "data" => [
     "t" => "Aktif",

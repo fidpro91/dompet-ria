@@ -295,8 +295,9 @@ class Skor_pegawaiController extends Controller
                 ->join("detail_indikator as di2","di2.detail_id","=","mu.resiko_admin")
                 ->join("detail_indikator as di3","di3.detail_id","=","mu.emergency_id")
                 ->join("indikator as i","i.id","=","di.indikator_id")
-                ->join("indikator as i2","i2.id","=","di3.indikator_id")
-                ->select(["mu.*","di.skor as skor_infeksi","di2.skor as skor_admin","i.bobot as bobot_risk","di3.skor as skor_emergency","i2.bobot as bobot_emergency"])
+                ->join("indikator as i2","i2.id","=","di2.indikator_id")
+                ->join("indikator as i3","i3.id","=","di3.indikator_id")
+                ->select(["mu.*","di.skor as skor_infeksi","di2.skor as skor_admin","i.bobot as bobot_risk","i2.bobot as bobotrisk_admin","di3.skor as skor_emergency","i2.bobot as bobot_emergency"])
                 ->first();
                 if (!$unit) {
                     return response()->json([
@@ -305,7 +306,7 @@ class Skor_pegawaiController extends Controller
                     ]);
                 }
                 $data[$key]['unit_kerja']   = $unit->unit_name;
-                $skor=($unit->skor_infeksi+$unit->skor_admin)*$unit->bobot_risk;
+                $skor=(($unit->skor_infeksi*$unit->bobot_risk)+($unit->skor_admin*$unit->bobotrisk_admin));
                 $data[$key]['totalSkor'] = $data[$key]['totalSkor'] +$skor;
                 $data[$key]['dataSkor']['risk'] = [
                     "skor"          => $skor,

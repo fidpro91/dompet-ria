@@ -91,6 +91,15 @@ $totalError = count(Cache::get('skorError'));
         </div>
     </div>
 </div>
+{{
+    Bootstrap::modal('modal_error',[
+        "title"   => 'Detail Error  <span id="title-error"></span>',
+        "size"    => "modal-xl",
+        "body"    => [
+                        "content"   => ''
+                    ]
+    ])
+}}
 <script>
     $(document).ready(()=>{
         $(".table-data").DataTable();
