@@ -204,9 +204,9 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::get('potongan_statis/get_dataTable','Potongan_statisController@get_dataTable');
     Route::resource('potongan_statis', Potongan_statisController::class);
 
-    Route::get('ms_group/get_hak_akses','ms_groupController@get_hak_akses');
-    Route::get('ms_group/get_dataTable','ms_groupController@get_dataTable');
-    Route::resource('ms_group', ms_groupController::class);
+    Route::get('ms_group/get_hak_akses','Ms_groupController@get_hak_akses');
+    Route::get('ms_group/get_dataTable','Ms_groupController@get_dataTable');
+    Route::resource('ms_group', Ms_groupController::class);
     Route::get('kategori_potongan/get_dataTable','Kategori_potonganController@get_dataTable');
     Route::resource('kategori_potongan', Kategori_potonganController::class);
     Route::get('kategori_potongan/get_dataTable','Kategori_potonganController@get_dataTable');
