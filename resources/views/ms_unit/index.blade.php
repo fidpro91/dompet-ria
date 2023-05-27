@@ -33,6 +33,9 @@ use \fidpro\builder\Bootstrap;
                             "searchable" => "false"
                         ],
                         'unit_id','unit_name','is_active','resiko','admin_risk','emergency'
+                    ],
+                    "dataTable" => [
+                        "order" => "[[3,'ASC']]"
                     ]
                 ])
             }}
