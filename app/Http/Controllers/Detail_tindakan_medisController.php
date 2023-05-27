@@ -421,4 +421,13 @@ class Detail_tindakan_medisController extends Controller
         $table = \fidpro\builder\Bootstrap::tableData($data,["class"=>"table table-bordered"]);
         return $table;
     }
+
+    public function set_mapping_bill($id,$klasifikasi=0){
+        $post = [
+			"bill_id"		=> $id,
+			"id_jasa"		=> $klasifikasi,
+		];
+        $response = Servant::connect_simrs("POST",'mapping_billing',json_encode($post));
+        return ($response);
+    }
 }

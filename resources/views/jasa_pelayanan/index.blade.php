@@ -41,6 +41,9 @@ use \fidpro\builder\Bootstrap;
                             ]
                         ],
                         'keterangan'
+                    ],
+                    "dataTable" => [
+                        "order"   => "[[2,'desc']]"
                     ]
                 ])
             }}
