@@ -7,7 +7,6 @@ Widget::_init(["select2"]);
 ?>
 {!!Form::open(["url" => "detail_tindakan_medis/get_data_simrs","id"=>"form_download"])!!}
 <div class="card border-0 shadow rounded" id="page_detail_tindakan_medis">
-    
     <div class="card-body">
         <table class="table table-hover" id="table_bill">
             <thead>
@@ -20,27 +19,32 @@ Widget::_init(["select2"]);
                 </tr>
             </thead>
             <tbody>
-                @foreach($data as $x=>$v)
-                    <tr>
-                        <td>{{($x+1)}}</td>
-                        <td>{{($v->bill_code)}}</td>
-                        <td>{{($v->bill_name)}}</td>
-                        <td>{{($v->unit_name)}}</td>
-                        <td>
-                            {!! 
-                                Form::hidden('tindakan_id[]', $v->bill_id) 
-                            !!}
-                            {!! 
-                                Widget::select2("klasifikasi_id_$x",[
-                                    "data" => [
-                                        "model"     => "Klasifikasi_jasa",
-                                        "column"    => ["id_klasifikasi_jasa","klasifikasi_jasa"]
-                                    ]
-                                ])->render()
-                            !!}
-                        </td>
-                    </tr>
-                @endforeach
+                @if(!empty($data))
+                    @foreach($data as $x=>$v)
+                        <tr>
+                            <td>{{($x+1)}}</td>
+                            <td>{{($v->bill_code)}}</td>
+                            <td>{{($v->bill_name)}}</td>
+                            <td>{{($v->unit_name)}}</td>
+                            <td>
+                                {!! 
+                                    Form::hidden('tindakan_id[]', $v->bill_id) 
+                                !!}
+                                {!! 
+                                    Widget::select2("klasifikasi_id_$x",[
+                                        "data" => [
+                                            "model"     => "Klasifikasi_jasa",
+                                            "column"    => ["id_klasifikasi_jasa","klasifikasi_jasa"]
+                                        ],
+                                        "extra" => [
+                                            "onchange"  => "set_mapping(this,$v->bill_id)"
+                                        ]
+                                    ])->render()
+                                !!}
+                            </td>
+                        </tr>
+                    @endforeach
+                @endif
             </tbody>
         </table>
     </div>
@@ -71,5 +75,15 @@ Widget::_init(["select2"]);
             info: false,
         })
     })
+
+    function set_mapping(row,id) {
+        $.get("{{url('detail_tindakan_medis/set_mapping_bill')}}/"+id+"/"+$(row).val(),function(resp){
+            if (resp.metadata.code == "200") {
+                toastr.success(resp.metadata.message, "Message : ");
+            }else{
+                toastr.error(resp.metadata.message, "Message : ");
+            }
+        },"json");
+    }
 </script>
 @endsection

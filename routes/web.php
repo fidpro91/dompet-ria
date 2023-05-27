@@ -161,6 +161,7 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::post('detail_tindakan_medis/kroscek_tindakan', 'Detail_tindakan_medisController@kroscek_tindakan');
     Route::get('detail_tindakan_medis/download_page', 'Detail_tindakan_medisController@get_data_download');
     Route::get('detail_tindakan_medis/get_error/{type?}', 'Detail_tindakan_medisController@get_error');
+    Route::get('detail_tindakan_medis/set_mapping_bill/{id?}/{klasifikasi?}','Detail_tindakan_medisController@set_mapping_bill');
     Route::post('detail_tindakan_medis/get_data_simrs', 'Detail_tindakan_medisController@get_data_simrs');
     Route::get('detail_tindakan_medis/get_dataTable','Detail_tindakan_medisController@get_dataTable');
     Route::resource('detail_tindakan_medis', Detail_tindakan_medisController::class);
