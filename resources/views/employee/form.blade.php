@@ -26,7 +26,8 @@ Widget::_init(["select2","datepicker","inputmask"]);
                     !!}
                     {!! 
                         Create::input("emp_nip",[
-                            "value" => $employee->emp_nip,
+                            "value"     => $employee->emp_nip,
+                            "readonly"  => "true"
                         ])->render("group","KODE SIMRS");
                     !!}
                     {!! Create::input("emp_name",[
