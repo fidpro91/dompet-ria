@@ -37,12 +37,12 @@ class Ms_unitController extends Controller
     public function get_dataTable(Request $request)
     {
         $data = Ms_unit::from("ms_unit as mu")
-                ->join("detail_indikator as di","di.detail_id","=","mu.resiko_infeksi")
-                ->join("detail_indikator as di2","di2.detail_id","=","mu.resiko_admin")
-                ->join("detail_indikator as di3","di3.detail_id","=","mu.emergency_id")
-                ->join("indikator as i","i.id","=","di.indikator_id")
-                ->join("indikator as i2","i2.id","=","di2.indikator_id")
-                ->join("indikator as i3","i3.id","=","di3.indikator_id")
+                ->leftJoin("detail_indikator as di","di.detail_id","=","mu.resiko_infeksi")
+                ->leftJoin("detail_indikator as di2","di2.detail_id","=","mu.resiko_admin")
+                ->leftJoin("detail_indikator as di3","di3.detail_id","=","mu.emergency_id")
+                ->leftJoin("indikator as i","i.id","=","di.indikator_id")
+                ->leftJoin("indikator as i2","i2.id","=","di2.indikator_id")
+                ->leftJoin("indikator as i3","i3.id","=","di3.indikator_id")
                 ->selectRaw("
                     mu.unit_id,
                     mu.unit_name,
