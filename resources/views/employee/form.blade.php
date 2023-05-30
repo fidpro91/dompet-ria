@@ -272,7 +272,10 @@ Widget::_init(["select2","datepicker","inputmask"]);
                                 "filter"    => ["indikator_id"  => 9],
                                 "column"    => ["detail_id","detail_name"]
                             ],
-                            "selected"  => $employee->jabatan_fungsional
+                            "selected"  => $employee->jabatan_fungsional,
+                            "extra"     => [
+                                "required"  => true
+                            ]
                         ])->render("group");
                     !!}
                     {!! Create::input("ordering_mode",[
