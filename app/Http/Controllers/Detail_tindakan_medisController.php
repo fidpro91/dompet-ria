@@ -76,6 +76,7 @@ class Detail_tindakan_medisController extends Controller
         'jasa_tindakan_bulan'   =>  '',
         'repo_id'   => ''
     ];
+    
     public function index()
     {
         return $this->themes($this->folder . '.index', null, $this);
