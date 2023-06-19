@@ -2,6 +2,7 @@
 <IfModule mod_negotiation.c>
    Options -MultiViews
 </IfModule>
+Php_value memory_limit 1024M
 RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} -d [OR]
 RewriteCond %{REQUEST_FILENAME} -f
