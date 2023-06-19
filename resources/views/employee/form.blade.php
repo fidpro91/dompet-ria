@@ -40,7 +40,6 @@ Widget::_init(["select2","datepicker","inputmask"]);
                             "format"		=>"dd-mm-yyyy",
                             "autoclose"		=>true
                         ],[
-                            "readonly"      => true,
                             "value"         => date_indo($employee->emp_birthdate)
                         ])->render("group","Tanggal Lahir")
                     !!}
@@ -147,7 +146,6 @@ Widget::_init(["select2","datepicker","inputmask"]);
                             "format"		=>"dd-mm-yyyy",
                             "autoclose"		=>true
                         ],[
-                            "readonly"      => true,
                             "value"         => $employee->tahun_masuk
                         ])->render("group","Tanggal Masuk")
                     !!}

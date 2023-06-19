@@ -19,8 +19,6 @@ class LoginController extends Controller
                 return redirect('beranda/index');
             }elseif(Session::get('sesLogin')->group_type == 2){
                 return redirect('mobile/index');
-            }else{
-                return view('login.login');
             }
         }else{
             return view('login.login');
