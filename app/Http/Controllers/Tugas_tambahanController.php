@@ -58,18 +58,18 @@ class Tugas_tambahanController extends Controller
                 ->join("employee as e2","e2.emp_id","=","tt.emp_id")
                 ->join("detail_indikator as di","di.detail_id","=","tt.jabatan_tugas")
                 ->select([
-                    'id',
-                    'nama_tugas',
+                    'tt.id',
+                    'tt.nama_tugas',
                     'e1.emp_name as pemberi_tugas',
-                    'nomor_sk',
+                    'tt.nomor_sk',
                     'e2.emp_name as petugas',
-                    'tanggal_awal',
-                    'tanggal_akhir',
-                    'deskripsi_tugas',
+                    'tt.tanggal_awal',
+                    'tt.tanggal_akhir',
+                    'tt.deskripsi_tugas',
                     'di.detail_name as jabatan_tugas',
                     'di.skor',
-                    'file_sk',
-                    'is_active'
+                    'tt.file_sk',
+                    'tt.is_active'
                 ]);
 
         $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
