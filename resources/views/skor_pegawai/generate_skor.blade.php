@@ -67,6 +67,9 @@ Widget::_init(["select2","datepicker"]);
                         'headers': {
                             'X-CSRF-TOKEN': "<?=csrf_token()?>"
                         },
+                        'beforeSend': function() {
+                            showLoading();
+                        },
                         'type'   : 'post',
                         'url'   : '{{url("skor_pegawai/generate_skor")}}',
                         'success': function(data) {

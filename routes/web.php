@@ -8,7 +8,7 @@ use App\Http\Controllers\LoginController;
 use App\Libraries\Servant;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\SendEmail;
-
+use App\Traits\WablasTrait;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -28,7 +28,7 @@ Route::get('login/reload_capcha', [LoginController::class, 'reload_capcha']);
 Route::get('/', [LoginController::class, 'login'])->name('login');
 
 Route::group(['prefix'=>'mobile','middleware' => ['auth','client']], function(){
-    Route::get('/', [LoginController::class, 'login'])->name('login');
+    // Route::get('/', [LoginController::class, 'login'])->name('login');
     Route::get('/index', function () {
         return view("mobile.index");
     }); 
@@ -44,6 +44,18 @@ Route::group(['prefix'=>'mobile','middleware' => ['auth','client']], function(){
 });
 
 Route::get('/tes_package', function () {
+
+    $kumpulan_data=[];
+    //KIRIM WA
+    $data['phone'] = '085655448087';
+    $data['message'] = 'INI PESAN';
+    $data['secret'] = false;
+    $data['retry'] = false;
+    $data['isGroup'] = false;
+    array_push($kumpulan_data, $data);
+    WablasTrait::sendText($kumpulan_data);
+    die;
+
     $data = [
         'name' => 'Syahrizal As',
         'body' => 'Testing Kirim Email di Santri Koding'
@@ -231,6 +243,7 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::get('jasa_pelayanan/get_dataTable','Jasa_pelayananController@get_dataTable');
     Route::get('jasa_pelayanan/hasil_hitung_sementara','Jasa_pelayananController@hasil_perhitungan');
     Route::post('jasa_pelayanan/hitung_jasa','Jasa_pelayananController@hitung_jasa');
+    Route::get('jasa_pelayanan/cetak','Jasa_pelayananController@cetak_laporan');
     Route::resource('jasa_pelayanan', Jasa_pelayananController::class);
 
     Route::get('proporsi_jasa_individu/get_dataTable','Proporsi_jasa_individuController@get_dataTable');
@@ -265,8 +278,12 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::resource('users', UsersController::class);
 
     Route::get('laporan','LaporanController@index');
+    Route::get('laporan/skor_pegawai','LaporanController@skor_pegawai');
+    Route::post('laporan/show_skor_pegawai','LaporanController@get_lap_skor');
     Route::post('laporan/laporan_pajak','LaporanController@get_lap_pajak');
     Route::post('laporan/laporan_potongan','LaporanController@get_lap_potongan');
     Route::get('pencairan_jasa/get_dataTable','Pencairan_jasaController@get_dataTable');
     Route::resource('pencairan_jasa', Pencairan_jasaController::class);
 });
+            Route::get('activity_log/get_dataTable','activity_logController@get_dataTable');
+            Route::resource('activity_log', activity_logController::class);
