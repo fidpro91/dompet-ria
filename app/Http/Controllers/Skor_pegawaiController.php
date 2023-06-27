@@ -349,11 +349,11 @@ class Skor_pegawaiController extends Controller
                         $tugasSkor += ($value->skor*$value->bobot);
                         $tugasNote[]= $value->detail_name.'@'.$value->nama_tugas;
                     }
-                    /* if ($pgw->is_medis == 'f') {
-                        if ($tugasSkor>1.75) {
-                            $tugasSkor = 1.75;
+                    if ($pgw->is_medis == 'f') {
+                        if ($tugasSkor>3.5) {
+                            $tugasSkor = 3.5;
                         }
-                    } */
+                    }
                 }
                 $tugasNote = implode(',',$tugasNote);
                 $data[$key]['dataSkor']['tugas'] = [
