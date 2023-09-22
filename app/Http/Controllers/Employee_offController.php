@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Employee_off;
+use App\Models\Skor_pegawai;
 use Illuminate\Support\Facades\Validator;
 use DataTables;
 use fidpro\builder\Create;
+use Illuminate\Support\Facades\Auth;
 
 class Employee_offController extends Controller
 {
@@ -16,19 +18,13 @@ class Employee_offController extends Controller
 
     public $param = [
         'emp_id'            =>  'required',
-        'bulan_jasa_awal'   =>  'required',
-        'bulan_jasa_akhir'   =>  'required',
-        'keterangan'   =>  '',
-        'user_act'   =>  ''
+        'keterangan'        =>  '',
+        'bulan_skor'        => 'required',
+        'user_act'          => 'required',
+        'periode'           => 'required',
+        'persentase_skor'   => 'required'
     ];
-    public $defaultValue = [
-        'id'            =>  '',
-        'emp_id'        =>  '',
-        'bulan_jasa_awal'   =>  '',
-        'bulan_jasa_akhir'   =>  '',
-        'keterangan'   =>  '',
-        'user_act'   =>  ''
-    ];
+
     public function index()
     {
         return $this->themes($this->folder . '.index', null, $this);
@@ -40,11 +36,12 @@ class Employee_offController extends Controller
                 ->join("ms_unit","ms_unit.unit_id","=","employee.unit_id_kerja")
                 ->get([
                     'id',
-                    'emp_nip',
+                    'emp_no',
                     'emp_name',
                     'unit_name',
-                    'bulan_jasa_awal',
-                    'bulan_jasa_akhir',
+                    'bulan_skor',
+                    'periode',
+                    'persentase_skor',
                     'keterangan'
                 ]);
 
@@ -70,23 +67,61 @@ class Employee_offController extends Controller
 
     public function create()
     {
-        $employee_off = (object)$this->defaultValue;
+        $defaultValue =  array_fill_keys(array_keys($this->param), null);
+        $defaultValue["id"] = null;
+        $employee_off = (object) $defaultValue;
         return view($this->folder . '.form', compact('employee_off'));
     }
 
     public function store(Request $request)
     {
+        $request['user_act'] = Auth::id();
         $valid = $this->form_validasi($request->all());
         if ($valid['code'] != 200) {
             return response()->json([
                 'success' => false,
-                'message' => $this->form_validasi($request->all())['message']
+                'message' => $valid['message']
             ]);
         }
+        
+        $hitungSkor = $this->hitung_skor($request);
+        if ($hitungSkor["code"] != 200) {
+            return response()->json([
+                'success' => false,
+                'message' => $hitungSkor["message"]
+            ]);
+        }
+
         $save = Employee_off::create($valid['data']);
         return response()->json([
             'success' => true,
             'message' => 'Data Berhasil Disimpan!'
+        ]);
+    }
+
+    public function hitung_skor($request) {
+        $dataSkor = Skor_pegawai::where([
+            "bulan_update"  => $request->bulan_skor,
+            "emp_id"        => $request->emp_id
+        ]);
+
+        if (empty($dataSkor->first())) {
+            return([
+                'code' => 202,
+                'message' => "Skor pegawai bulan $request->bulan_skor tidak ditemukan"
+            ]);
+        }
+
+        //kurangi data persentasi skor
+        $valueSkor = $dataSkor->first();
+        $totalSkor = $request->persentase_skor/100*$valueSkor->total_skor;
+        $dataSkor->update([
+            "skor_koreksi"    => $totalSkor
+        ]);
+
+        return([
+            'code'      => 200,
+            'message'   => "OK"
         ]);
     }
 
@@ -97,7 +132,7 @@ class Employee_offController extends Controller
         if ($validator->fails()) {
             return [
                 "code"      => "201",
-                "message"   => $validator->errors()
+                "message"   => implode("<br>", $validator->errors()->all())
             ];
         }
         //filter
@@ -119,14 +154,23 @@ class Employee_offController extends Controller
     }
     public function update(Request $request, Employee_off $employee_off)
     {
+        $request['user_act'] = Auth::id();
         $valid = $this->form_validasi($request->all());
         if ($valid['code'] != 200) {
             return response()->json([
                 'success' => false,
-                'message' => $this->form_validasi($request->all())['message']
+                'message' => $valid['message']
             ]);
         }
 
+        $hitungSkor = $this->hitung_skor($request);
+        if ($hitungSkor["code"] != 200) {
+            return response()->json([
+                'success' => false,
+                'message' => $hitungSkor["message"]
+            ]);
+        }
+        
         $data = Employee_off::findOrFail($employee_off->id);
         $data->update($valid['data']);
         return response()->json([

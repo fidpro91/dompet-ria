@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Detail_indikator;
 use App\Models\Diklat;
 use App\Models\Employee;
+use App\Models\Employee_off;
 use App\Models\Ms_unit;
 use App\Models\Performa_index;
 use Illuminate\Http\Request;
@@ -149,6 +150,7 @@ class Skor_pegawaiController extends Controller
                     'position_index',
                     'competency_index',
                     'total_skor',
+                    'skor_koreksi',
                     'bulan_update',
                     'sp.emp_id',
                     'admin_risk_index',
@@ -243,10 +245,6 @@ class Skor_pegawaiController extends Controller
             }
 
             foreach ($pegawai as $key => $pgw) {
-                $employeeOff = DB::table("employee_off")->whereRaw("emp_id = ".$pgw->emp_id." and ('".$request->bulan_skor."' between bulan_jasa_awal and bulan_jasa_akhir)")->count();
-                if ($employeeOff>0) {
-                    continue;
-                }
                 $data[$key] = [
                     "nip"   => $pgw->emp_no,
                     "id"    => $pgw->emp_id,
@@ -389,7 +387,7 @@ class Skor_pegawaiController extends Controller
                             select e.emp_no,e.emp_name,mu.unit_name from employee e 
                             join ms_unit mu on mu.unit_id = e.unit_id_kerja
                             left join employee_off eo on e.emp_id = eo.emp_id and (
-                                '".$request->bulan_skor."' between eo.bulan_jasa_awal and eo.bulan_jasa_akhir
+                               eo.bulan_skor =  '".$request->bulan_skor."'
                             )
                             where e.emp_active = 't' and e.emp_id not in (".$emp_id.") and eo.emp_id is null
                         ");
@@ -464,6 +462,16 @@ class Skor_pegawaiController extends Controller
     public function destroy($id)
     {
         $data = Skor_pegawai::findOrFail($id);
+        $data->delete();
+        return response()->json([
+            'success' => true,
+            'message' => 'Data Berhasil Dihapus!'
+        ]);
+    }
+    
+    public function clear_all_data(Request $request)
+    {
+        $data = Skor_pegawai::where("bulan_update",$request->bulan_skor);
         $data->delete();
         return response()->json([
             'success' => true,

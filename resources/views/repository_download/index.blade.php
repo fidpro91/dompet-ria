@@ -21,10 +21,50 @@ use \fidpro\builder\Bootstrap;
                             "orderable" => "false", 
                             "searchable" => "false"
                         ],
-                        'id','download_date','download_no','bulan_jasa','bulan_pelayanan','periode_awal','periode_akhir','group_penjamin','jenis_pembayaran'
+                        'download_no',
+                        'jml_jaspel','bulan_pelayanan','periode_awal','group_penjamin','jenis_pembayaran','total_data'
                     ]
                 ])
             }}
         </div>
     </div>
 </div>
+{{
+    Bootstrap::modal('modal_copy',[
+        "title"   => 'Copy data tindakan medis',
+        "size"    => "modal-md",
+        "body"    => [
+            "content"   => function (){
+                return view("repository_download.form_copy");
+            }
+        ]
+    ])
+}}
+<script>
+    function copy_data(id) {
+        $("#modal_copy").modal("show");
+        $("#modal_copy").find("#id").val(id);
+    }
+
+    function delete_copy(id) {
+        Swal.fire({
+                title: 'Hapus data medis yang tercopy?',
+                type: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes'
+            }).then((result) => {
+                if (result.value) {
+                    showLoading();
+                    $.get("{{url('repository_download/delete_copy')}}/"+id,function(data){
+                        if (data.success) {
+                            Swal.fire("Sukses!", data.message, "success");
+                        }else{
+                            Swal.fire("Oopss...!!", data.message, "error");
+                        }
+                    },'json');
+                }
+            })
+    }
+</script>

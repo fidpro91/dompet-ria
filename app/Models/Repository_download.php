@@ -20,5 +20,16 @@ class Repository_download extends Model
         'jenis_pembayaran',
         'download_by',
         'download_no',
+        'is_used',
+        'total_data',
+        'skor_eksekutif',
+        'skor_non_eksekutif'
     ];
+
+    public function hasCopy()
+    {
+        return $this->hasMany(Jasa_pelayanan::class, 'repo_id')
+                ->select('repo_id','jaspel_id')
+                ->distinct();
+    }
 }

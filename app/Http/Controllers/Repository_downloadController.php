@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Detail_tindakan_medis;
+use App\Models\Employee;
 use App\Models\Ms_reff;
+use App\Models\Point_medis;
 use Illuminate\Http\Request;
 use App\Models\Repository_download;
 use Illuminate\Support\Facades\Validator;
 use DataTables;
 use fidpro\builder\Create;
+use Illuminate\Support\Facades\DB;
 
 class Repository_downloadController extends Controller
 {
@@ -44,19 +48,23 @@ class Repository_downloadController extends Controller
 
     public function get_dataTable(Request $request)
     {
-        $data = Repository_download::select([
-            'id',
-            'download_date',
-            'download_no',
-            'bulan_jasa',
-            'bulan_pelayanan',
-            'periode_awal',
-            'periode_akhir',
-            'group_penjamin',
-            'jenis_pembayaran',
-            'download_by',
-            'is_used'
-        ]);
+        $data = Repository_download::with('hasCopy')
+                ->select([
+                    'id',
+                    'download_date',
+                    'download_no',
+                    'bulan_jasa',
+                    'bulan_pelayanan',
+                    'periode_awal',
+                    'periode_akhir',
+                    'group_penjamin',
+                    'jenis_pembayaran',
+                    'download_by',
+                    'is_used',
+                    'total_data',
+                    'skor_eksekutif',
+                    'skor_non_eksekutif'
+                ]);
         if ($request->is_used) {
             $data->where("is_used",$request->is_used);
         }
@@ -71,8 +79,35 @@ class Repository_downloadController extends Controller
                     "data-url"  => route($this->route . ".destroy", $data->id),
                 ]);
             }
+
+            $button .= Create::action("<i class=\"fas fa-eraser\"></i>", [
+                "class"     => "btn btn-pink btn-xs",
+                "onclick"   => "delete_copy($data->id)"
+            ]);
+            
+            $button .= Create::action("<i class=\"fas fa-copy\"></i>", [
+                "class"     => "btn btn-info btn-xs",
+                "onclick"   => "copy_data($data->id)"
+            ]);
+
             return $button;
-        })->editColumn('group_penjamin',function($data){
+        })->addColumn('jml_jaspel', function ($data) {
+            return $data->hasCopy->count();
+        })
+        ->editColumn('periode_awal',function($data){
+            return date_indo($data->periode_awal).'/'.date_indo($data->periode_akhir);
+        })
+        ->editColumn('total_data',function($data){
+            $html = "<div>
+                        <b>
+                            Total Data : $data->total_data <br>
+                            Total Eksekutif : $data->skor_eksekutif <br>
+                            Total Non Eksekutif : $data->skor_non_eksekutif
+                        </b>
+                    </div>";
+            return $html;
+        })
+        ->editColumn('group_penjamin',function($data){
             $penjamin = "ALL";
             if (!empty($data->group_penjamin)) {
                 $penjamin = json_decode($data->group_penjamin,true);
@@ -86,7 +121,7 @@ class Repository_downloadController extends Controller
             }else{
                 return "Piutang";
             }
-        })->rawColumns(['action']);
+        })->rawColumns(['action','total_data']);
         return $datatables->make(true);
     }
 
@@ -94,6 +129,66 @@ class Repository_downloadController extends Controller
     {
         $repository_download = (object)$this->defaultValue;
         return view($this->folder . '.form', compact('repository_download'));
+    }
+
+    public function copy_point(Request $request)
+    {
+        $data = Detail_tindakan_medis::where("repo_id",$request->id)
+                ->whereIn("penjamin_id",$request->group_penjamin)
+                ->get();
+        if ($data) {
+            DB::beginTransaction();
+            try {
+                Point_medis::where([
+                    'repo_id'   => $request->id,
+                    'is_usage'  => 'f'
+                ])->delete();
+                foreach ($data as $key => $value) {
+                    $employee = Employee::where("emp_nip",$value->nip)->get()->first();
+                    $point = [
+                        'bulan_jaspel'      => $request->bulan_jaspel,
+                        'bulan_pelayanan'   => $value->bulan_pelayanan,
+                        'id_tindakan'       => $value->tindakan_id,
+                        'penjamin'          => $value->nama_penjamin,
+                        'skor'              => $value->skor_jasa,
+                        'is_eksekutif'      => $value->unit_vip,
+                        'employee_id'       => $employee->emp_id,
+                        'repo_id'           => $request->id,
+                        'jenis_tagihan'     => $value->jenis_tagihan,
+                        'is_copy'           => 't'
+                    ];
+                    Point_medis::create($point);
+                }
+
+                DB::table("skor_pegawai")->where("bulan_update",$request->bulan_skor)->update([
+                    "prepare_remun"         => "t",
+                    "prepare_remun_month"   => $request->bulan_jaspel
+                ]);
+
+                Repository_download::findOrFail($request->id)->update([
+                    "is_used"   => "f"
+                ]);
+
+                $resp = [
+                    "code"      => 200,
+                    "message"   => "Data berhasil dicopy"
+                ];
+                DB::commit();
+            }catch (\Exception $e) {
+                DB::rollBack();
+                $resp = [
+                    'code'      => 201,
+                    'message'   => 'Data Gagal Disimpan! <br>' . $e->getMessage()
+                ];
+            }
+        }else {
+            $resp = [
+                "code"      => 202,
+                "message"   => "Data tidak ditemukan"
+            ];
+        }
+
+        return response()->json($resp);
     }
 
     public function store(Request $request)
@@ -147,6 +242,7 @@ class Repository_downloadController extends Controller
     {
         return view($this->folder . '.form', compact('repository_download'));
     }
+
     public function update(Request $request, Repository_download $repository_download)
     {
         $valid = $this->form_validasi($request->all());
@@ -181,7 +277,21 @@ class Repository_downloadController extends Controller
                 'message' => 'Data tidak dapat dihapus karena sudah digunakan!'
             ]);
         }
+        Point_medis::where('repo_id',$id)->delete();
         $data->delete();
+        return response()->json([
+            'success' => true,
+            'message' => 'Data Berhasil Dihapus!'
+        ]);
+    }
+
+    public function delete_copy($id)
+    {
+        Point_medis::where([
+            'repo_id'   => $id,
+            'is_usage'  => 'f'
+        ])->delete();
+
         return response()->json([
             'success' => true,
             'message' => 'Data Berhasil Dihapus!'

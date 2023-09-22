@@ -15,7 +15,7 @@ class crudGenerator extends Command
      *
      * @var string
      */
-    protected $signature = 'build:crud {name} {--make="*"} {--routes=true} {--breadcrumbs=true}';
+    protected $signature = 'build:crud {name} {--make=all} {--routes=true} {--breadcrumbs=true}';
 
     /**
      * The console command description.
@@ -41,7 +41,7 @@ class crudGenerator extends Command
     }
 
     protected function generate_crud($make,$name){
-        $results = DB::select("SHOW FIELDS FROM $name");
+        $results = DB::select("SHOW FIELDS FROM ".strtolower($name)."");
         $this->Field="[\n";
         foreach($results as $x=>$rs){
             if($rs->Key == "PRI"){
@@ -50,7 +50,7 @@ class crudGenerator extends Command
             $this->Field .= "'".$rs->Field."',\n";
         }
         $this->Field = rtrim($this->Field,",\n")."\n]";
-        if ($make == '*') {
+        if ($make == 'all') {
             $this->controller($name,$results);
             $this->model($name);
             $this->view($name,$results);

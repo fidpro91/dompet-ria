@@ -28,6 +28,7 @@ class Jasa_pelayanan extends Model
         'status',
         'keterangan',
         'id_cair',
+        'repo_id',
         'no_jasa'
     ];
 }

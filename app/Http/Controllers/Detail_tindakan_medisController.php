@@ -145,42 +145,72 @@ class Detail_tindakan_medisController extends Controller
             DB::disableQueryLog();
             $input = Cache::get('inputCache'); 
             $bill = Cache::get('billCache');
-            list($tanggal1,$tanggal2) = explode('-',$input['periode_tindakan']);
-            $tanggal1 = date("Y-m-d",strtotime($tanggal1));
-            $tanggal2 = date("Y-m-d",strtotime($tanggal2));
-            $penjamin = "";
-            if (!empty($input['surety_id'])) {
-                $penjamin = json_encode($input['surety_id']);
+            if (empty($input["id"])) {
+                list($tanggal1,$tanggal2) = explode('-',$input['periode_tindakan']);
+                $tanggal1 = date("Y-m-d",strtotime($tanggal1));
+                $tanggal2 = date("Y-m-d",strtotime($tanggal2));
+                $penjamin = "";
+                if (!empty($input['surety_id'])) {
+                    $penjamin = json_encode($input['surety_id']);
+                }
+                $nomor = Servant::generate_code_transaksi([
+                    "text"	=> "DOWNLOAD/NOMOR/".date("d.m.Y"),
+                    "table"	=> "repository_download",
+                    "column"	=> "download_no",
+                    "delimiterFirst" => "/",
+                    "delimiterLast" => "/",
+                    "limit"	=> "2",
+                    "number"	=> "-1",
+                ]);
+                $repoDownload = [
+                    'download_date'     =>  date('Y-m-d'),
+                    'bulan_jasa'        =>  $input['bulan_jasa'],
+                    'bulan_pelayanan'   =>  $input['bulan_pelayanan'],
+                    'periode_awal'      =>  $tanggal1,
+                    'periode_akhir'     =>  $tanggal2,
+                    'group_penjamin'    =>  $penjamin,
+                    'jenis_pembayaran'  =>  $input['jenis_pembayaran'],
+                    'download_by'       =>  Auth::user()->id,
+                    "download_no"       => $nomor
+                ];
+                Repository_download::create($repoDownload);
+                $repoId = Repository_download::latest()->first()->id;
+                $totalEksekutif=$totalNonEksekutif=0;
+                $totalData = count($bill);
+            }else{
+                $repoId = $input["id"];
+                $totalEksekutif     = $input["skor_eksekutif"];
+                $totalNonEksekutif  = $input["skor_non_eksekutif"];
+                $totalData          = $input["total_data"] + count($bill);
             }
-            $nomor = Servant::generate_code_transaksi([
-                "text"	=> "DOWNLOAD/NOMOR/".date("d.m.Y"),
-                "table"	=> "repository_download",
-                "column"	=> "download_no",
-                "delimiterFirst" => "/",
-                "delimiterLast" => "/",
-                "limit"	=> "2",
-                "number"	=> "-1",
-            ]);
-            $repoDownload = [
-                'download_date'     =>  date('Y-m-d'),
-                'bulan_jasa'        =>  $input['bulan_jasa'],
-                'bulan_pelayanan'   =>  $input['bulan_pelayanan'],
-                'periode_awal'      =>  $tanggal1,
-                'periode_akhir'     =>  $tanggal2,
-                'group_penjamin'    =>  $penjamin,
-                'jenis_pembayaran'  =>  $input['jenis_pembayaran'],
-                'download_by'       =>  Auth::user()->id,
-                "download_no"       => $nomor
-            ];
-            Repository_download::create($repoDownload);
-            $repoId = Repository_download::latest()->first()->id;
             $bill = array_map(function ($arr) use ($repoId) {
 				return $arr + ['repo_id' => $repoId];
 			}, $bill);
             foreach (array_chunk($bill,1000) as $t)  
             {
-                DB::table('Detail_tindakan_medis')->insert($t); 
+                foreach ($t as $key => $value) {
+                    if ($value["unit_vip"] == 't' && $value["jenis_tagihan"] == 1) {
+                        $totalEksekutif += $value["skor_jasa"];
+                    }else{
+                        $totalNonEksekutif += $value["skor_jasa"];
+                    }
+                    Detail_tindakan_medis::create($value);
+                } 
             }
+
+            Repository_download::find($repoId)->update([
+                "skor_eksekutif"        => $totalEksekutif,
+                "total_data"            => $totalData,
+                "skor_non_eksekutif"    => $totalNonEksekutif
+            ]);
+
+            /* $resp = [
+                'success' => false,
+                'message' => 'Data Berhasil Disimpan!'
+            ];
+            DB::rollBack();
+            return $resp;
+            die; */
             // DB::table("Detail_tindakan_medis")->insert();
             /* $skor = Cache::get('skorCache');
             DB::table('skor_per_bulan')->where([
@@ -189,17 +219,23 @@ class Detail_tindakan_medisController extends Controller
                 "is_used"			=> 'f'
             ])->delete();
             DB::table('skor_per_bulan')->insert($skor); */
-            $dataSkor = DB::select("
+            /* $dataSkor = DB::select("
                 select sp.* from skor_pegawai sp
                 left join employee_off eo on sp.emp_id = eo.emp_id and ('".$input['bulan_pelayanan']."' between eo.bulan_jasa_awal and eo.bulan_jasa_akhir)
                 WHERE sp.bulan_update = '".$input['bulan_pelayanan']."' AND eo.emp_id IS NULL
             ");
+            
             foreach ($dataSkor as $key => $value) {
                 DB::table("skor_pegawai")->where("id",$value->id)->update([
                     "prepare_remun"         => "t",
                     "prepare_remun_month"   => $input['bulan_jasa']
                 ]);
-            }
+            } */
+
+            /* DB::table("skor_pegawai")->where("bulan_update",$input['bulan_pelayanan'])->update([
+                "prepare_remun"         => "t",
+                "prepare_remun_month"   => $input['bulan_jasa']
+            ]); */
             $resp = [
                 'success' => true,
                 'message' => 'Data Berhasil Disimpan!'
@@ -209,7 +245,7 @@ class Detail_tindakan_medisController extends Controller
             DB::rollback();
             $resp = [
                 'success' => false,
-                'message' => 'Data gagal disimpan! <br>'.$e->getMessage()
+                'message' => 'Data gagal disimpan! <br> '.$e->getMessage().$e->getLine()
             ];
         }
         return response()->json($resp);
@@ -288,15 +324,22 @@ class Detail_tindakan_medisController extends Controller
 	{
         ini_set('max_execution_time', -1);
         ini_set('memory_limit', -1);
-        $input = (array) $request->all();
+        if ($request->repo_id) {
+            $input = Repository_download::findOrFail($request->repo_id)->toArray();
+            $tanggal1 = $input["periode_awal"];
+            $tanggal2 = $input["periode_akhir"];
+            $penjamin = json_decode($input["group_penjamin"],true);
+        }else{
+            $input = (array) $request->all();
+            list($tanggal1,$tanggal2) = explode('-',$input['periode_tindakan']);
+            $penjamin = $request->surety_id;
+        }
         Cache::forget('inputCache');
         Cache::forget('billCache');
         Cache::forget('skorCache');
         Cache::forget('employeeOffCache');
         Cache::forget('errorDownloadCache');
         Cache::add('inputCache', $input, 6000);
-        list($tanggal1,$tanggal2) = explode('-',$input['periode_tindakan']);
-		$penjamin = $request->surety_id;
 		$filter = [
 			"tanggalawal"		=> date("Y-m-d",strtotime($tanggal1)),
 			"tanggalakhir"		=> date("Y-m-d",strtotime($tanggal2)),
@@ -360,8 +403,7 @@ class Detail_tindakan_medisController extends Controller
             Cache::add('billCache', $tindakanMedis, 6000);
             $dataSkor = DB::select("
                 select sp.* from skor_pegawai sp
-                left join employee_off eo on sp.emp_id = eo.emp_id and ('".$input['bulan_pelayanan']."' between eo.bulan_jasa_awal and eo.bulan_jasa_akhir)
-                WHERE sp.bulan_update = '".$input['bulan_pelayanan']."' AND eo.emp_id IS NULL
+                WHERE sp.bulan_update = '".$input['bulan_pelayanan']."'
             ");
             if ($dataSkor) {
                 $skor=[];
@@ -375,11 +417,16 @@ class Detail_tindakan_medisController extends Controller
                 }
                 Cache::add('skorCache', $skor, 6000);
                 Cache::remember('employeeOffCache', 6000, function () use($input){
-                    return DB::table("employee_off as eo")
-                    ->join("employee as e","e.emp_id","=","eo.emp_id")
+                    return DB::table("employee as e")
+                    // ->join("skor_pegawai as sp","sp.emp_id","=","e.emp_id")
+                    ->leftJoin('skor_pegawai as sp', function($join) use($input) {
+                        $join->on('sp.emp_id', '=', 'e.emp_id');
+                        $join->where("sp.bulan_update","=",$input['bulan_pelayanan']);
+                    })
                     ->join("ms_unit as mu","e.unit_id_kerja","=","mu.unit_id")
                     ->select(["e.emp_nip","e.emp_name","mu.unit_name as unit_kerja"])
-                    ->whereRaw("('".$input['bulan_pelayanan']."' between bulan_jasa_awal and bulan_jasa_akhir)")->get();
+                    ->whereRaw("sp.emp_id is null AND e.emp_active = 't'")
+                    ->get();
                 });
             }else{
                 $resp = [

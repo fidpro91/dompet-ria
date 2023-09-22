@@ -2,7 +2,7 @@
 
 use \fidpro\builder\Create;
 use \fidpro\builder\Widget;
-Widget::_init(["select2","datepicker"]);
+Widget::_init(["select2","datepicker","daterangepicker"]);
 ?>
 {!! Form::open(['route' => 'employee_off.store','id'=>'form_employee_off']) !!}
 <div class="card-body">
@@ -17,7 +17,7 @@ Widget::_init(["select2","datepicker"]);
         ])->render("group","Nama Pegawai")
     !!}
     {!! 
-        Widget::datepicker("bulan_jasa_awal",
+        Widget::datepicker("bulan_skor",
         [
             "format"		=>"mm-yyyy",
             "viewMode"		=> "year",
@@ -26,26 +26,18 @@ Widget::_init(["select2","datepicker"]);
         ],[
             "required"      => true,
             "readonly"      => true,
-            "value"         => date('m-Y')
-        ])->render("group","Bulan Awal Off")
+            "value"         => ($employee_off->bulan_skor??date('m-Y'))
+        ])->render("group","Bulan Skor Pegawai")
     !!}
+    {!!Widget::daterangePicker("periode")->render("group")!!}
     {!! 
-        Widget::datepicker("bulan_jasa_akhir",
-        [
-            "format"		=>"mm-yyyy",
-            "viewMode"		=> "year",
-            "minViewMode"	=> "year",
-            "autoclose"		=>true
-        ],[
-            "required"      => true,
-            "readonly"      => true,
-            "value"         => date('m-Y')
-        ])->render("group","Bulan Akhir Off")
+        Create::input("persentase_skor",[
+            "value" => $employee_off->persentase_skor
+        ])->render("group");
     !!}
     {!! 
         Create::input("keterangan",[
-        "value" => $employee_off->keterangan,
-
+            "value" => $employee_off->keterangan
         ])->render("group");
     !!}
 </div>
@@ -75,9 +67,13 @@ Widget::_init(["select2","datepicker"]);
                             'data': $('#form_employee_off').serialize(),
                             'dataType': 'json',
                             'success': function(data) {
-                                Swal.fire("Sukses!", data.message, "success").then(() => {
-                                    location.reload();
-                                });
+                                if (data.success) {
+                                    Swal.fire("Sukses!", data.message, "success").then(() => {
+                                        location.reload();
+                                    });
+                                }else{
+                                    Swal.fire("Oopss..!!!", data.message, "error");
+                                }
                             }
                         });
                     }

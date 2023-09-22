@@ -2,6 +2,7 @@
 @section('content')
 <?php
 use \fidpro\builder\Bootstrap;
+use \fidpro\builder\Create;
 if(!Cache::has('cacheJasaMerger')){
     $dataJasaEks = Cache::get('cacheEksekutif');
     $dataJNonmedis = Cache::get('cacheJasaProporsi');
@@ -74,8 +75,9 @@ $allJasa=Cache::get("cacheJasaMerger");
         </table>
     </div>
     <div class="card-footer text-center">
-        {!! Form::button('Save',['class' => 'btn btn-success btn-save']); !!}
-        {!! Form::button('Cancel',['class' => 'btn btn-warning', 'onclick' => 'history.back()']); !!}
+        {!! Form::button('Simpan Data Jasa',['class' => 'btn btn-success btn-save']); !!}
+        {!! Form::button('Finish Data Jasa',['class' => 'btn btn-primary', 'onclick' => 'finish_jaspel()']); !!}
+        {!! Form::button('Cancel',['class' => 'btn btn-warning', 'onclick' => 'delete_jaspel()']); !!}
     </div>
 </div>
 <div class="card border-0 shadow rounded">
@@ -86,10 +88,19 @@ $allJasa=Cache::get("cacheJasaMerger");
                         $tabs=[];
                         foreach ($allJasa as $key => $value) {
                             $dataJasa = $value['detail'] ?? null;
+                            $button = Create::action("<i class=\"fas fa-check\"></i> Checkout", [
+                                "class"     => "btn btn-info",
+                                "onclick"   => "checkout_proporsi(".$value['komponen_id'].")"
+                            ]);
                             $tabs[$value['komponen_nama']] = [
                                 "href"      => "tab_".$value['komponen_id'],
-                                "content"   => function() use($dataJasa,$value){
+                                "content"   => function() use($dataJasa,$value,$button){
                                     $html = '
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            '.$button.'
+                                        </div>
+                                    </div>
                                     <div class="row">
                                         <div class="col-md-4">
                                             <span>TOTAL SKOR / PENERIMA :</span>
@@ -120,6 +131,7 @@ $allJasa=Cache::get("cacheJasaMerger");
     </div>
 </div>
 <script>
+    var jaspelId;
     $(document).ready(()=>{
         $(".table-detail").DataTable({
             paging: false,
@@ -156,7 +168,8 @@ $allJasa=Cache::get("cacheJasaMerger");
                         'success': function(data) {
                             if (data.success) {
                                 Swal.fire("Sukses!", data.message, "success").then(() => {
-                                    location.href = "{{url('jasa_pelayanan/hasil_hitung_sementara')}}";
+                                    jaspelId = data.response.jaspel_id;
+                                    sessionStorage.setItem('jaspelId', data.response.jaspel_id);
                                 });
                             }else{
                                 Swal.fire("Oopss...!!", data.message, "error");
@@ -168,5 +181,82 @@ $allJasa=Cache::get("cacheJasaMerger");
             })
         })
     })
+
+    function checkout_proporsi(komponen_id) {
+        jaspelId = sessionStorage.getItem('jaspelId');
+        showLoading();
+        $.get("{{url('jasa_pelayanan/simpan_per_proporsi')}}/"+jaspelId+"/"+komponen_id,function(resp){
+            if (resp.code == 200) {
+                Swal.fire("Sukses!", resp.message, "success").then(() => {
+                    
+                });
+            }else{
+                Swal.fire("Oopss...!!", data.message, "error");
+            }
+        },'json')
+    }
+
+    function delete_jaspel() {
+        Swal.fire({
+                title: 'Batal perhitungan jasa pelayan?',
+                type: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes'
+            }).then((result) => {
+                if (result.value) {
+                    showLoading();
+                    $.get("{{url('jasa_pelayanan/remove_jaspel')}}/"+jaspelId,function(data){
+                        if (data.success) {
+                            Swal.fire("Sukses!", data.message, "success").then(() => {
+                                location.reload();
+                            });
+                        }else{
+                            Swal.fire("Oopss...!!", data.message, "error");
+                        }
+                    },'json');
+                }
+            })
+    }
+
+    function finish_jaspel() {
+        jaspelId = sessionStorage.getItem('jaspelId');
+        Swal.fire({
+                title: 'Selesai perhitungan jasa pelayan?',
+                type: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes'
+            }).then((result) => {
+                if (result.value) {
+                    $.ajax({
+                        'dataType': 'json',
+                        'type'  : 'post',
+                        'headers': {
+                            'X-CSRF-TOKEN': "<?= csrf_token() ?>"
+                        },
+                        'data' : {
+                            'jaspel_id' : jaspelId
+                        },
+                        'beforeSend': function() {
+                            showLoading();
+                        },
+                        'url'   : '{{url("jasa_pelayanan/finish_jaspel")}}',
+                        'success': function(data) {
+                            if (data.code == 200) {
+                                sessionStorage.removeItem('jaspelId');
+                                Swal.fire("Sukses!", data.message, "success").then(() => {
+                                    location.href = "{{route('jasa_pelayanan.index')}}"
+                                });
+                            }else{
+                                Swal.fire("Oopss...!!", data.message, "error");
+                            }
+                        }
+                    });
+                }
+            })
+    }
 </script>
 @endsection

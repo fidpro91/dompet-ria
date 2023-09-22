@@ -187,6 +187,7 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::resource('komponen_jasa', Komponen_jasaController::class);
 
     Route::get('skor_pegawai/error_skor','Skor_pegawaiController@error_skor');
+    Route::post('skor_pegawai/clear_all_data','Skor_pegawaiController@clear_all_data');
     Route::post('skor_pegawai/save_skor','Skor_pegawaiController@save_skor');
     Route::post('skor_pegawai/generate_skor','Skor_pegawaiController@generate_skor');
     Route::get('skor_pegawai/hasil_skor','Skor_pegawaiController@hasil_skor');
@@ -216,13 +217,16 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::get('performa_index/get_dataTable','Performa_indexController@get_dataTable');
     Route::resource('performa_index', Performa_indexController::class);
     
+    Route::get('jasa_pelayanan/simpan_per_proporsi/{jaspel_id?}/{komponen_id?}',"Jasa_pelayananController@simpan_per_proporsi");
     Route::get('jasa_pelayanan/get_dataTableEmployee','Jasa_pelayananController@get_dataTableEmployee');
     Route::get('jasa_pelayanan/excel/{jaspel_id?}','Jasa_pelayananController@export_excel');
     Route::get('jasa_pelayanan/print/{jaspel_id?}','Jasa_pelayananController@print_pdf');
+    Route::get('jasa_pelayanan/remove_jaspel/{jaspel_id?}','Jasa_pelayananController@remove_jaspel');
     Route::get('jasa_pelayanan/list','Jasa_pelayananController@list');
     Route::get('jasa_pelayanan/get_dataTable','Jasa_pelayananController@get_dataTable');
     Route::get('jasa_pelayanan/hasil_hitung_sementara','Jasa_pelayananController@hasil_perhitungan');
     Route::post('jasa_pelayanan/hitung_jasa','Jasa_pelayananController@hitung_jasa');
+    Route::post('jasa_pelayanan/finish_jaspel','Jasa_pelayananController@finish_jaspel');
     Route::resource('jasa_pelayanan', Jasa_pelayananController::class);
 
     Route::get('proporsi_jasa_individu/get_dataTable','Proporsi_jasa_individuController@get_dataTable');
@@ -231,8 +235,12 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::post('proporsi_jasa_individu/insert_left','Proporsi_jasa_individuController@insert_left');
     Route::post('proporsi_jasa_individu/copy_data','Proporsi_jasa_individuController@copy_data');
     Route::resource('proporsi_jasa_individu', Proporsi_jasa_individuController::class);
+
+    Route::post('repository_download/copy_point','Repository_downloadController@copy_point');
     Route::get('repository_download/get_dataTable','Repository_downloadController@get_dataTable');
+    Route::get('repository_download/delete_copy/{id?}','Repository_downloadController@delete_copy');
     Route::resource('repository_download', Repository_downloadController::class);
+    
     Route::get('komponen_jasa_sistem/get_dataTable','Komponen_jasa_sistemController@get_dataTable');
     Route::resource('komponen_jasa_sistem', Komponen_jasa_sistemController::class);
 
