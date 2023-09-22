@@ -11,15 +11,19 @@ use \fidpro\builder\Bootstrap;
                     "url"   => "repository_download/get_dataTable",
                     "raw"   => [
                         '#'     => [
-                            "data" => "action", 
-                            "name" => "action", 
-                            "orderable" => "false", 
-                            "searchable" => "false"
+                            "data"      => "action", 
+                            "name"      => "action",
+                            "settings"  => [
+                                "orderable" => "false", 
+                                "searchable" => "false"
+                            ]
                         ],
                         'no'    => [
                             "data" => "DT_RowIndex",
-                            "orderable" => "false", 
-                            "searchable" => "false"
+                            "settings"  => [
+                                "orderable" => "false", 
+                                "searchable" => "false"
+                            ]
                         ],
                         'download_no',
                         'jml_jaspel','bulan_pelayanan','periode_awal','group_penjamin','jenis_pembayaran','total_data'

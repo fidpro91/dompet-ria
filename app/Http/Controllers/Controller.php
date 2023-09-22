@@ -8,6 +8,7 @@ use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Session;
 
 class Controller extends BaseController
 {
@@ -22,11 +23,12 @@ class Controller extends BaseController
         }
         $data['pageName']   = ucwords(str_replace('_',' ',$page));
         $menu='';
-        if(!Cache::has('menuCache')){
+        if(!Session::has('loginMenu')){
             $menu = Servant::get_menu();
-            Cache::add('menuCache', $menu, 60);
+            Session::put("loginMenu",$menu);
+            // Cache::add('menuCache', $menu, 60);
         }
-        $menu = Cache::store('file')->get('menuCache');
+        $menu = Session::get('loginMenu');
         $data['menu']       = $menu;
         return view($view,$data);
     }

@@ -26,7 +26,8 @@ Widget::_init(["select2","datepicker","inputmask"]);
                     !!}
                     {!! 
                         Create::input("emp_nip",[
-                            "value" => $employee->emp_nip,
+                            "value"     => $employee->emp_nip,
+                            "readonly"  => "true"
                         ])->render("group","KODE SIMRS");
                     !!}
                     {!! Create::input("emp_name",[
@@ -39,7 +40,6 @@ Widget::_init(["select2","datepicker","inputmask"]);
                             "format"		=>"dd-mm-yyyy",
                             "autoclose"		=>true
                         ],[
-                            "readonly"      => true,
                             "value"         => date_indo($employee->emp_birthdate)
                         ])->render("group","Tanggal Lahir")
                     !!}
@@ -146,7 +146,6 @@ Widget::_init(["select2","datepicker","inputmask"]);
                             "format"		=>"dd-mm-yyyy",
                             "autoclose"		=>true
                         ],[
-                            "readonly"      => true,
                             "value"         => $employee->tahun_masuk
                         ])->render("group","Tanggal Masuk")
                     !!}
@@ -271,7 +270,10 @@ Widget::_init(["select2","datepicker","inputmask"]);
                                 "filter"    => ["indikator_id"  => 9],
                                 "column"    => ["detail_id","detail_name"]
                             ],
-                            "selected"  => $employee->jabatan_fungsional
+                            "selected"  => $employee->jabatan_fungsional,
+                            "extra"     => [
+                                "required"  => true
+                            ]
                         ])->render("group");
                     !!}
                     {!! Create::input("ordering_mode",[

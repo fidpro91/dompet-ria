@@ -52,13 +52,13 @@ class crudGenerator extends Command
         $this->Field = rtrim($this->Field,",\n")."\n]";
         if ($make == 'all') {
             $this->controller($name,$results);
-            $this->model($name);
-            $this->view($name,$results);
-        }elseif ($make == 'controller') {
-            $this->controller($name,$results);
         }elseif ($make == 'model') {
             $this->model($name);
         }elseif ($make == 'view') {
+            $this->view($name,$results);
+        }else{
+            $this->controller($name,$results);
+            $this->model($name);
             $this->view($name,$results);
         }
     }
@@ -180,7 +180,6 @@ class crudGenerator extends Command
         ");
 
         $this->generate_crud($make,$name);
-
         if ($routes == 'true') {
             File::append(base_path('routes/web.php'),
             "

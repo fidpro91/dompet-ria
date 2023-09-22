@@ -25,13 +25,14 @@ class Create
         $defaultAttr = [
             "class"         => self::$className,
             "type"          => "text",
+            "name"          => "$name", 
             "placeholder"   => Str::ucfirst(Str::replace('_', ' ', $name))
         ];
         if(is_array($attr)){
             $defaultAttr = array_merge($defaultAttr,$attr);
         }
         $properti = self::array_to_attr($defaultAttr);
-        $form = "<input id=\"$name\" name = \"$name\" $properti></input>";
+        $form = "<input id=\"$name\" $properti></input>";
         return self::_set_output($form,$name);
     }
 

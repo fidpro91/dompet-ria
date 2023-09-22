@@ -51,39 +51,39 @@ use \fidpro\builder\Bootstrap;
                 },
                 {
                     data: 'nomor_sk',
-                    name: 'nomor_sk',
+                    name: 'tt.nomor_sk',
                 },
                 {
                     data: 'nama_tugas',
-                    name: 'nama_tugas',
+                    name: 'tt.nama_tugas',
                 },
                 {
                     data: 'pemberi_tugas',
-                    name: 'pemberi_tugas',
+                    name: 'e1.emp_name',
                 },
                 {
                     data: 'petugas',
-                    name: 'petugas',
+                    name: 'e2.emp_name',
                 },
                 {
                     data: 'tanggal_awal',
-                    name: 'tanggal_awal',
+                    name: 'tt.tanggal_awal',
                 },
                 {
                     data: 'tanggal_akhir',
-                    name: 'tanggal_akhir',
+                    name: 'tt.tanggal_akhir',
                 },
                 {
                     data: 'deskripsi_tugas',
-                    name: 'deskripsi_tugas',
+                    name: 'tt.deskripsi_tugas',
                 },
                 {
                     data: 'jabatan_tugas',
-                    name: 'jabatan_tugas',
+                    name: 'di.detail_name',
                 },
                 {
                     data: 'skor',
-                    name: 'skor',
+                    name: 'di.skor',
                 }
             ]
         });

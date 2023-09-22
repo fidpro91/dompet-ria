@@ -102,22 +102,31 @@ class Jasa_pelayananController extends Controller
         }
 
         $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
-            $button = Create::link("<i class=\"far fa-file-pdf\"></i>", [
+            /* $button = Create::link("<i class=\"far fa-file-pdf\"></i>", [
                 "class"     => "btn btn-info btn-xs",
                 "href"      => url("jasa_pelayanan/print/$data->jaspel_id"),
                 "target"    => "_blank"
-            ]);
-            $button .= Create::link("<i class=\"far fa-file-excel\"></i>", [
+            ]); */
+            $button = Create::link("<i class=\"far fa-file-excel\"></i>", [
                 "class"     => "btn btn-success btn-xs",
                 "href"      => url("jasa_pelayanan/excel/$data->jaspel_id"),
             ]);
-            $button .= Create::action("<i class=\"fas fa-trash\"></i>", [
-                "class"     => "btn btn-danger btn-xs",
-                "onclick"   => "delete_row(this)",
-                "x-token"   => csrf_token(),
-                "data-url"  => route($this->route . ".destroy", $data->jaspel_id),
+            $button .= Create::action("<i class=\"fas fa-print\"></i>", [
+                "class"     => "btn btn-secondary btn-xs",
+                "onclick"   => "open_print(".$data->jaspel_id.")"
             ]);
+            if (!$data->id_cair) {
+                $button .= Create::action("<i class=\"fas fa-trash\"></i>", [
+                    "class"     => "btn btn-danger btn-xs",
+                    "onclick"   => "delete_row(this)",
+                    "x-token"   => csrf_token(),
+                    "data-url"  => route($this->route . ".destroy", $data->jaspel_id),
+                ]);
+            }
             return $button;
+        })->editColumn("jaspel_bulan",function($data){
+            $jaspelBulan = get_namaBulan($data->jaspel_bulan).' '.$data->jaspel_tahun;
+            return $jaspelBulan;
         })->addColumn('penjamin', function ($data) {
             $repo = DB::table('repository_download')->where("id",$data->repo_id)->get();
             $groupPenjamin=[];
@@ -133,6 +142,17 @@ class Jasa_pelayananController extends Controller
             return $groupPenjamin;
         })->rawColumns(['action','penjamin']);
         return $datatables->make(true);
+    }
+
+    public function cetak_laporan(Request $request)
+    {
+        if ($request->jenis_report == 1) {
+            return $this->print_pdf($request->jaspel_id);
+        }elseif ($request->jenis_report == 2) {
+            return $this->print_struktural($request->jaspel_id);
+        }elseif ($request->jenis_report == 3) {
+            return $this->print_medis($request->jaspel_id);
+        }
     }
 
     public function export_excel($id)
@@ -167,6 +187,39 @@ class Jasa_pelayananController extends Controller
         // $pdf = PDF::loadview("jasa_pelayanan.printout.print_jaspel",compact('data'));
         // return $pdf->download('laporan-pegawai.pdf');
         // return $pdf->stream();
+        
+    }
+
+    public function print_struktural($id)
+    {
+        $data = DB::select("
+            SELECT e.emp_no,e.emp_name,mu.unit_name,
+            json_arrayagg(json_object('id',ks.id,'komponen',ks.nama_komponen,'skor',jm.skor,'nominal',jm.nominal_terima))detail
+            FROM jp_byname_medis jm
+            join employee e on e.emp_id = jm.emp_id
+            JOIN ms_unit mu ON e.unit_id_kerja = mu.unit_id
+            JOIN komponen_jasa_sistem ks ON ks.id = jm.komponen_id
+            where jm.jaspel_id = '$id' AND e.jabatan_type = 17 and jm.komponen_id in (3,4,5)
+            GROUP BY e.emp_no,e.emp_name,mu.unit_name
+        ");
+        return view("jasa_pelayanan.printout.print_struktural",compact('data'));
+        
+    }
+
+    public function print_medis($id)
+    {
+        $data = DB::select("
+            SELECT e.emp_no,e.emp_name,mu.unit_name,
+            json_arrayagg(json_object('id',ks.id,'komponen',ks.nama_komponen,'skor',jm.skor,'nominal',jm.nominal_terima))detail
+            FROM jp_byname_medis jm
+            join employee e on e.emp_id = jm.emp_id
+            JOIN ms_unit mu ON e.unit_id_kerja = mu.unit_id
+            JOIN komponen_jasa_sistem ks ON ks.id = jm.komponen_id
+            where jm.jaspel_id = '$id' AND e.is_medis = 't' and jm.komponen_id in (7,8,9)
+            GROUP BY e.emp_no,e.emp_name,mu.unit_name
+            ORDER BY e.emp_name
+        ");
+        return view("jasa_pelayanan.printout.print_medis",compact('data'));
         
     }
 

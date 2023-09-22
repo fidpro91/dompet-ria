@@ -23,16 +23,55 @@ use \fidpro\builder\Bootstrap;
                     "raw"   => [
                         '#'     => [
                             "data" => "action", 
-                            "name" => "action", 
-                            "orderable" => "false", 
-                            "searchable" => "false"
+                            "name" => "action",
+                            "settings"  => [
+                                "orderable" => "false", 
+                                "searchable" => "false"
+                            ]
                         ],
                         'no'    => [
                             "data" => "DT_RowIndex",
-                            "orderable" => "false", 
-                            "searchable" => "false"
+                            "settings"  => [
+                                "orderable" => "false", 
+                                "searchable" => "false"
+                            ]
                         ],
-                        'unit_id','unit_name','is_active','resiko_infeksi','resiko_admin','emergency_id'
+                        'unit_name' => [
+                            "data"  => "unit_name",
+                            "name"  => "mu.unit_name"
+                        ],
+                        'is_active' => [
+                            "data"  => "is_active",
+                            "name"  => "mu.is_active",
+                            "settings"  => [
+                                "orderable" => "false", 
+                                "searchable" => "false"
+                            ]
+                        ],
+                        'resiko'  => [
+                            "data"  => "resiko",
+                            "settings"  => [
+                                "orderable" => "false", 
+                                "searchable" => "false"
+                            ]
+                        ],
+                        'admin_risk' => [
+                            "data"  => "admin_risk",
+                            "settings"  => [
+                                "orderable" => "false", 
+                                "searchable" => "false"
+                            ]
+                        ],
+                        'emergency' => [
+                            "data"  => "emergency",
+                            "settings"  => [
+                                "orderable" => "false", 
+                                "searchable" => "false"
+                            ]
+                        ]
+                    ],
+                    "dataTable" => [
+                        "order" => "[[2,'ASC']]"
                     ]
                 ])
             }}

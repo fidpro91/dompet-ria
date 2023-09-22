@@ -13,52 +13,59 @@ class Ms_unitController extends Controller
     public $model   = "Ms_unit";
     public $folder  = "ms_unit";
     public $route   = "ms_unit";
-    
+
     public $param = [
-'unit_name'   =>  'required',
-'is_active'   =>  'required',
-'resiko_infeksi'   =>  'required',
-'resiko_admin'   =>  'required',
-'emergency_id'   =>  'required'
-];
+        'unit_name'   =>  'required',
+        'is_active'   =>  'required',
+        'resiko_infeksi'   =>  'required',
+        'resiko_admin'   =>  'required',
+        'emergency_id'   =>  'required'
+    ];
     public $defaultValue = [
-'unit_id'   =>  '',
-'unit_name'   =>  '',
-'is_active'   =>  '',
-'resiko_infeksi'   =>  '',
-'resiko_admin'   =>  '',
-'emergency_id'   =>  ''
-];
+        'unit_id'   =>  '',
+        'unit_name'   =>  '',
+        'is_active'   =>  '',
+        'resiko_infeksi'   =>  '',
+        'resiko_admin'   =>  '',
+        'emergency_id'   =>  ''
+    ];
     public function index()
     {
-        return $this->themes($this->folder . '.index',null,$this);
+        return $this->themes($this->folder . '.index', null, $this);
     }
 
     public function get_dataTable(Request $request)
     {
-        $data = Ms_unit::select([
-'unit_id',
-'unit_name',
-'is_active',
-'resiko_infeksi',
-'resiko_admin',
-'emergency_id'
-]);
+        $data = Ms_unit::from("ms_unit as mu")
+                ->leftJoin("detail_indikator as di","di.detail_id","=","mu.resiko_infeksi")
+                ->leftJoin("detail_indikator as di2","di2.detail_id","=","mu.resiko_admin")
+                ->leftJoin("detail_indikator as di3","di3.detail_id","=","mu.emergency_id")
+                ->leftJoin("indikator as i","i.id","=","di.indikator_id")
+                ->leftJoin("indikator as i2","i2.id","=","di2.indikator_id")
+                ->leftJoin("indikator as i3","i3.id","=","di3.indikator_id")
+                ->selectRaw("
+                    mu.unit_id,
+                    mu.unit_name,
+                    mu.is_active,
+                    (di.skor*i.bobot) as resiko,
+                    (di2.skor*i2.bobot) as admin_risk,
+                    (di3.skor*i3.bobot) as emergency
+                ");
 
         $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
-            $button = Create::action("<i class=\"fas fa-edit\"></i>",[
+            $button = Create::action("<i class=\"fas fa-edit\"></i>", [
                 "class"     => "btn btn-primary btn-xs",
                 "onclick"   => "set_edit(this)",
-                "data-url"  => route($this->route.".edit",$data->unit_id),
-                "ajax-url"  => route($this->route.'.update',$data->unit_id),
+                "data-url"  => route($this->route . ".edit", $data->unit_id),
+                "ajax-url"  => route($this->route . '.update', $data->unit_id),
                 "data-target"  => "page_ms_unit"
             ]);
-            
-            $button .= Create::action("<i class=\"fas fa-trash\"></i>",[
+
+            $button .= Create::action("<i class=\"fas fa-trash\"></i>", [
                 "class"     => "btn btn-danger btn-xs",
                 "onclick"   => "delete_row(this)",
                 "x-token"   => csrf_token(),
-                "data-url"  => route($this->route.".destroy",$data->unit_id),
+                "data-url"  => route($this->route . ".destroy", $data->unit_id),
             ]);
             return $button;
         })->rawColumns(['action']);
@@ -68,13 +75,13 @@ class Ms_unitController extends Controller
     public function create()
     {
         $ms_unit = (object)$this->defaultValue;
-        return view($this->folder . '.form',compact('ms_unit'));
+        return view($this->folder . '.form', compact('ms_unit'));
     }
 
     public function store(Request $request)
     {
         $valid = $this->form_validasi($request->all());
-        if($valid['code'] != 200){
+        if ($valid['code'] != 200) {
             return response()->json([
                 'success' => false,
                 'message' => $valid['message']
@@ -86,16 +93,17 @@ class Ms_unitController extends Controller
                 'success' => true,
                 'message' => 'Data Berhasil Disimpan!'
             ];
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             $resp = [
                 'success' => false,
-                'message' => 'Data Gagal Disimpan! <br>'.$e->getMessage()
+                'message' => 'Data Gagal Disimpan! <br>' . $e->getMessage()
             ];
         }
         return response()->json($resp);
     }
 
-    private function form_validasi($data){
+    private function form_validasi($data)
+    {
         $validator = Validator::make($data, $this->param);
         //check if validation fails
         if ($validator->fails()) {
@@ -124,7 +132,7 @@ class Ms_unitController extends Controller
     public function update(Request $request, Ms_unit $ms_unit)
     {
         $valid = $this->form_validasi($request->all());
-        if($valid['code'] != 200){
+        if ($valid['code'] != 200) {
             return response()->json([
                 'success' => false,
                 'message' => $this->form_validasi($request->all())['message']
@@ -137,10 +145,10 @@ class Ms_unitController extends Controller
                 'success' => true,
                 'message' => 'Data Berhasil Diupdate!'
             ];
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             $resp = [
                 'success' => false,
-                'message' => 'Data Gagal Diupdate! <br>'.$e->getMessage()
+                'message' => 'Data Gagal Diupdate! <br>' . $e->getMessage()
             ];
         }
         return response()->json($resp);

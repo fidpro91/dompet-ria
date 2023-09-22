@@ -92,7 +92,8 @@ class Skor_pegawaiController extends Controller
                     'unit_risk_index'   =>  $value['dataSkor']['risk']['skor'],
                     'position_index'   =>  ($value['dataSkor']['position']['skor']+$value['dataSkor']['tugas']['skor']),
                     'competency_index'   =>  $value['dataSkor']['performa']['skor'],
-                    'total_skor'   =>  $value['totalSkor'],
+                    'total_skor'        =>  $value['totalSkor'],
+                    'skor_note'         =>  $value['skor_note'],
                     'bulan_update'   =>  $value['bulan_update'],
                     'emp_id'   =>  $value['id'],
                     'created_by'  => Auth::user()->id,
@@ -293,8 +294,9 @@ class Skor_pegawaiController extends Controller
                 ->join("detail_indikator as di2","di2.detail_id","=","mu.resiko_admin")
                 ->join("detail_indikator as di3","di3.detail_id","=","mu.emergency_id")
                 ->join("indikator as i","i.id","=","di.indikator_id")
-                ->join("indikator as i2","i2.id","=","di3.indikator_id")
-                ->select(["mu.*","di.skor as skor_infeksi","di2.skor as skor_admin","i.bobot as bobot_risk","di3.skor as skor_emergency","i2.bobot as bobot_emergency"])
+                ->join("indikator as i2","i2.id","=","di2.indikator_id")
+                ->join("indikator as i3","i3.id","=","di3.indikator_id")
+                ->select(["mu.*","di.skor as skor_infeksi","di2.skor as skor_admin","i.bobot as bobot_risk","i2.bobot as bobotrisk_admin","di3.skor as skor_emergency","i2.bobot as bobot_emergency"])
                 ->first();
                 if (!$unit) {
                     return response()->json([
@@ -303,7 +305,7 @@ class Skor_pegawaiController extends Controller
                     ]);
                 }
                 $data[$key]['unit_kerja']   = $unit->unit_name;
-                $skor=($unit->skor_infeksi+$unit->skor_admin)*$unit->bobot_risk;
+                $skor=(($unit->skor_infeksi*$unit->bobot_risk)+($unit->skor_admin*$unit->bobotrisk_admin));
                 $data[$key]['totalSkor'] = $data[$key]['totalSkor'] +$skor;
                 $data[$key]['dataSkor']['risk'] = [
                     "skor"          => $skor,
@@ -347,8 +349,8 @@ class Skor_pegawaiController extends Controller
                         $tugasNote[]= $value->detail_name.'@'.$value->nama_tugas;
                     }
                     if ($pgw->is_medis == 'f') {
-                        if ($tugasSkor>1.75) {
-                            $tugasSkor = 1.75;
+                        if ($tugasSkor>3.5) {
+                            $tugasSkor = 3.5;
                         }
                     }
                 }
@@ -378,7 +380,10 @@ class Skor_pegawaiController extends Controller
                     "skor"          => ($performSkor),
                     "keterangan"    => ($performSkor>0)?"($performanNote)":null
                 ];
-                $data[$key]['totalSkor'] = $data[$key]['totalSkor'] +$performSkor;
+
+                //cek jika percentase != 100
+                $data[$key]['skor_note']    = "Skor pegawai bulan $request->bulan_skor.";
+                $data[$key]['totalSkor']    = ($data[$key]['totalSkor'] +$performSkor);
             }
             Cache::add('skorPegawai',array_values($data),3000);
             Cache::remember('skorError', 3000, function () use($data,$request){

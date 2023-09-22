@@ -24,6 +24,7 @@ class Skor_pegawai extends Model
         'confirm_by',
         'created_by',
         'skor_type',
-        'skor_koreksi'
+        'skor_koreksi',
+        'skor_note'
     ];
 }

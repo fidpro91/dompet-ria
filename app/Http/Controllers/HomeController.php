@@ -16,7 +16,7 @@ class HomeController extends Controller
     {
         $name = Auth::user()->name;
         $chart['statistik'] = new RemunChart;
-        $data =  Pencairan_jasa_header::whereYear('tanggal_cair','=','2022')->get();
+        $data =  Pencairan_jasa_header::whereYear('tanggal_cair','=','2023')->get();
         $dataChart=[];
         foreach ($data as $key => $value) {
             $month = date('m-Y',strtotime($value->tanggal_cair));

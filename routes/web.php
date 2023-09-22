@@ -1,16 +1,14 @@
 <?php
 
 use App\Http\Controllers\Builder\Docs\Example;
-use App\Models\Ms_menu;
 use Illuminate\Support\Facades\Route;
-use Diglactic\Breadcrumbs\Breadcrumbs;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use App\Http\Controllers\LoginController;
 use App\Libraries\Servant;
-use App\Models\Detail_tindakan_medis;
-use Illuminate\Support\Facades\Config;
-
+use Illuminate\Support\Facades\Mail;
+use App\Mail\SendEmail;
+use App\Traits\WablasTrait;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -30,7 +28,7 @@ Route::get('login/reload_capcha', [LoginController::class, 'reload_capcha']);
 Route::get('/', [LoginController::class, 'login'])->name('login');
 
 Route::group(['prefix'=>'mobile','middleware' => ['auth','client']], function(){
-    Route::get('/', [LoginController::class, 'login'])->name('login');
+    // Route::get('/', [LoginController::class, 'login'])->name('login');
     Route::get('/index', function () {
         return view("mobile.index");
     }); 
@@ -46,6 +44,27 @@ Route::group(['prefix'=>'mobile','middleware' => ['auth','client']], function(){
 });
 
 Route::get('/tes_package', function () {
+
+    $kumpulan_data=[];
+    //KIRIM WA
+    $data['phone'] = '085655448087';
+    $data['message'] = 'INI PESAN';
+    $data['secret'] = false;
+    $data['retry'] = false;
+    $data['isGroup'] = false;
+    array_push($kumpulan_data, $data);
+    WablasTrait::sendText($kumpulan_data);
+    die;
+
+    $data = [
+        'name' => 'Syahrizal As',
+        'body' => 'Testing Kirim Email di Santri Koding'
+    ];
+   
+    Mail::to('ufi.alfi@gmail.com')->send(new SendEmail($data));
+   
+    dd("Email Berhasil dikirim.");
+    die;
     // echo config('app.name');
     /* $data=DB::table("users")->get();
     ini_set('max_execution_time', -1);
@@ -154,6 +173,7 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::post('detail_tindakan_medis/kroscek_tindakan', 'Detail_tindakan_medisController@kroscek_tindakan');
     Route::get('detail_tindakan_medis/download_page', 'Detail_tindakan_medisController@get_data_download');
     Route::get('detail_tindakan_medis/get_error/{type?}', 'Detail_tindakan_medisController@get_error');
+    Route::get('detail_tindakan_medis/set_mapping_bill/{id?}/{klasifikasi?}','Detail_tindakan_medisController@set_mapping_bill');
     Route::post('detail_tindakan_medis/get_data_simrs', 'Detail_tindakan_medisController@get_data_simrs');
     Route::get('detail_tindakan_medis/get_dataTable','Detail_tindakan_medisController@get_dataTable');
     Route::resource('detail_tindakan_medis', Detail_tindakan_medisController::class);
@@ -198,9 +218,9 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::get('potongan_statis/get_dataTable','Potongan_statisController@get_dataTable');
     Route::resource('potongan_statis', Potongan_statisController::class);
 
-    Route::get('ms_group/get_hak_akses','ms_groupController@get_hak_akses');
-    Route::get('ms_group/get_dataTable','ms_groupController@get_dataTable');
-    Route::resource('ms_group', ms_groupController::class);
+    Route::get('ms_group/get_hak_akses','Ms_groupController@get_hak_akses');
+    Route::get('ms_group/get_dataTable','Ms_groupController@get_dataTable');
+    Route::resource('ms_group', Ms_groupController::class);
     Route::get('kategori_potongan/get_dataTable','Kategori_potonganController@get_dataTable');
     Route::resource('kategori_potongan', Kategori_potonganController::class);
     Route::get('kategori_potongan/get_dataTable','Kategori_potonganController@get_dataTable');
@@ -227,6 +247,7 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::get('jasa_pelayanan/hasil_hitung_sementara','Jasa_pelayananController@hasil_perhitungan');
     Route::post('jasa_pelayanan/hitung_jasa','Jasa_pelayananController@hitung_jasa');
     Route::post('jasa_pelayanan/finish_jaspel','Jasa_pelayananController@finish_jaspel');
+    Route::get('jasa_pelayanan/cetak','Jasa_pelayananController@cetak_laporan');
     Route::resource('jasa_pelayanan', Jasa_pelayananController::class);
 
     Route::get('proporsi_jasa_individu/get_dataTable','Proporsi_jasa_individuController@get_dataTable');
@@ -265,8 +286,12 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::resource('users', UsersController::class);
 
     Route::get('laporan','LaporanController@index');
+    Route::get('laporan/skor_pegawai','LaporanController@skor_pegawai');
+    Route::post('laporan/show_skor_pegawai','LaporanController@get_lap_skor');
     Route::post('laporan/laporan_pajak','LaporanController@get_lap_pajak');
     Route::post('laporan/laporan_potongan','LaporanController@get_lap_potongan');
     Route::get('pencairan_jasa/get_dataTable','Pencairan_jasaController@get_dataTable');
     Route::resource('pencairan_jasa', Pencairan_jasaController::class);
 });
+            Route::get('activity_log/get_dataTable','activity_logController@get_dataTable');
+            Route::resource('activity_log', activity_logController::class);

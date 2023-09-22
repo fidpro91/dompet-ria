@@ -19,7 +19,7 @@
         "lavary/laravel-menu": "^1.8",
         "maatwebsite/excel": "^3.1",
         "mews/captcha": "^3.2",
-        "spatie/laravel-activitylog": "^3.17",
+        "spatie/laravel-activitylog": "3.17",
         "yajra/laravel-datatables-oracle": "^9.21"
     },
     "require-dev": {

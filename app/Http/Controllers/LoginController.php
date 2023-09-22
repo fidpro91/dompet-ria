@@ -17,7 +17,7 @@ class LoginController extends Controller
         if (Auth::check()) {
             if (Session::get('sesLogin')->group_type == 1) {
                 return redirect('beranda/index');
-            }else{
+            }elseif(Session::get('sesLogin')->group_type == 2){
                 return redirect('mobile/index');
             }
         }else{
