@@ -4,10 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Skor_pegawai extends Model
 {
     use HasFactory;
+    use LogsActivity;
+
+    protected static $logName = 'skor_pegawai';
+    protected static $logFillable = true;
+    protected static $recordEvents = ['updated', 'deleted'];
+
     protected $table = 'skor_pegawai';
     protected $fillable = [
         'basic_index',

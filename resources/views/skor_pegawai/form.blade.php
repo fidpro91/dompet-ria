@@ -82,9 +82,6 @@ Widget::_init(["select2","datepicker"]);
                 ])->render("group");
             !!}
             {!! 
-                Create::input("persentase_skor")->render("group");
-            !!}
-            {!! 
                 Create::input("total_skor",[
                 "value" => $skor_pegawai->total_skor
                 ])->render("group");
@@ -107,11 +104,7 @@ Widget::_init(["select2","datepicker"]);
             });
             $("#total_skor").val(total);
         });
-        $("#persentase_skor").change(function(){
-            let persen = parseFloat($(this).val());
-            let total  = persen/100*parseFloat($("#total_skor").val());
-            $("#total_skor").val(total);
-        });
+        
         $('#form_skor_pegawai').parsley().on('field:validated', function() {
                 var ok = $('.parsley-error').length === 0;
                 $('.bs-callout-info').toggleClass('hidden', !ok);

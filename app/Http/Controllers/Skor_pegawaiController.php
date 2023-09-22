@@ -193,6 +193,7 @@ class Skor_pegawaiController extends Controller
 
     public function store(Request $request)
     {
+        $request['skor_type'] = 2;
         $valid = $this->form_validasi($request->all());
         if ($valid['code'] != 200) {
             return response()->json([
@@ -201,7 +202,6 @@ class Skor_pegawaiController extends Controller
             ]);
         }
         try {
-            $valid['data']['skor_type'] = 2;
             Skor_pegawai::create($valid['data']);
             $resp = [
                 'success' => true,
