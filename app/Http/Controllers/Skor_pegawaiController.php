@@ -91,7 +91,8 @@ class Skor_pegawaiController extends Controller
                     'unit_risk_index'   =>  $value['dataSkor']['risk']['skor'],
                     'position_index'   =>  ($value['dataSkor']['position']['skor']+$value['dataSkor']['tugas']['skor']),
                     'competency_index'   =>  $value['dataSkor']['performa']['skor'],
-                    'total_skor'   =>  $value['totalSkor'],
+                    'total_skor'        =>  $value['totalSkor'],
+                    'skor_note'         =>  $value['skor_note'],
                     'bulan_update'   =>  $value['bulan_update'],
                     'emp_id'   =>  $value['id'],
                     'created_by'  => Auth::user()->id,
@@ -243,9 +244,11 @@ class Skor_pegawaiController extends Controller
             }
 
             foreach ($pegawai as $key => $pgw) {
-                $employeeOff = DB::table("employee_off")->whereRaw("emp_id = ".$pgw->emp_id." and ('".$request->bulan_skor."' between bulan_jasa_awal and bulan_jasa_akhir)")->count();
-                if ($employeeOff>0) {
-                    continue;
+                $employeeOff = DB::table("employee_off")->whereRaw("emp_id = ".$pgw->emp_id." and ('".$request->bulan_skor."' = bulan_skor)");
+                $percentase = 100;
+                if ($employeeOff->count()>0) {
+                    $employeeOff = $employeeOff->get()->first();
+                    $percentase  = $employeeOff->persentase_skor;
                 }
                 $data[$key] = [
                     "nip"   => $pgw->emp_no,
@@ -381,7 +384,14 @@ class Skor_pegawaiController extends Controller
                     "skor"          => ($performSkor),
                     "keterangan"    => ($performSkor>0)?"($performanNote)":null
                 ];
-                $data[$key]['totalSkor'] = $data[$key]['totalSkor'] +$performSkor;
+
+                //cek jika percentase != 100
+                $data[$key]['skor_note']    = "Skor pegawai bulan $request->bulan_skor.";
+                $data[$key]['totalSkor']    = ($data[$key]['totalSkor'] +$performSkor);
+                if ($percentase != 100) {
+                    $data[$key]['totalSkor']    = ($data[$key]['totalSkor'] +$performSkor)*($percentase/100);
+                    $data[$key]['skor_note']    = "Skor pegawai bulan $request->bulan_skor. $percentase% $employeeOff->keterangan periode : $employeeOff->periode";
+                }
             }
             Cache::add('skorPegawai',array_values($data),3000);
             Cache::remember('skorError', 3000, function () use($data,$request){
@@ -390,7 +400,7 @@ class Skor_pegawaiController extends Controller
                             select e.emp_no,e.emp_name,mu.unit_name from employee e 
                             join ms_unit mu on mu.unit_id = e.unit_id_kerja
                             left join employee_off eo on e.emp_id = eo.emp_id and (
-                                '".$request->bulan_skor."' between eo.bulan_jasa_awal and eo.bulan_jasa_akhir
+                                '".$request->bulan_skor."' = eo.bulan_skor 
                             )
                             where e.emp_active = 't' and e.emp_id not in (".$emp_id.") and eo.emp_id is null
                         ");

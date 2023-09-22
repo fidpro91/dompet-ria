@@ -19,7 +19,7 @@ use \fidpro\builder\Bootstrap;
                 Bootstrap::table("table-data",[
                     "class" => "table table-hover"
                 ],[
-                    '#','NO','emp_nip','emp_name','unit_name','bulan_jasa_awal','bulan_jasa_akhir','keterangan'
+                    '#','NO','emp_nip','emp_name','unit_name','bulan_skor','periode','persentase_skor','keterangan'
                 ])
             }}
         </div>
@@ -55,12 +55,16 @@ use \fidpro\builder\Bootstrap;
                     name: 'unit_name',
                 },
                 {
-                    data: 'bulan_jasa_awal',
-                    name: 'bulan_jasa_awal',
+                    data: 'bulan_skor',
+                    name: 'bulan_skor',
                 },
                 {
-                    data: 'bulan_jasa_akhir',
-                    name: 'bulan_jasa_akhir',
+                    data: 'periode',
+                    name: 'periode',
+                },
+                {
+                    data: 'persentase_skor',
+                    name: 'persentase_skor',
                 },
                 {
                     data: 'keterangan',

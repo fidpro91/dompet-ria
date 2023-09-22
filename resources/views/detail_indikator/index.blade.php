@@ -6,10 +6,10 @@ use \fidpro\builder\Bootstrap;
 <div class="card border-0 shadow rounded" id="page_detail_indikator">
     <div class="card-header">
         {!!
-        Form::button("Tambah",[
-        "class" => "btn btn-primary add-form",
-        "data-target" => "page_detail_indikator",
-        "data-url" => route("detail_indikator.create")
+            Form::button("Tambah",[
+            "class" => "btn btn-primary add-form",
+            "data-target" => "page_detail_indikator",
+            "data-url" => route("detail_indikator.create")
         ])
         !!}
     </div>

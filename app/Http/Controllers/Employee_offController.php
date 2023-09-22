@@ -16,18 +16,20 @@ class Employee_offController extends Controller
 
     public $param = [
         'emp_id'            =>  'required',
-        'bulan_jasa_awal'   =>  'required',
-        'bulan_jasa_akhir'   =>  'required',
-        'keterangan'   =>  '',
-        'user_act'   =>  ''
+        'bulan_skor'        =>  'required',
+        'periode'           =>  'required',
+        'persentase_skor'   =>  'required',
+        'keterangan'        =>  '',
+        'user_act'          =>  ''
     ];
     public $defaultValue = [
         'id'            =>  '',
         'emp_id'        =>  '',
-        'bulan_jasa_awal'   =>  '',
-        'bulan_jasa_akhir'   =>  '',
-        'keterangan'   =>  '',
-        'user_act'   =>  ''
+        'bulan_skor'    =>  '',
+        'periode'       =>  '',
+        'persentase_skor'       =>  '',
+        'keterangan'    =>  '',
+        'user_act'      =>  ''
     ];
     public function index()
     {
@@ -38,15 +40,7 @@ class Employee_offController extends Controller
     {
         $data = Employee_off::join("employee","employee.emp_id","=","employee_off.emp_id")
                 ->join("ms_unit","ms_unit.unit_id","=","employee.unit_id_kerja")
-                ->get([
-                    'id',
-                    'emp_nip',
-                    'emp_name',
-                    'unit_name',
-                    'bulan_jasa_awal',
-                    'bulan_jasa_akhir',
-                    'keterangan'
-                ]);
+                ->get();
 
         $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
             $button = Create::action("<i class=\"fas fa-edit\"></i>", [

@@ -23,6 +23,7 @@ class Skor_pegawai extends Model
         'is_confirm',
         'confirm_by',
         'created_by',
-        'skor_type'
+        'skor_type',
+        'skor_note'
     ];
 }

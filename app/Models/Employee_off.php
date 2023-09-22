@@ -15,8 +15,9 @@ class Employee_off extends Model
     protected $fillable = [
         'id',
         'emp_id',
-        'bulan_jasa_awal',
-        'bulan_jasa_akhir',
+        'bulan_skor',
+        'periode',
+        'persentase_skor',
         'keterangan',
         'user_act'
     ];
