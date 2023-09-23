@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Detail_indikator;
 use Illuminate\Http\Request;
 use App\Models\Employee;
+use App\Models\Ms_unit;
 use Illuminate\Support\Facades\Validator;
 use DataTables;
 use fidpro\builder\Create;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class EmployeeController extends Controller
@@ -149,6 +152,7 @@ class EmployeeController extends Controller
                 'message' => $valid['message']
             ]);
         }
+        DB::beginTransaction();
         try {
             $valid['data']['emp_birthdate'] = date('Y-m-d',strtotime($request->emp_birthdate));
             $valid['data']['tahun_masuk']   = date('Y-m-d',strtotime($request->tahun_masuk));
@@ -159,12 +163,26 @@ class EmployeeController extends Controller
                 $image->storeAs('public/uploads/photo_pegawai', $image->hashName());
                 $valid['data']['photo'] = $image->hashName();
             }
+            $skorUnit = $this->get_unit_skor($request);
+            if ($skorUnit["code"] != 200) {
+                DB::rollBack();
+                return response()->json([
+                    "success"   => false,
+                    "message"   => $skorUnit["message"]
+                ]);
+            }
+            $valid['data']['last_risk_index']       = $skorUnit["response"]["riskIndex"];
+            $valid['data']['last_emergency_index']  = $skorUnit["response"]["emergencyIndex"];
+            $valid['data']['last_position_index']   = $skorUnit["response"]["positionIndex"];
+
             Employee::create($valid['data']);
+            DB::commit();
             $resp = [
                 'success' => true,
                 'message' => 'Data Berhasil Disimpan!'
             ];
         } catch (\Exception $e) {
+            DB::rollBack();
             $resp = [
                 'success' => false,
                 'message' => 'Data Gagal Disimpan! <br>' . $e->getMessage()
@@ -173,6 +191,50 @@ class EmployeeController extends Controller
         return response()->json($resp);
     }
 
+    private function get_unit_skor($request)
+    {
+        //get unit skor
+        $unit = Ms_unit::from("ms_unit as mu")
+        ->where("mu.unit_id",$request->unit_id_kerja)
+        ->join("detail_indikator as di","di.detail_id","=","mu.resiko_infeksi")
+        ->join("detail_indikator as di2","di2.detail_id","=","mu.resiko_admin")
+        ->join("detail_indikator as di3","di3.detail_id","=","mu.emergency_id")
+        ->join("indikator as i","i.id","=","di.indikator_id")
+        ->join("indikator as i2","i2.id","=","di2.indikator_id")
+        ->join("indikator as i3","i3.id","=","di3.indikator_id")
+        ->select(["mu.*","di.skor as skor_infeksi","di2.skor as skor_admin","i.bobot as bobot_risk","i2.bobot as bobotrisk_admin","di3.skor as skor_emergency","i2.bobot as bobot_emergency"])
+        ->first();
+        if (!$unit) {
+            return [
+                'code'      => 202,
+                'message'   => 'Unit kerja pegawai tidak terdaftar'
+            ];
+        }
+        $skorRisk   =(($unit->skor_infeksi*$unit->bobot_risk)+($unit->skor_admin*$unit->bobotrisk_admin));
+        $skorEmergency = ($unit->skor_emergency)*$unit->bobot_emergency;
+
+        //get jabatan skor
+        if ($request->jabatan_struktural) {
+            $posisi = Detail_indikator::from("detail_indikator as di")
+                      ->where("detail_id",$request->jabatan_struktural)
+                      ->join("indikator as i","i.id","=","di.indikator_id")->first();
+        }elseif ($request->jabatan_fungsional) {
+            $posisi = Detail_indikator::from("detail_indikator as di")
+                      ->where("detail_id",$request->jabatan_fungsional)
+                      ->join("indikator as i","i.id","=","di.indikator_id")->first();
+        }
+        $skorPosition = ($posisi->skor*$posisi->bobot);
+
+        return [
+            "code"      => 200,
+            "message"   => "OK",
+            "response"  =>[
+                "riskIndex"         => $skorRisk,
+                "emergencyIndex"    => $skorEmergency,
+                "positionIndex"     => $skorPosition
+            ]
+        ];
+    }
     private function form_validasi($data)
     {
         $validator = Validator::make($data, $this->param);
@@ -207,6 +269,7 @@ class EmployeeController extends Controller
     {
         return view($this->folder . '.form', compact('employee'));
     }
+
     public function update_data(Request $request)
     {
         $valid = $this->form_validasi($request->all());
@@ -216,6 +279,7 @@ class EmployeeController extends Controller
                 'message' => $valid['message']
             ]);
         }
+        DB::beginTransaction();
         try {
             $data = Employee::findOrFail($request->emp_id);
             $valid['data']['emp_birthdate'] = date('Y-m-d',strtotime($request->emp_birthdate));
@@ -231,12 +295,27 @@ class EmployeeController extends Controller
                 $image->storeAs('public/uploads/photo_pegawai', $image->hashName());
                 $valid['data']['photo'] = $image->hashName();
             }
+
+            $skorUnit = $this->get_unit_skor($request);
+            if ($skorUnit["code"] != 200) {
+                DB::rollBack();
+                return response()->json([
+                    "success"   => false,
+                    "message"   => $skorUnit["message"]
+                ]);
+            }
+            $valid['data']['last_risk_index']       = $skorUnit["response"]["riskIndex"];
+            $valid['data']['last_emergency_index']  = $skorUnit["response"]["emergencyIndex"];
+            $valid['data']['last_position_index']   = $skorUnit["response"]["positionIndex"];
+
             $data->update($valid['data']);
+            DB::commit();
             $resp = [
                 'success' => true,
                 'message' => 'Data Berhasil Diupdate!'
             ];
         } catch (\Exception $e) {
+            DB::rollBack();
             $resp = [
                 'success' => false,
                 'message' => 'Data Gagal Diupdate! <br>' . $e->getMessage()

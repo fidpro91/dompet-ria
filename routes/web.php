@@ -44,7 +44,14 @@ Route::group(['prefix'=>'mobile','middleware' => ['auth','client']], function(){
 });
 
 Route::get('/tes_package', function () {
-
+    $pegawai = \App\Models\Employee::all();
+    foreach ($pegawai as $key => $pgw) {
+        \App\Models\Diklat::from("diklat as dk")
+        ->where("peserta_id",$pgw->emp_id)
+        ->join("detail_indikator as di","di.detail_id","=","dk.indikator_skor")
+        ->join("indikator as i","i.id","=","di.indikator_id");
+    }
+    die;
     $kumpulan_data=[];
     //KIRIM WA
     $data['phone'] = '085655448087';

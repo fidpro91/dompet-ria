@@ -48,6 +48,9 @@ class Employee extends Model
         'profesi_id',
         'email',
         'phone',
-        'photo'
+        'photo',
+        'last_risk_index',
+        'last_emergency_index',
+        'last_position_index'
     ];
 }

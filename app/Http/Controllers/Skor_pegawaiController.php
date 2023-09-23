@@ -225,26 +225,28 @@ class Skor_pegawaiController extends Controller
             if ($request->emp_id_gen) {
                 $pegawai =  Employee::from("employee as e")
                             ->where("e.emp_id",$request->emp_id_gen)
+                            ->join("ms_unit as mu","mu.unit_id","=","e.unit_id_kerja")
                             ->join("detail_indikator as di","di.detail_id","=","e.pendidikan")
                             ->join("indikator as i","i.id","=","di.indikator_id")
-                            ->select(["e.*","di.detail_name as pendidikan","di.skor as skor_pendidikan","di.indikator_id","i.bobot"])
+                            ->select(["e.*","di.detail_name as pendidikan","di.skor as skor_pendidikan","di.indikator_id","i.bobot","mu.unit_name"])
                             ->get();
             }elseif ($request->unit_id) {
                 $pegawai =  Employee::from("employee as e")
                             ->where("e.unit_id_kerja",$request->unit_id)
+                            ->join("ms_unit as mu","mu.unit_id","=","e.unit_id_kerja")
                             ->join("detail_indikator as di","di.detail_id","=","e.pendidikan")
                             ->join("indikator as i","i.id","=","di.indikator_id")
-                            ->select(["e.*","di.detail_name as pendidikan","di.skor as skor_pendidikan","di.indikator_id","i.bobot"])
+                            ->select(["e.*","di.detail_name as pendidikan","di.skor as skor_pendidikan","di.indikator_id","i.bobot","mu.unit_name"])
                             ->get();
             }else{
                 $pegawai =  Employee::from("employee as e")
                             ->where("e.emp_active","t")
+                            ->join("ms_unit as mu","mu.unit_id","=","e.unit_id_kerja")
                             ->join("detail_indikator as di","di.detail_id","=","e.pendidikan")
                             ->join("indikator as i","i.id","=","di.indikator_id")
-                            ->select(["e.*","di.detail_name as pendidikan","di.skor as skor_pendidikan","di.indikator_id","i.bobot"])
+                            ->select(["e.*","di.detail_name as pendidikan","di.skor as skor_pendidikan","di.indikator_id","i.bobot","mu.unit_name"])
                             ->get();
             }
-
             foreach ($pegawai as $key => $pgw) {
                 $data[$key] = [
                     "nip"   => $pgw->emp_no,
@@ -252,6 +254,7 @@ class Skor_pegawaiController extends Controller
                     "bulan_update"    => $request->bulan_skor,
                     "nama"  => $pgw->emp_name
                 ];
+
                 $skor=($pgw->gaji_pokok/1000000*1);
                 $data[$key]['dataSkor']['basic'] = [
                     "skor"          => $skor,
@@ -264,58 +267,17 @@ class Skor_pegawaiController extends Controller
                     "skor"          => $skor,
                     "keterangan"    => "BASIC INDEX PENDIDIKAN - ".$pgw->pendidikan
                 ];
-                
-                //get sertifikat skor
-                $sertifikat = Diklat::from("diklat as dk")
-                              ->where("peserta_id",$pgw->emp_id)
-                              ->join("detail_indikator as di","di.detail_id","=","dk.indikator_skor")
-                              ->join("indikator as i","i.id","=","di.indikator_id");
-                $sertifikatSkor=0;
-                $sertifikatNote=[];
-                if ($sertifikat->count() > 0) {
-                    foreach ($sertifikat->get() as $x => $value) {
-                        $sertifikatSkor += ($value->skor*$value->bobot);
-                        $sertifikatNote[] = $value->judul_pelatihan;
-                    }
-                    if ($sertifikatSkor>0.8) {
-                        $sertifikatSkor = 0.8;
-                    }
-                }
-                $sertifikatNote = implode(',',$sertifikatNote);
-                $data[$key]['dataSkor']['certifycate'] = [
-                    "skor"          => ($sertifikatSkor),
-                    "keterangan"    => ($sertifikatSkor>0)?"DIKLAT & SERTIFIKAT INDEX - ($sertifikatNote)":NULL
-                ];
-                $data[$key]['totalSkor'] = $data[$key]['totalSkor'] +$sertifikatSkor;
-                //get unit skor
-                $unit = Ms_unit::from("ms_unit as mu")
-                ->where("mu.unit_id",$pgw->unit_id_kerja)
-                ->join("detail_indikator as di","di.detail_id","=","mu.resiko_infeksi")
-                ->join("detail_indikator as di2","di2.detail_id","=","mu.resiko_admin")
-                ->join("detail_indikator as di3","di3.detail_id","=","mu.emergency_id")
-                ->join("indikator as i","i.id","=","di.indikator_id")
-                ->join("indikator as i2","i2.id","=","di2.indikator_id")
-                ->join("indikator as i3","i3.id","=","di3.indikator_id")
-                ->select(["mu.*","di.skor as skor_infeksi","di2.skor as skor_admin","i.bobot as bobot_risk","i2.bobot as bobotrisk_admin","di3.skor as skor_emergency","i2.bobot as bobot_emergency"])
-                ->first();
-                if (!$unit) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Unit kerja pegawai : '.$pgw->emp_name.' tidak terdaftar'
-                    ]);
-                }
-                $data[$key]['unit_kerja']   = $unit->unit_name;
-                $skor=(($unit->skor_infeksi*$unit->bobot_risk)+($unit->skor_admin*$unit->bobotrisk_admin));
-                $data[$key]['totalSkor'] = $data[$key]['totalSkor'] +$skor;
+
+                $data[$key]['totalSkor'] = $data[$key]['totalSkor'] + $pgw->unit_risk_index;
                 $data[$key]['dataSkor']['risk'] = [
-                    "skor"          => $skor,
-                    "keterangan"    => "RISK INDEX (INFEKSIUS+ADMINISTRASI) - ".$unit->unit_name
+                    "skor"          => $pgw->unit_risk_index,
+                    "keterangan"    => "RISK INDEX (INFEKSIUS+ADMINISTRASI) - ".$pgw->unit_name
                 ];
-                $skor = ($unit->skor_emergency)*$unit->bobot_emergency;
-                $data[$key]['totalSkor'] = $data[$key]['totalSkor'] +$skor;
+
+                $data[$key]['totalSkor'] = $data[$key]['totalSkor'] + $pgw->unit_emergency_index;
                 $data[$key]['dataSkor']['emergency'] = [
-                    "skor"          => $skor,
-                    "keterangan"    => "EMERGENCY INDEX - ".$unit->unit_name
+                    "skor"          => $pgw->unit_emergency_index,
+                    "keterangan"    => "RISK INDEX (INFEKSIUS+ADMINISTRASI) - ".$pgw->unit_name
                 ];
 
                 //get jabatan skor
@@ -334,72 +296,26 @@ class Skor_pegawaiController extends Controller
                     "skor"          => $skor,
                     "keterangan"    => "POSITION INDEX - ".$posisi->detail_name
                 ];
-
-                //get tugas tambahan
-                $tugasTambahan = Tugas_tambahan::from("tugas_tambahan as tt")
-                              ->where("emp_id",$pgw->emp_id)
-                              ->whereRaw("('".date('Y-m-d')."' <= tt.tanggal_akhir)")
-                              ->join("detail_indikator as di","di.detail_id","=","tt.jabatan_tugas")
-                              ->join("indikator as i","i.id","=","di.indikator_id");
-                $tugasSkor=0;
-                $tugasNote=[];
-                if ($tugasTambahan->count() > 0) {
-                    foreach ($tugasTambahan->get() as $x => $value) {
-                        $tugasSkor += ($value->skor*$value->bobot);
-                        $tugasNote[]= $value->detail_name.'@'.$value->nama_tugas;
-                    }
-                    if ($pgw->is_medis == 'f') {
-                        if ($tugasSkor>3.5) {
-                            $tugasSkor = 3.5;
-                        }
-                    }
-                }
-                $tugasNote = implode(',',$tugasNote);
-                $data[$key]['dataSkor']['tugas'] = [
-                    "skor"          => ($tugasSkor),
-                    "keterangan"    => ($tugasSkor>0)?"TUGAS TAMBAHAN INDEX - ($tugasNote)":null
+                /* $sertifikatNote = implode(',',$sertifikatNote);
+                $data[$key]['dataSkor']['certifycate'] = [
+                    "skor"          => ($sertifikatSkor),
+                    "keterangan"    => ($sertifikatSkor>0)?"DIKLAT & SERTIFIKAT INDEX - ($sertifikatNote)":NULL
                 ];
-                $data[$key]['totalSkor'] = $data[$key]['totalSkor'] +$tugasSkor;
-
-                //get performa index
-                $performaIndex = Performa_index::from("performa_index as pi")
-                              ->where("pi.emp_id",$pgw->emp_id)
-                              ->whereRaw("('".date('Y-m-d')."' <= pi.expired_date)")
-                              ->join("detail_indikator as di","di.detail_id","=","pi.perform_skor")
-                              ->join("indikator as i","i.id","=","di.indikator_id");
-                $performSkor=0;
-                $performanNote=[];
-                if ($performaIndex->count() > 0) {
-                    foreach ($performaIndex->get() as $x => $value) {
-                        $performSkor += ($value->skor*$value->bobot);
-                        $performanNote[]= $value->indikator;
-                    }
-                }
-                $performanNote = implode(',',$performanNote);
-                $data[$key]['dataSkor']['performa'] = [
-                    "skor"          => ($performSkor),
-                    "keterangan"    => ($performSkor>0)?"($performanNote)":null
-                ];
-
-                //cek jika percentase != 100
-                $data[$key]['skor_note']    = "Skor pegawai bulan $request->bulan_skor.";
-                $data[$key]['totalSkor']    = ($data[$key]['totalSkor'] +$performSkor);
+                $data[$key]['totalSkor'] = $data[$key]['totalSkor'] +$sertifikatSkor; */
+                
             }
             Cache::add('skorPegawai',array_values($data),3000);
-            Cache::remember('skorError', 3000, function () use($data,$request){
+            Cache::remember('skorError', 3000, function () use($data){
                 $emp_id = implode(',',array_column($data, 'id'));
                 $dataError = DB::select("
                             select e.emp_no,e.emp_name,mu.unit_name from employee e 
                             join ms_unit mu on mu.unit_id = e.unit_id_kerja
-                            left join employee_off eo on e.emp_id = eo.emp_id and (
-                               eo.bulan_skor =  '".$request->bulan_skor."'
-                            )
-                            where e.emp_active = 't' and e.emp_id not in (".$emp_id.") and eo.emp_id is null
+                            where e.emp_active = 't' and e.emp_id not in (".$emp_id.")
                         ");
                 return $dataError;
             });
             $resp = [
-                'success' => true,
+                'success' => false,
                 'message' => 'Skor Berhasil Digenerate!'
             ];
         } catch (\Exception $e) {
