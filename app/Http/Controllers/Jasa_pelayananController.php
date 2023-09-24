@@ -211,15 +211,16 @@ class Jasa_pelayananController extends Controller
         $data = DB::select("
             SELECT e.emp_no,e.emp_name,mu.unit_name,
             json_arrayagg(json_object('id',ks.id,'komponen',ks.nama_komponen,'skor',jm.skor,'nominal',jm.nominal_terima))detail
-            FROM jp_byname_medis jm
-            join employee e on e.emp_id = jm.emp_id
-            JOIN ms_unit mu ON e.unit_id_kerja = mu.unit_id
-            JOIN komponen_jasa_sistem ks ON ks.id = jm.komponen_id
+            FROM komponen_jasa_sistem ks
+            left JOIN jp_byname_medis jm ON ks.id = jm.komponen_id
+            left join employee e on e.emp_id = jm.emp_id
+            left JOIN ms_unit mu ON e.unit_id_kerja = mu.unit_id
             where jm.jaspel_id = '$id' AND e.is_medis = 't' and jm.komponen_id in (7,8,9)
             GROUP BY e.emp_no,e.emp_name,mu.unit_name
             ORDER BY e.emp_name
         ");
-        return view("jasa_pelayanan.printout.print_medis",compact('data'));
+        $header = Komponen_jasa_sistem::whereIn('id',[7,8,9])->get();
+        return view("jasa_pelayanan.printout.print_medis",compact('data','header'));
         
     }
 
@@ -619,7 +620,7 @@ class Jasa_pelayananController extends Controller
                         ->join("employee as e","e.emp_id","=","sp.emp_id")
                         ->join("proporsi_jasa_individu as pi","e.emp_id","=","pi.employee_id")
                         ->groupBy(["e.emp_nip","e.emp_name","e.emp_id"])
-                        ->select(["e.emp_id","e.emp_nip","e.emp_name",DB::raw('SUM(sp.total_skor) AS total_skor'),DB::raw('json_arrayagg(sp.id) AS id_skor')])
+                        ->select(["e.emp_id","e.emp_nip","e.emp_name",DB::raw('SUM(coalesce(sp.skor_koreksi,sp.total_skor)) AS total_skor'),DB::raw('json_arrayagg(sp.id) AS id_skor')])
                         ->where([
                             "prepare_remun_month"   => $request->jaspel_bulan,
                             "pi.jasa_bulan"         => $request->jaspel_bulan,

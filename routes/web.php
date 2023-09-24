@@ -213,6 +213,7 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::get('komponen_jasa/get_dataTable','Komponen_jasaController@get_dataTable');
     Route::resource('komponen_jasa', Komponen_jasaController::class);
 
+    Route::get('skor_pegawai/set_skor/{type?}','Skor_pegawaiController@set_skor');
     Route::get('skor_pegawai/error_skor','Skor_pegawaiController@error_skor');
     Route::post('skor_pegawai/clear_all_data','Skor_pegawaiController@clear_all_data');
     Route::post('skor_pegawai/save_skor','Skor_pegawaiController@save_skor');
@@ -275,6 +276,7 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::get("pencairan_jasa_header/data",function(){
         return view("pencairan_jasa_header.data");
     });
+    Route::get('pencairan_jasa_header/statistik/{id?}','Pencairan_jasa_headerController@statistic_report');
     Route::get('pencairan_jasa_header/update_potongan','Pencairan_jasa_headerController@update_potongan');
     Route::get('pencairan_jasa_header/final_pencairan/{id?}','Pencairan_jasa_headerController@final_pencairan');
     Route::get('pencairan_jasa_header/detail/{type?}/{id_kategori?}/{id_jasa?}','Pencairan_jasa_headerController@detail');

@@ -21,18 +21,11 @@ use \fidpro\builder\Bootstrap;
                 ],[
                     "url"   => "activity_log/get_dataTable",
                     "raw"   => [
-                        '#'     => [
-                            "data" => "action", 
-                            "name" => "action", 
-                            "orderable" => "false", 
-                            "searchable" => "false"
-                        ],
                         'no'    => [
                             "data" => "DT_RowIndex",
                             "orderable" => "false", 
                             "searchable" => "false"
-                        ],
-                        'id','log_name','description','subject_type','subject_id','causer_type','causer_id','created_at','updated_at'
+                        ],'log_name','description','subject_type','subject_id','causer_type','causer_id'
                     ]
                 ])
             }}

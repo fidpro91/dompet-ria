@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Charts\RemunChart;
 use App\Libraries\Servant;
 use App\Models\Jasa_pelayanan;
 use App\Models\Kategori_potongan;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Validator;
 use DataTables;
 use fidpro\builder\Create;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use stdClass;
 use Maatwebsite\Excel\Facades\Excel;
@@ -75,6 +77,12 @@ class Pencairan_jasa_headerController extends Controller
                 "class"     => "btn btn-success btn-xs",
                 "href"      => url("$this->route/excel/$data->id_cair_header"),
             ]);
+
+            $button .= Create::link("<i class=\" fas fa-chart-bar\"></i>", [
+                "class"     => "btn btn-purple btn-xs",
+                "href"      => url("$this->route/statistik/$data->id_cair_header"),
+            ]);
+
             if ($data->is_published == 0) {
                 $button .= Create::link("<i class=\"fas fa-glasses\"></i>", [
                     "class"     => "btn btn-warning btn-xs",
@@ -141,6 +149,7 @@ class Pencairan_jasa_headerController extends Controller
                 if ($value->emp_status == 2) {
                     $this->hitung_pajak_blud($value,$id);
                 }
+
                 $this->hitung_potongan_individu($value,$id);
                 DB::table("pencairan_jasa")->where("id_cair",$id)->update([
                     "total_potongan"	=> $this->totalPotongan,
@@ -504,28 +513,77 @@ class Pencairan_jasa_headerController extends Controller
 	{
 		return Excel::download(new JaspelExport($id), 'THP_'.$id.'.xlsx');
 	}
+    
+    public function statistic_report($id)
+	{
+		$chart['statistik'] = new RemunChart;
+        $pencairan = Pencairan_jasa_header::findOrFail($id);
+        $data =  Pencairan_jasa_header::from('pencairan_jasa_header as ph')
+                 ->join("pencairan_jasa as pj","pj.id_header","=","ph.id_cair_header")
+                 ->join("employee as e","e.emp_id","=","pj.emp_id")
+                 ->join("ms_unit as mu","mu.unit_id","=","e.unit_id_kerja")
+                 ->select("mu.unit_name",DB::raw("sum(pj.total_brutto) as total_jasa"))
+                 ->where([
+                    "ph.id_cair_header" => $id,
+                    "e.is_medis"        => "f"
+                 ])
+                 ->whereNotIn('e.jabatan_type', [16,17])
+                 ->groupBy("mu.unit_name")
+                //  ->limit("10")
+                 ->get();
+        $dataChart=$colors=[];
+        foreach ($data as $key => $value) {
+            $dataChart[$value->unit_name] = $value->total_jasa;
+            $colors[] = '#' . str_pad(dechex(mt_rand(0, 0xFFFFFF)), 6, '0', STR_PAD_LEFT);
+        }
+        $chart['statistik']->labels(array_keys($dataChart));
+        $chart['statistik']->dataset('Jasa Pelayanan', 'bar', array_values($dataChart))
+                            // ->color("rgb(216, 255, 119 )")
+                            ->backgroundcolor($colors);
+        $chart['statistik']->displayLegend(false);
+
+        $chart['globalPendapatan']  = new RemunChart;
+        $dataPercent   = DB::table("persentase_jasa")->where("id_cair",$id);
+        $dataChart=$background=[];
+        foreach ($dataPercent->get() as $key => $value) {
+            $dataChart[$value->penjamin] = $value->persentase_jasa;
+            $background[] = "rgb(".rand(100,250).",".rand(50,200).", ".rand(10,125).")";
+        }
+        
+        $chart['globalPendapatan']->labels(array_keys($dataChart));
+        $chart['globalPendapatan']->dataset('Pendapatan Global', 'pie', array_values($dataChart))
+            ->color("rgb(216, 255, 119 )")
+            ->backgroundcolor($background);
+
+        return $this->themes("pencairan_jasa_header.printout.statistik",compact('chart'),'Statistik Jasa Pelayanan '.$pencairan->keterangan);
+	}
 
     public function print_pdf($id)
     {
         ini_set("memory_limit",-1);
-        $data['potongan']   = Kategori_potongan::where("potongan_active","t")->get();
-        $data['header']     = Pencairan_jasa_header::find($id);
+        $cacheKey = 'laporan-' . $id;
+        $data = Cache::get($cacheKey);
+        if (!$data) {
+            $data['potongan']   = Kategori_potongan::where("potongan_active","t")->get();
+            $data['header']     = Pencairan_jasa_header::find($id);
 
-        $data['detail'] = DB::select("SELECT x.golongan,x.emp_no,x.emp_name,x.nomor_rekening,
-        x.total_brutto,
-        json_arrayagg(
-            json_object('kategori_id',x.kategori_id, 'potongan', x.total_potongan)
-        )detail
-        FROM (
-            SELECT e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,pm.kategori_id,pj.total_brutto,sum(pm.potongan_value)total_potongan
-            FROM pencairan_jasa pj
-            join employee e on e.emp_id = pj.emp_id
-            JOIN potongan_jasa_medis pm ON pm.pencairan_id = pj.id_cair
-            where pj.id_header = '$id'
-            group by e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,pm.kategori_id,pj.total_brutto
-        )x
-        GROUP BY x.golongan,x.emp_no,x.emp_name,x.nomor_rekening,
-        x.total_brutto");
+            $data['detail'] = DB::select("SELECT x.golongan,x.emp_no,x.emp_name,x.nomor_rekening,
+            x.total_brutto,
+            json_arrayagg(
+                json_object('kategori_id',x.kategori_id, 'potongan', x.total_potongan)
+            )detail
+            FROM (
+                SELECT e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,pm.kategori_id,pj.total_brutto,sum(pm.potongan_value)total_potongan
+                FROM pencairan_jasa pj
+                join employee e on e.emp_id = pj.emp_id
+                JOIN potongan_jasa_medis pm ON pm.pencairan_id = pj.id_cair
+                where pj.id_header = '$id'
+                group by e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,pm.kategori_id,pj.total_brutto
+            )x
+            GROUP BY x.golongan,x.emp_no,x.emp_name,x.nomor_rekening,
+            x.total_brutto");
+            Cache::put($cacheKey,$data,60);
+        }
         // return view("pencairan_jasa_header.printout.print_pencairan",compact('data'));
         $pdf = PDF::loadview("pencairan_jasa_header.printout.print_pencairan",compact('data'))
                ->setPaper([0, 0, 750, 1500], 'landscape');

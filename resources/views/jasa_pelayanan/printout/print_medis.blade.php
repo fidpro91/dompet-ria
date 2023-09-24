@@ -57,8 +57,8 @@ body {
 }
 </style>
 <?php
-$getHeader = new ArrayIterator($data);
-$header = json_decode($getHeader->current()->detail);
+/* $getHeader = new ArrayIterator($data);
+$header = json_decode($getHeader->current()->detail); */
 ?>
 <h1 align="center">
 </h1>
@@ -74,7 +74,7 @@ $header = json_decode($getHeader->current()->detail);
                     foreach ($header as $key => $value) {
                         $child .= "<th>SKOR</th>
                                    <th>NOMINAL</th>";
-                        echo "<th colspan=\"2\">$value->komponen</th>";
+                        echo "<th colspan=\"2\">$value->nama_komponen</th>";
                     }
                 ?>
                 <th rowspan="2">TOTAL</th>

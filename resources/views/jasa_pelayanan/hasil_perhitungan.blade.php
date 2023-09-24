@@ -139,7 +139,7 @@ $allJasa=Cache::get("cacheJasaMerger");
             info: false,
             'columnDefs': [
                 {
-                    "targets": [-1],
+                    "targets": [-1,-2],
                     'render': $.fn.dataTable.render.number( ',', '.', 2)
                 }
             ]
@@ -184,6 +184,10 @@ $allJasa=Cache::get("cacheJasaMerger");
 
     function checkout_proporsi(komponen_id) {
         jaspelId = sessionStorage.getItem('jaspelId');
+        if (!jaspelId) {
+            Swal.fire("Oopss...!!", "Data dasar jasa belum disimpan. Silahkan simpan data dasar jasa terlebih dahulu", "error");
+            return false;
+        }
         showLoading();
         $.get("{{url('jasa_pelayanan/simpan_per_proporsi')}}/"+jaspelId+"/"+komponen_id,function(resp){
             if (resp.code == 200) {
@@ -222,6 +226,10 @@ $allJasa=Cache::get("cacheJasaMerger");
 
     function finish_jaspel() {
         jaspelId = sessionStorage.getItem('jaspelId');
+        if (!jaspelId) {
+            Swal.fire("Oopss...!!", "Data dasar jasa belum disimpan. Silahkan simpan data dasar jasa terlebih dahulu", "error");
+            return false;
+        }
         Swal.fire({
                 title: 'Selesai perhitungan jasa pelayan?',
                 type: 'question',

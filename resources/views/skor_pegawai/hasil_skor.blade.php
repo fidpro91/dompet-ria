@@ -120,6 +120,9 @@ $totalError = count(Cache::get('skorError'));
                             'X-CSRF-TOKEN': "<?=csrf_token()?>"
                         },
                         'type'    : 'post',
+                        'beforeSend' : function(){
+                            showLoading();
+                        },
                         'url'     : '{{url("skor_pegawai/save_skor")}}',
                         'success': function(data) {
                             if (data.success) {

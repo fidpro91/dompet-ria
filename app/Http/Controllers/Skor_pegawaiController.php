@@ -249,10 +249,12 @@ class Skor_pegawaiController extends Controller
             }
             foreach ($pegawai as $key => $pgw) {
                 $data[$key] = [
-                    "nip"   => $pgw->emp_no,
-                    "id"    => $pgw->emp_id,
-                    "bulan_update"    => $request->bulan_skor,
-                    "nama"  => $pgw->emp_name
+                    "nip"              => $pgw->emp_no,
+                    "id"               => $pgw->emp_id,
+                    "is_medis"         => $pgw->is_medis,
+                    "unit_kerja"       => $pgw->unit_name,
+                    "bulan_update"     => $request->bulan_skor,
+                    "nama"             => $pgw->emp_name
                 ];
 
                 $skor=($pgw->gaji_pokok/1000000*1);
@@ -268,40 +270,34 @@ class Skor_pegawaiController extends Controller
                     "keterangan"    => "BASIC INDEX PENDIDIKAN - ".$pgw->pendidikan
                 ];
 
-                $data[$key]['totalSkor'] = $data[$key]['totalSkor'] + $pgw->unit_risk_index;
+                $data[$key]['totalSkor'] = $data[$key]['totalSkor'] + $pgw->last_risk_index;
                 $data[$key]['dataSkor']['risk'] = [
-                    "skor"          => $pgw->unit_risk_index,
+                    "skor"          => $pgw->last_risk_index,
                     "keterangan"    => "RISK INDEX (INFEKSIUS+ADMINISTRASI) - ".$pgw->unit_name
                 ];
 
-                $data[$key]['totalSkor'] = $data[$key]['totalSkor'] + $pgw->unit_emergency_index;
+                $data[$key]['totalSkor'] = $data[$key]['totalSkor'] + $pgw->last_emergency_index;
                 $data[$key]['dataSkor']['emergency'] = [
-                    "skor"          => $pgw->unit_emergency_index,
+                    "skor"          => $pgw->last_emergency_index,
                     "keterangan"    => "RISK INDEX (INFEKSIUS+ADMINISTRASI) - ".$pgw->unit_name
                 ];
 
                 //get jabatan skor
-                if ($pgw->jabatan_struktural) {
-                    $posisi = Detail_indikator::from("detail_indikator as di")
-                              ->where("detail_id",$pgw->jabatan_struktural)
-                              ->join("indikator as i","i.id","=","di.indikator_id")->first();
-                }elseif ($pgw->jabatan_fungsional) {
-                    $posisi = Detail_indikator::from("detail_indikator as di")
-                              ->where("detail_id",$pgw->jabatan_fungsional)
-                              ->join("indikator as i","i.id","=","di.indikator_id")->first();
+                $posisiId = (($pgw->jabatan_struktural ?? $pgw->jabatan_fungsional)??30);
+                $posisi = Detail_indikator::from("detail_indikator as di")
+                        ->where("detail_id",$posisiId)
+                        ->join("indikator as i","i.id","=","di.indikator_id")->first();
+                if (!$posisi) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Jabatan pegawai : '.$pgw->emp_name.' tidak terdaftar'
+                    ]);
                 }
-                $skor = ($posisi->skor*$posisi->bobot);
-                $data[$key]['totalSkor'] = $data[$key]['totalSkor'] +$skor;
+                $data[$key]['totalSkor'] = $data[$key]['totalSkor'] + $pgw->last_position_index;
                 $data[$key]['dataSkor']['position'] = [
                     "skor"          => $skor,
                     "keterangan"    => "POSITION INDEX - ".$posisi->detail_name
                 ];
-                /* $sertifikatNote = implode(',',$sertifikatNote);
-                $data[$key]['dataSkor']['certifycate'] = [
-                    "skor"          => ($sertifikatSkor),
-                    "keterangan"    => ($sertifikatSkor>0)?"DIKLAT & SERTIFIKAT INDEX - ($sertifikatNote)":NULL
-                ];
-                $data[$key]['totalSkor'] = $data[$key]['totalSkor'] +$sertifikatSkor; */
                 
             }
             Cache::add('skorPegawai',array_values($data),3000);
@@ -315,7 +311,7 @@ class Skor_pegawaiController extends Controller
                 return $dataError;
             });
             $resp = [
-                'success' => false,
+                'success' => true,
                 'message' => 'Skor Berhasil Digenerate!'
             ];
         } catch (\Exception $e) {
@@ -325,6 +321,100 @@ class Skor_pegawaiController extends Controller
             ];
         }
         return response()->json($resp);
+    }
+
+    function set_skor($type)
+    {
+        $skor = Cache::get('skorPegawai');
+        $newSkor=[];
+        foreach ($skor as $key => $value) {
+            if ($type == 1) {
+                //get sertifikat skor
+                $sertifikat = Diklat::from("diklat as dk")
+                ->where("peserta_id", $value["id"])
+                    ->join("detail_indikator as di", "di.detail_id", "=", "dk.indikator_skor")
+                    ->join("indikator as i", "i.id", "=", "di.indikator_id")
+                    ->select([
+                        "skor","bobot","judul_pelatihan"
+                    ]);
+                $sertifikatSkor = 0;
+                $sertifikatNote = [];
+                if ($sertifikat->count() > 0) {
+                    foreach ($sertifikat->get() as $x => $rs) {
+                        $sertifikatSkor += ($rs->skor * $rs->bobot);
+                        $sertifikatNote[] = $rs->judul_pelatihan;
+                    }
+                    if ($sertifikatSkor > 0.8) {
+                        $sertifikatSkor = 0.8;
+                    }
+                }
+                $sertifikatNote = implode(',', $sertifikatNote);
+                $data['certifycate'] = [
+                    "skor"          => ($sertifikatSkor),
+                    "keterangan"    => ($sertifikatSkor > 0) ? "DIKLAT & SERTIFIKAT INDEX - ($sertifikatNote)" : NULL
+                ];
+                $value["totalSkor"] = $value['totalSkor'] + $sertifikatSkor;
+                
+                $value["dataSkor"]  = array_merge($value["dataSkor"],$data);
+            }else if ($type == 2) {
+                //get tugas tambahan
+                $tugasTambahan = Tugas_tambahan::from("tugas_tambahan as tt")
+                ->where("emp_id", $value["id"])
+                    ->whereRaw("('" . date('Y-m-d') . "' <= tt.tanggal_akhir)")
+                    ->join("detail_indikator as di", "di.detail_id", "=", "tt.jabatan_tugas")
+                    ->join("indikator as i", "i.id", "=", "di.indikator_id");
+                $tugasSkor = 0;
+                $tugasNote = [];
+                if ($tugasTambahan->count() > 0) {
+                    foreach ($tugasTambahan->get() as $x => $rs) {
+                        $tugasSkor += ($rs->skor * $rs->bobot);
+                        $tugasNote[] = $rs->detail_name . '@' . $rs->nama_tugas;
+                    }
+                    if ($value["is_medis"] == 'f') {
+                        if ($tugasSkor > 3.5) {
+                            $tugasSkor = 3.5;
+                        }
+                    }
+                }
+                $tugasNote = implode(',', $tugasNote);
+                $data['tugas'] = [
+                    "skor"          => ($tugasSkor),
+                    "keterangan"    => ($tugasSkor > 0) ? "TUGAS TAMBAHAN INDEX - ($tugasNote)" : null
+                ];
+                $value["totalSkor"] = $value['totalSkor'] + $tugasSkor;
+                $value["dataSkor"]  = array_merge($value["dataSkor"],$data);
+            }else if ($type == 3) {
+                //get performa index
+                $performaIndex = Performa_index::from("performa_index as pi")
+                ->where("pi.emp_id", $value['id'])
+                    ->whereRaw("('" . date('Y-m-d') . "' <= pi.expired_date)")
+                    ->join("detail_indikator as di", "di.detail_id", "=", "pi.perform_skor")
+                    ->join("indikator as i", "i.id", "=", "di.indikator_id");
+                $performSkor = 0;
+                $performanNote = [];
+                if ($performaIndex->count() > 0) {
+                    foreach ($performaIndex->get() as $x => $rs) {
+                        $performSkor += ($rs->skor * $rs->bobot);
+                        $performanNote[] = $rs->indikator;
+                    }
+                }
+                $performanNote = implode(',', $performanNote);
+                $data['performa'] = [
+                    "skor"          => ($performSkor),
+                    "keterangan"    => ($performSkor > 0) ? "($performanNote)" : null
+                ];
+                $value['skor_note']    = "Skor pegawai bulan ".$value["bulan_update"].".";
+                $value["totalSkor"]    = $value['totalSkor'] + $performSkor;
+                $value["dataSkor"]     = array_merge($value["dataSkor"],$data);
+            }
+            $newSkor[$key] = $value;
+        }
+        //update cache skor 
+        Cache::put('skorPegawai',$newSkor);
+        return response()->json([
+            "code"      => 200,
+            "message"   => "OK"
+        ]);
     }
 
     private function form_validasi($data)
