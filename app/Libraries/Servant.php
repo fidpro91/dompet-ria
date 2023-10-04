@@ -8,7 +8,7 @@ class Servant
 {
     public static function connect_simrs($method,$url,$data = array()){
         $ch = curl_init(); 
-        $base_url = "http://36.95.219.202:83/ehos/api/api_internal/";
+        $base_url = "http://localhost:88/ehos/api/api_internal/";
         $url = $base_url.$url;
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt ($ch, CURLOPT_SSL_VERIFYPEER, FALSE);

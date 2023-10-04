@@ -112,9 +112,8 @@ $employeeOff  = count(Cache::get('employeeOffCache'));
                         'url'     : '{{route("detail_tindakan_medis.store")}}',
                         'success': function(data) {
                             if (data.success) {
-                                Swal.fire("Sukses!", data.message, "success").then(() => {
-                                    location.href= "{{route('detail_tindakan_medis.index')}}";
-                                });
+                                Swal.close();
+                                location.href= "{{route('detail_tindakan_medis.index')}}";
                             }else{
                                 Swal.fire("Oopss..!!", data.message, "error")
                             }

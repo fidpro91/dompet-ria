@@ -3,26 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Libraries\Servant;
-use App\Models\Data_simrs;
 use Illuminate\Http\Request;
-use App\Models\Detail_tindakan_medis;
+use App\Models\Data_simrs;
 use App\Models\Repository_download;
 use Illuminate\Support\Facades\Validator;
 use DataTables;
 use fidpro\builder\Create;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\DB;
 
-class Detail_tindakan_medisController extends Controller
+class Data_simrsController extends Controller
 {
-    public $model   = "Detail_tindakan_medis";
-    public $folder  = "detail_tindakan_medis";
-    public $route   = "detail_tindakan_medis";
+    public $model   = "Data_simrs";
+    public $folder  = "data_simrs";
+    public $route   = "data_simrs";
 
     public $param = [
-        'jp_medis_id'   =>  '',
         'tanggal_tindakan'   =>  '',
         'nama_tindakan'   =>  '',
         'tarif_tindakan'   =>  '',
@@ -42,16 +39,12 @@ class Detail_tindakan_medisController extends Controller
         'penjamin_id'   =>  '',
         'nama_penjamin'   =>  '',
         'status_bayar'   =>  '',
-        'tanggal_import'   =>  '',
         'billing_id'   =>  '',
-        'status_jasa'   =>  '',
-        'jasa_tindakan_bulan'   =>  '',
-        'repo_id'   => 'required'
+        'jenis_tagihan'   =>  '',
+        'repo_id'   =>  ''
     ];
-
     public $defaultValue = [
         'tindakan_id'   =>  '',
-        'jp_medis_id'   =>  '',
         'tanggal_tindakan'   =>  '',
         'nama_tindakan'   =>  '',
         'tarif_tindakan'   =>  '',
@@ -71,23 +64,19 @@ class Detail_tindakan_medisController extends Controller
         'penjamin_id'   =>  '',
         'nama_penjamin'   =>  '',
         'status_bayar'   =>  '',
-        'tanggal_import'   =>  '',
         'billing_id'   =>  '',
-        'status_jasa'   =>  '3',
-        'jasa_tindakan_bulan'   =>  '',
-        'repo_id'   => ''
+        'jenis_tagihan'   =>  '',
+        'repo_id'   =>  ''
     ];
-    
     public function index()
     {
-        return $this->themes($this->folder . '.index', null, $this);
+        return $this->themes($this->folder . '.index',null,$this);
     }
 
     public function get_dataTable(Request $request)
     {
-        $data = Detail_tindakan_medis::select([
+        $data = Data_simrs::select([
             'tindakan_id',
-            'jp_medis_id',
             'tanggal_tindakan',
             'nama_tindakan',
             'tarif_tindakan',
@@ -107,26 +96,26 @@ class Detail_tindakan_medisController extends Controller
             'penjamin_id',
             'nama_penjamin',
             'status_bayar',
-            'tanggal_import',
             'billing_id',
-            'status_jasa',
-            'jasa_tindakan_bulan'
-        ]);
+            'jenis_tagihan',
+            'repo_id'
+            ]
+        );
 
         $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
-            $button = Create::action("<i class=\"fas fa-edit\"></i>", [
-                "class"     => "btn btn-primary btn-sm",
+            $button = Create::action("<i class=\"fas fa-edit\"></i>",[
+                "class"     => "btn btn-primary btn-xs",
                 "onclick"   => "set_edit(this)",
-                "data-url"  => route($this->route . ".edit", $data->tindakan_id),
-                "ajax-url"  => route($this->route . '.update', $data->tindakan_id),
-                "data-target"  => "page_detail_tindakan_medis"
+                "data-url"  => route($this->route.".edit",$data->tindakan_id),
+                "ajax-url"  => route($this->route.'.update',$data->tindakan_id),
+                "data-target"  => "page_data_simr"
             ]);
-
-            $button .= Create::action("<i class=\"fas fa-trash\"></i>", [
-                "class"     => "btn btn-danger btn-sm",
+            
+            $button .= Create::action("<i class=\"fas fa-trash\"></i>",[
+                "class"     => "btn btn-danger btn-xs",
                 "onclick"   => "delete_row(this)",
                 "x-token"   => csrf_token(),
-                "data-url"  => route($this->route . ".destroy", $data->tindakan_id),
+                "data-url"  => route($this->route.".destroy",$data->tindakan_id),
             ]);
             return $button;
         })->rawColumns(['action']);
@@ -135,8 +124,8 @@ class Detail_tindakan_medisController extends Controller
 
     public function create()
     {
-        $detail_tindakan_medi = (object)$this->defaultValue;
-        return view($this->folder . '.form', compact('detail_tindakan_medi'));
+        $data_simr = (object)$this->defaultValue;
+        return view($this->folder . '.form',compact('data_simr'));
     }
 
     public function store(Request $request)
@@ -198,7 +187,7 @@ class Detail_tindakan_medisController extends Controller
                         $totalNonEksekutif  += $value["skor_jasa"];
                     }
                 } 
-                Detail_tindakan_medis::insert($t);
+                Data_simrs::insert($t);
             }
 
             Repository_download::find($repoId)->update([
@@ -251,75 +240,6 @@ class Detail_tindakan_medisController extends Controller
             ];
         }
         return response()->json($resp);
-    }
-
-    private function form_validasi($data)
-    {
-        $validator = Validator::make($data, $this->param);
-        //check if validation fails
-        if ($validator->fails()) {
-            return [
-                "code"      => "201",
-                "message"   => $validator->errors()
-            ];
-        }
-        //filter
-        $filter = array_keys($this->param);
-        $input = array_filter(
-            $data,
-            fn ($key) => in_array($key, $filter),
-            ARRAY_FILTER_USE_KEY
-        );
-        return [
-            "code"      => "200",
-            "data"      => $input
-        ];
-    }
-
-    public function edit(Detail_tindakan_medis $detail_tindakan_medi)
-    {
-        return view($this->folder . '.form', compact('detail_tindakan_medi'));
-    }
-    public function update(Request $request, Detail_tindakan_medis $detail_tindakan_medi)
-    {
-        $valid = $this->form_validasi($request->all());
-        if ($valid['code'] != 200) {
-            return response()->json([
-                'success' => false,
-                'message' => $this->form_validasi($request->all())['message']
-            ]);
-        }
-
-        $data = Detail_tindakan_medis::findOrFail($detail_tindakan_medi->tindakan_id);
-        $data->update($valid['data']);
-        return response()->json([
-            'success' => true,
-            'message' => 'Data Berhasil Diudapte!'
-        ]);
-    }
-
-    public function destroy($id)
-    {
-        $data = Detail_tindakan_medis::findOrFail($id);
-        $data->delete();
-        return response()->json([
-            'success' => true,
-            'message' => 'Data Berhasil Diudapte!'
-        ]);
-    }
-
-    public function kroscek_tindakan(Request $request)
-	{
-        ini_set('max_execution_time', -1);
-        ini_set('memory_limit', -1);
-        list($tanggal1,$tanggal2) = explode('-',$request->periode_tindakan_kroscek);
-        $filter = [
-			"tanggal1"		=> date("Y-m-d",strtotime($tanggal1)),
-			"tanggal2"		=> date("Y-m-d",strtotime($tanggal2)),
-		];
-        $datajaspelDetail  	= Servant::connect_simrs("POST",'kroscek_billing',json_encode($filter));
-        $datajaspelDetail   = json_decode($datajaspelDetail);
-        return $this->themes("detail_tindakan_medis.bill_not_mapp",['data'=>($datajaspelDetail->response??null)],"Data Tindakan Belum Dimapping");
     }
 
     public function get_data_simrs(Request $request)
@@ -472,5 +392,66 @@ class Detail_tindakan_medisController extends Controller
 		];
         $response = Servant::connect_simrs("POST",'mapping_billing',json_encode($post));
         return ($response);
+    }
+
+    private function form_validasi($data){
+        $validator = Validator::make($data, $this->param);
+        //check if validation fails
+        if ($validator->fails()) {
+            return [
+                "code"      => "201",
+                "message"   => implode("<br>",$validator->errors()->all())
+            ];
+        }
+        //filter
+        $filter = array_keys($this->param);
+        $input = array_filter(
+            $data,
+            fn ($key) => in_array($key, $filter),
+            ARRAY_FILTER_USE_KEY
+        );
+        return [
+            "code"      => "200",
+            "data"      => $input
+        ];
+    }
+
+    public function edit(Data_simrs $data_simr)
+    {
+        return view($this->folder . '.form', compact('data_simr'));
+    }
+    public function update(Request $request, Data_simrs $data_simr)
+    {
+        $valid = $this->form_validasi($request->all());
+        if($valid['code'] != 200){
+            return response()->json([
+                'success' => false,
+                'message' => $this->form_validasi($request->all())['message']
+            ]);
+        }
+        try {
+            $data = Data_simrs::findOrFail($data_simr->tindakan_id);
+            $data->update($valid['data']);
+            $resp = [
+                'success' => true,
+                'message' => 'Data Berhasil Diupdate!'
+            ];
+        }catch(\Exception $e){
+            $resp = [
+                'success' => false,
+                'message' => 'Data Gagal Diupdate! <br>'.$e->getMessage()
+            ];
+        }
+        return response()->json($resp);
+    }
+
+    public function destroy($id)
+    {
+        $data = Data_simrs::findOrFail($id);
+        $data->delete();
+        return response()->json([
+            'success' => true,
+            'message' => 'Data Berhasil Dihapus!'
+        ]);
     }
 }

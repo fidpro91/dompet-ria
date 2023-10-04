@@ -36,8 +36,8 @@ Widget::_init(["select2","datepicker","daterangepicker"]);
                 ],[
                     "readonly" => true,
                     "value" => date('m-Y')
-                ])->render("group")!!}
-            {!!Widget::daterangePicker("periode_tindakan")->render("group")!!}
+                ])->render("group")
+            !!}
             {!!
                 Widget::select2("surety_id",[
                     "data" => [
@@ -53,12 +53,14 @@ Widget::_init(["select2","datepicker","daterangepicker"]);
             !!}
             {!!
                 Create::dropDown("jenis_pembayaran",[
-                "data" => [
-                    ["1" => "Tunai"],
-                    ["2" => "Piutang"]
-                ]
-            ])->render("group")!!}
+                    "data" => [
+                        ["1" => "Tunai"],
+                        ["2" => "Piutang"]
+                    ]
+                ])->render("group")
+            !!}
         </div>
+        {!!Widget::daterangePicker("periode_tindakan")->render("group")!!}
         <button class="btn btn-block btn-success btn-download">Download</button>
         {!!Form::close()!!}
     </div>
@@ -89,7 +91,7 @@ Widget::_init(["select2","datepicker","daterangepicker"]);
                             'X-CSRF-TOKEN': "<?=csrf_token()?>"
                         },
                         'beforeSend': function() {
-                            // showLoading();
+                            showLoading();
                         },
                         'type'    : 'post',
                         'url'     : '{{URL("detail_tindakan_medis/get_data_simrs")}}',

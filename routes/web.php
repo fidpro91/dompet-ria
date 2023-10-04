@@ -304,3 +304,8 @@ Route::group(['middleware' => ['auth','admin']], function (){
 });
             Route::get('activity_log/get_dataTable','activity_logController@get_dataTable');
             Route::resource('activity_log', activity_logController::class);
+
+            Route::get('data_simr/get_dataTable','Data_simrsController@get_dataTable');
+            Route::resource('data_simr', Data_simrsController::class);
+            Route::get('data_simr/get_dataTable','Data_simrsController@get_dataTable');
+            Route::resource('data_simr', Data_simrsController::class);
