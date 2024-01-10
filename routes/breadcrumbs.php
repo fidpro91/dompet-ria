@@ -145,3 +145,7 @@ Breadcrumbs::for("ms_classification", function (BreadcrumbTrail $trail) {
                 $trail->parent("home");
                 $trail->push("activity_log", route("activity_log.index"));
             });
+            Breadcrumbs::for("potongan_penghasilan", function (BreadcrumbTrail $trail) {
+                $trail->parent("home");
+                $trail->push("potongan_penghasilan", route("potongan_penghasilan.index"));
+            });

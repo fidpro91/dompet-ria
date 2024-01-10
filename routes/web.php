@@ -309,3 +309,17 @@ Route::group(['middleware' => ['auth','admin']], function (){
             Route::resource('data_simr', Data_simrsController::class);
             Route::get('data_simr/get_dataTable','Data_simrsController@get_dataTable');
             Route::resource('data_simr', Data_simrsController::class);
+            Route::get('detail_tindakan_medi/get_dataTable','Detail_tindakan_medisController@get_dataTable');
+            Route::resource('detail_tindakan_medi', Detail_tindakan_medisController::class);
+
+            Route::get('potongan_penghasilan/index/{id_cair?}','Potongan_penghasilanController@index');
+            Route::get('potongan_penghasilan/show/{id?}','Potongan_penghasilanController@show');
+            Route::get('potongan_penghasilan/data/{id?}','Potongan_penghasilanController@data');
+            Route::get('potongan_penghasilan/get_dataTable','Potongan_penghasilanController@get_dataTable');
+            Route::resource('potongan_penghasilan', Potongan_penghasilanController::class);
+
+            Route::get('pengajuan_diklat','PengajuandiklatController@index');
+            Route::post('pengajuan_diklat/find','PengajuandiklatController@find');
+            Route::post('pengajuan_diklat/store','PengajuandiklatController@store');
+            Route::get('pengajuan_diklat/form_pengajuan','PengajuandiklatController@form_pengajuan');
+            Route::get('pengajuan_diklat/finish','PengajuandiklatController@finish');

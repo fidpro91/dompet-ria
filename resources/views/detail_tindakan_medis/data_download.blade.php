@@ -5,7 +5,8 @@ use \fidpro\builder\Create;
 use \fidpro\builder\Bootstrap;
 use \fidpro\builder\Widget;
 use Illuminate\Support\Facades\DB;
-// print_r(Cache::get('billCache'));
+/* print_r(Cache::get('billCache'));
+die; */
 $totalDownload = count(Cache::get('billCache'));
 $totalSkor     = count(Cache::get('skorCache'));
 $errorDownload = Cache::get('errorDownloadCache');

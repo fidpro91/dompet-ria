@@ -19,6 +19,11 @@ $(document).ready(function () {
     if ($(this).attr("data-url")) {
       $("#" + $(this).attr("data-target") + "").load($(this).attr("data-url"));
     }
+    if ($(this).attr("data-url-store")) {
+      $.ajaxSetup({
+        "url": $(this).attr("data-url-store")
+      });
+    }
   });
 
   $("body").on("click", ".btn-refresh", function () {

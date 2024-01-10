@@ -57,4 +57,31 @@ class Servant
         }
         return str_replace('NOMOR', $query->nomax, $data['text']);
 	}
+
+    public static function erm($tipe,$url,$cparam){
+        $url = "192.168.1.8:81/".$url;
+        $ch           = curl_init();
+		curl_setopt ($ch, CURLOPT_URL, $url);
+		if($tipe == 'post'){
+			curl_setopt ($ch, CURLOPT_POST, 1);
+			curl_setopt ($ch, CURLOPT_POSTFIELDS, $cparam);
+		}else if($tipe == 'put'){
+			curl_setopt ($ch, CURLOPT_CUSTOMREQUEST, "PUT");
+			curl_setopt ($ch, CURLOPT_POSTFIELDS, $cparam);
+		}else if($tipe =='delete'){
+			curl_setopt ($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+			curl_setopt ($ch, CURLOPT_POSTFIELDS, $cparam);
+		}else if($tipe =='get'){
+			curl_setopt ($ch, CURLOPT_POST, 0);
+			curl_setopt ($ch, CURLOPT_POSTFIELDS, $cparam);
+		}
+		curl_setopt($ch, CURLOPT_HEADER, false);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_HTTPHEADER,array("Content-Type: application/json")); // DO NOT RETURN HTTP HEADERS
+		$data = curl_exec($ch);		
+		print_r($data);
+        die;
+		curl_close($ch);
+		return $data;
+    }
 }

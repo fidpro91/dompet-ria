@@ -14,7 +14,7 @@ Widget::_init(["datepicker"]);
                     "class" => "table table-hover"
                 ],[
                     "url"       => "jasa_pelayanan/get_dataTable",
-                    "filter"    => ["status" => '1'],
+                    "filter"    => ["status" => '2'],
                     "raw"   => [
                         '<input type="checkbox" name="check-all-jaspel" class="check-all"/>'     => [
                             "data"      => "jaspel_id", 

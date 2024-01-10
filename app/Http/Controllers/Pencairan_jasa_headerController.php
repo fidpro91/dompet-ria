@@ -86,7 +86,8 @@ class Pencairan_jasa_headerController extends Controller
             if ($data->is_published == 0) {
                 $button .= Create::link("<i class=\"fas fa-glasses\"></i>", [
                     "class"     => "btn btn-warning btn-xs",
-                    "href"      => url("$this->route/kroscek/$data->id_cair_header"),
+                    "href"      => url("potongan_penghasilan/index/$data->id_cair_header"),
+                    // "href"      => url("$this->route/kroscek/$data->id_cair_header"),
                     "target"    => "_blank"
                 ]);
                 $button .= Create::action("<i class=\"fas fa-trash\"></i>", [
@@ -145,7 +146,7 @@ class Pencairan_jasa_headerController extends Controller
                 $id=DB::table("pencairan_jasa")->insertGetId($input);
 
                 //hitung pajak & potongan by golongan
-                $this->hitung_potongan_golongan($value,$id);
+                /* $this->hitung_potongan_golongan($value,$id);
                 if ($value->emp_status == 2) {
                     $this->hitung_pajak_blud($value,$id);
                 }
@@ -155,7 +156,7 @@ class Pencairan_jasa_headerController extends Controller
                     "total_potongan"	=> $this->totalPotongan,
 					"total_netto"		=> ($value->total_terima-$this->totalPotongan)
                 ]);
-                $this->totalPotongan = 0;
+                $this->totalPotongan = 0; */
             }
             DB::commit();
             $resp = [
@@ -274,7 +275,7 @@ class Pencairan_jasa_headerController extends Controller
 			}
 		}else{
 			if (!empty($data->kode_ptkp)) {
-				$cekPajak = Potongan_statis::find($data->kode_ptkp);
+				$cekPajak = Potongan_statis::where("pot_stat_code",$data->kode_ptkp)->first();
                 if (!$cekPajak) {
                     return false;
                 }

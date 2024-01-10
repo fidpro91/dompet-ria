@@ -133,58 +133,46 @@ class Repository_downloadController extends Controller
 
     public function copy_point(Request $request)
     {
-        $data = Detail_tindakan_medis::where("repo_id",$request->id)
-                ->whereIn("penjamin_id",$request->group_penjamin)
-                ->get();
-        if ($data) {
-            DB::beginTransaction();
-            try {
-                Point_medis::where([
-                    'repo_id'   => $request->id,
-                    'is_usage'  => 'f'
-                ])->delete();
-                foreach ($data as $key => $value) {
-                    $employee = Employee::where("emp_nip",$value->nip)->get()->first();
-                    $point = [
-                        'bulan_jaspel'      => $request->bulan_jaspel,
-                        'bulan_pelayanan'   => $value->bulan_pelayanan,
-                        'id_tindakan'       => $value->tindakan_id,
-                        'penjamin'          => $value->nama_penjamin,
-                        'skor'              => $value->skor_jasa,
-                        'is_eksekutif'      => $value->unit_vip,
-                        'employee_id'       => $employee->emp_id,
-                        'repo_id'           => $request->id,
-                        'jenis_tagihan'     => $value->jenis_tagihan,
-                        'is_copy'           => 't'
-                    ];
-                    Point_medis::create($point);
-                }
-
-                DB::table("skor_pegawai")->where("bulan_update",$request->bulan_skor)->update([
-                    "prepare_remun"         => "t",
-                    "prepare_remun_month"   => $request->bulan_jaspel
-                ]);
-
-                Repository_download::findOrFail($request->id)->update([
-                    "is_used"   => "f"
-                ]);
-
-                $resp = [
-                    "code"      => 200,
-                    "message"   => "Data berhasil dicopy"
-                ];
-                DB::commit();
-            }catch (\Exception $e) {
-                DB::rollBack();
-                $resp = [
-                    'code'      => 201,
-                    'message'   => 'Data Gagal Disimpan! <br>' . $e->getMessage()
-                ];
+        ini_set('max_execution_time', -1);
+        DB::beginTransaction();
+        DB::disableQueryLog();
+        try {
+            Point_medis::where([
+                "repo_id"   => $request->id,
+                "is_usage"  => "f"
+            ])->delete();
+            $where="";
+            if ($request->group_penjamin) {
+                $where = "and dm.penjamin_id in (".implode(',',$request->group_penjamin).")";
             }
-        }else {
+            DB::select("
+                INSERT INTO `point_medis`(`bulan_jaspel`, `bulan_pelayanan`, `id_tindakan`, `penjamin`, `skor`, `is_eksekutif`, `is_usage`, `employee_id`, `jenis_tagihan`, `repo_id`, `is_copy`)
+                SELECT '$request->bulan_jaspel',rd.bulan_pelayanan,dm.tindakan_id,dm.penjamin_id,dm.skor_jasa,dm.unit_vip,'f',COALESCE (NULLIF(dm.id_dokter, ''), 0 ),dm.jenis_tagihan,
+                dm.repo_id,'t'
+                FROM detail_tindakan_medis as dm
+                join repository_download as rd on dm.repo_id = rd.id
+                where dm.repo_id = $request->id $where
+            ");
+
+            DB::table("skor_pegawai")->where("bulan_update",$request->bulan_skor)->update([
+                "prepare_remun"         => "t",
+                "prepare_remun_month"   => $request->bulan_jaspel
+            ]);
+
+            Repository_download::findOrFail($request->id)->update([
+                "is_used"   => "f"
+            ]);
+
             $resp = [
-                "code"      => 202,
-                "message"   => "Data tidak ditemukan"
+                "code"      => 200,
+                "message"   => "Data berhasil dicopy"
+            ];
+            DB::commit();
+        }catch (\Exception $e) {
+            DB::rollBack();
+            $resp = [
+                'code'      => 201,
+                'message'   => 'Data Gagal Disimpan! <br>' . $e->getMessage()
             ];
         }
 

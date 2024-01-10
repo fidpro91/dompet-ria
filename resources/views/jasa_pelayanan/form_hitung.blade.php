@@ -15,7 +15,9 @@ Widget::_init(["select2","datepicker","inputmask"]);
                     "class" => "table table-hover"
                 ],[
                     "url"       => "repository_download/get_dataTable",
-                    "filter"    => ["is_used" => "'f'"],
+                    "filter"    => [
+                        "is_used"   => "'f'"
+                    ],
                     "raw"       => [
                         'no' => [
                             "data" => "DT_RowIndex",

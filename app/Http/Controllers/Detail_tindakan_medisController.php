@@ -22,60 +22,51 @@ class Detail_tindakan_medisController extends Controller
     public $route   = "detail_tindakan_medis";
 
     public $param = [
-        'jp_medis_id'   =>  '',
-        'tanggal_tindakan'   =>  '',
-        'nama_tindakan'   =>  '',
-        'tarif_tindakan'   =>  '',
-        'id_klasifikasi_jasa'   =>  '',
-        'klasifikasi_jasa'   =>  '',
-        'percentase_jasa'   =>  '',
-        'skor_jasa'   =>  '',
-        'qty_tindakan'   =>  '',
-        'px_norm'   =>  '',
-        'px_name'   =>  '',
-        'unit_layanan'   =>  '',
-        'unit_layanan_id'   =>  '',
-        'visit_id'   =>  '',
-        'nip'   =>  '',
-        'nama_dokter'   =>  '',
-        'unit_vip'   =>  '',
-        'penjamin_id'   =>  '',
-        'nama_penjamin'   =>  '',
-        'status_bayar'   =>  '',
-        'tanggal_import'   =>  '',
-        'billing_id'   =>  '',
-        'status_jasa'   =>  '',
-        'jasa_tindakan_bulan'   =>  '',
-        'repo_id'   => 'required'
+        'tindakan_id'           => '',
+        'tanggal_tindakan'      => '',
+        'nama_tindakan'         => '',
+        'tarif_tindakan'        => '',
+        'id_klasifikasi_jasa'   => '',
+        'klasifikasi_jasa'      => '',
+        'percentase_jasa'       => '',
+        'skor_jasa'             => '',
+        'qty_tindakan'          => '',
+        'unit_layanan'          => '',
+        'unit_layanan_id'       => '',
+        'visit_id'              => '',
+        'nama_dokter'           => '',
+        'unit_vip'              => '',
+        'penjamin_id'           => '',
+        'nama_penjamin'         => '',
+        'status_bayar'          => '',
+        'billing_id'            => '',
+        'jenis_tagihan'         => '',
+        'repo_id'               => '',
+        'id_dokter'             => ''
     ];
 
     public $defaultValue = [
-        'tindakan_id'   =>  '',
-        'jp_medis_id'   =>  '',
-        'tanggal_tindakan'   =>  '',
-        'nama_tindakan'   =>  '',
-        'tarif_tindakan'   =>  '',
-        'id_klasifikasi_jasa'   =>  '',
-        'klasifikasi_jasa'   =>  '',
-        'percentase_jasa'   =>  '',
-        'skor_jasa'   =>  '',
-        'qty_tindakan'   =>  '',
-        'px_norm'   =>  '',
-        'px_name'   =>  '',
-        'unit_layanan'   =>  '',
-        'unit_layanan_id'   =>  '',
-        'visit_id'   =>  '',
-        'nip'   =>  '',
-        'nama_dokter'   =>  '',
-        'unit_vip'   =>  '',
-        'penjamin_id'   =>  '',
-        'nama_penjamin'   =>  '',
-        'status_bayar'   =>  '',
-        'tanggal_import'   =>  '',
-        'billing_id'   =>  '',
-        'status_jasa'   =>  '3',
-        'jasa_tindakan_bulan'   =>  '',
-        'repo_id'   => ''
+        'tindakan_id'           => '',
+        'tanggal_tindakan'      => '',
+        'nama_tindakan'         => '',
+        'tarif_tindakan'        => '',
+        'id_klasifikasi_jasa'   => '',
+        'klasifikasi_jasa'      => '',
+        'percentase_jasa'       => '',
+        'skor_jasa'             => '',
+        'qty_tindakan'          => '',
+        'unit_layanan'          => '',
+        'unit_layanan_id'       => '',
+        'visit_id'              => '',
+        'nama_dokter'           => '',
+        'unit_vip'              => '',
+        'penjamin_id'           => '',
+        'nama_penjamin'         => '',
+        'status_bayar'          => '',
+        'billing_id'            => '',
+        'jenis_tagihan'         => '',
+        'repo_id'               => '',
+        'id_dokter'             => ''
     ];
     
     public function index()
@@ -142,6 +133,7 @@ class Detail_tindakan_medisController extends Controller
     public function store(Request $request)
     {
         ini_set('max_execution_time', -1);
+        ini_set('memory_limit', -1);
         DB::beginTransaction();
         try {
             DB::disableQueryLog();
@@ -350,8 +342,16 @@ class Detail_tindakan_medisController extends Controller
 				"surety_id" => $penjamin
 			]);
 		}
-		$datajaspelDetail  	= Servant::connect_simrs("POST",'get_tindakan',json_encode($filter));
-		$datajaspelDetail	= json_decode($datajaspelDetail);
+		// $datajaspelDetail  	= Servant::connect_simrs("POST",'get_tindakan',json_encode($filter));
+		// $datajaspelDetail	= json_decode($datajaspelDetail);
+        $ehosCon = app(\App\Http\Controllers\Api\EhosController::class);
+        if ($input['jenis_pembayaran'] == 1) {
+            $datajaspelDetail = $ehosCon->get_tindakan_medis_tunai($filter);
+            $data2 = $ehosCon->get_tindakan_medis_naikKelas($filter);
+            $datajaspelDetail = array_merge_recursive($datajaspelDetail,$data2);
+        }else{
+            $datajaspelDetail = $ehosCon->get_tindakan_medis_piutang($filter);
+        }
 		DB::beginTransaction();
         $dokterFail=$billFail=[];
         try {
@@ -361,7 +361,7 @@ class Detail_tindakan_medisController extends Controller
                 "jp_medis_id"           => null
             ])->delete(); */
             $tindakanMedis=[];
-            foreach ($datajaspelDetail->response as $xx => $r) {
+            foreach ($datajaspelDetail as $xx => $r) {
                 //cek apakah dokter ada di sistem
                 /* $isDokter=DB::table('employee')->where("emp_nip",trim($r->employee_nip))->count();
                 if($isDokter == 0){
@@ -374,24 +374,19 @@ class Detail_tindakan_medisController extends Controller
                 } */
                 $tindakanMedis[$xx] = [
                     "tanggal_tindakan"		=> date("Y-m-d",strtotime($r->visit_end_date)),
-                    "nama_tindakan"			=> addslashes($r->bill_name),
+                    "nama_tindakan"			=> addslashes($r->bill_name.'|'.$r->px_norm.'|'.$r->unit_name.'|'.$r->surety_name),
                     "tarif_tindakan"		=> $r->tarif,
                     "id_klasifikasi_jasa"	=> $r->id_klasifikasi_jasa,
                     "klasifikasi_jasa"		=> $r->klasifikasi_jasa,
                     "percentase_jasa"		=> (($r->is_vip=='t')?$r->percentase_eksekutif:$r->percentase_non_eksekutif),
                     "skor_jasa"				=> (($r->is_vip=='t')?$r->skor_eksekutif:$r->skor_noneksekutif),
                     "qty_tindakan"			=> $r->billing_qty,
-                    "px_norm"				=> $r->px_norm,
-                    "px_name"				=> addslashes($r->px_name),
-                    "unit_layanan"			=> $r->unit_name,
-                    "unit_layanan_id"		=> $r->unit_id,
                     "visit_id"				=> $r->visit_id,
-                    "nip"					=> trim($r->employee_nip),
+                    "id_dokter"			    => trim($r->kode_remun),
                     "nama_dokter"			=> trim($r->namapelaksana),
                     "unit_vip"				=> $r->is_vip,
                     "penjamin_id"			=> $r->surety_id,
                     "billing_id"			=> $r->billing_id,
-                    "nama_penjamin"			=> $r->surety_name,
                     "status_bayar"			=> $r->status_bayar,
                     "jenis_tagihan"			=> $input["jenis_pembayaran"],
                 ];

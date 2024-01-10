@@ -19,6 +19,7 @@ class Diklat extends Model
         'peserta_id',
         'lokasi_pelatihan',
         'sertifikat_file',
+        'sertifikat_no',
         'created_by',
         'created_at',
         'updated_at'

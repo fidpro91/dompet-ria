@@ -41,8 +41,7 @@ Widget::_init(["select2","datepicker"]);
             ],
             "extra" => [
                 "name"      => "group_penjamin[]",
-                "multiple"  => "true",
-                "required"  => "true"
+                "multiple"  => "true"
             ]
         ])->render("group","Penjamin")
     !!}
