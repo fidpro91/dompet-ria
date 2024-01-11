@@ -8,6 +8,9 @@ use \fidpro\builder\Widget;
 
 Widget::_init(["daterangepicker"])
 ?>
+<style>
+	input { text-transform: uppercase; }
+</style>
 <div class="bg-picture card-box">
     <div class="profile-info-name">
         <img src="{{asset('assets/images/no-photo.jpeg')}}" class="rounded-circle avatar-xl img-thumbnail float-left mr-3" alt="profile-image">
@@ -50,6 +53,14 @@ Widget::_init(["daterangepicker"])
     {!! 
         Create::upload("sertifikat_file")->render("group");
     !!}
+    <div class="form-group">
+        <span class="captcha">{!! captcha_img() !!}</span>
+        <button type="button" class="btn btn-danger" onclick="reload_capcha()" class="reload" id="reload">
+            &#x21bb;
+        </button>
+        <p></p>
+        <input class="form-control" type="text" id="capcha_log" name="capcha_log" placeholder="Ketikkan capcha" autocomplete="off">
+    </div>
 </div>
 <div class="card-footer text-center">
     {!! Form::submit('Save',['class' => 'btn btn-success']); !!}
@@ -57,4 +68,37 @@ Widget::_init(["daterangepicker"])
 </div>
 {!!Form::close()!!}
 </div>
+<script>
+    $('form').submit(function(){
+        var formData = new FormData($("#form_diklat")[0]);
+        $.ajax({
+            'data': formData,
+            headers: {
+                'X-CSRF-TOKEN': '<?=csrf_token()?>'
+            },
+            'dataType': 'json',
+            "url" 	: "{{url('pengajuan_diklat/store')}}",
+            "type"	  : "post",
+            'processData': false,
+            'contentType': false,
+            'success': function(resp) {
+                if (resp.code == "200") {
+                    window.location.assign(resp.redirect);
+                }else{
+                    alert(resp.message);
+                    reload_capcha();
+                }
+            }
+        });
+
+        return false;
+    });
+
+    function reload_capcha() {
+        $('#capcha_log').val('');
+        $.get("{{url('login/reload_capcha')}}",function(resp){
+            $(".captcha").html(resp.captcha);
+        });
+    }
+</script>
 @endsection

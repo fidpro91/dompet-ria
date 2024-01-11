@@ -320,6 +320,7 @@ Route::group(['middleware' => ['auth','admin']], function (){
 
             Route::get('pengajuan_diklat','PengajuandiklatController@index');
             Route::post('pengajuan_diklat/find','PengajuandiklatController@find');
+            Route::post('pengajuan_diklat/validasi_capcha','PengajuandiklatController@validasi_capcha');
             Route::post('pengajuan_diklat/store','PengajuandiklatController@store');
             Route::get('pengajuan_diklat/form_pengajuan','PengajuandiklatController@form_pengajuan');
             Route::get('pengajuan_diklat/finish','PengajuandiklatController@finish');

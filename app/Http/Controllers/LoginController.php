@@ -37,12 +37,14 @@ class LoginController extends Controller
             'password' => ['required'],
             'captcha' => ['required','captcha'],
         ]);
+
         if ($validator->fails()) {
-            return [
+            return response()->json([
                 "code"      => "202",
                 "message"   => implode('<br>',$validator->errors()->all())
-            ];
+            ]);
         }
+        
         unset($data['captcha']);
         if (Auth::Attempt($data)) {
             $dataEmp = DB::table("employee AS e")

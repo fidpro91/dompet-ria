@@ -37,15 +37,54 @@ class PengajuandiklatController extends Controller
         return redirect("pengajuan_diklat/form_pengajuan");
     }
 
+    public function validasi_capcha(Request $request)
+    {
+        $validator = Validator::make($request->all(),[
+            'capcha_log' => ['required','captcha'],
+        ]);
+
+        if ($validator->fails()) {
+            $resp = [
+                "code"      => "202",
+                "message"   => implode('<br>',$validator->errors()->all())
+            ];
+        }else{
+            $resp = [
+                "code"      => "200",
+                "message"   => "OK"
+            ];
+        }
+        return response()->json($resp);
+    }
+
     public function store(Request $request)
     {
         list($tgl1,$tgl2) = explode('-',$request->tanggal_pelatihan);
         $request['dari_tanggal'] = date('Y-m-d',strtotime($tgl1));
         $request['sampai_tanggal'] = date('Y-m-d',strtotime($tgl2));
         $request['peserta_id']     = Session::get("peserta")->emp_id;
+        $data = $request->all();
+
+        $validator = Validator::make($data,[
+            'capcha_log'        => ['required','captcha'],
+            'dari_tanggal'      =>  'required',
+            'sampai_tanggal'    =>  'required',
+            'judul_pelatihan'   =>  'required',
+            'penyelenggara'     =>  'required',
+            'peserta_id'        =>  'required',
+        ],[
+            "capcha_log.captcha"   => "Kode captcha tidak sesuai",
+        ]);
+
+        if ($validator->fails()) {
+            $resp = [
+                "code"      => "202",
+                "message"   => implode('<br>',$validator->errors()->all())
+            ];
+            return response()->json($resp);
+        }
 
         try {
-            $data = $request->all();
             if ($request->file('sertifikat_file')) {
                 $image = $request->file('sertifikat_file');
                 $image->storeAs('public/uploads/sertifikat', $image->hashName());
@@ -60,7 +99,12 @@ class PengajuandiklatController extends Controller
                 <strong>Gagal menambahkan sertifikat!</strong> Silahkan menghubungi admin untuk bantuan lebih lanjut.
             </div>';
         }
-        return redirect("pengajuan_diklat/finish")->with('message', $message); 
+        Session::flash('message', $message);
+        return response()->json([
+            "code"      => 200,
+            "redirect"  => url("pengajuan_diklat/finish")
+        ]);
+        // return redirect("pengajuan_diklat/finish")->with('message', $message); 
     }
 
     public function form_pengajuan(){

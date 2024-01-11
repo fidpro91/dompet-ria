@@ -27,7 +27,7 @@ Widget::_init(["select2"]);
     !!}
 </div>
 <div class="card-footer text-center">
-    {!! Form::submit('Save',['class' => 'btn btn-success']); !!}
+    {!! Form::submit('Cari Data',['class' => 'btn btn-success']); !!}
     {!! Form::button('Cancel',['class' => 'btn btn-warning btn-refresh']); !!}
 </div>
 {!!Form::close()!!}

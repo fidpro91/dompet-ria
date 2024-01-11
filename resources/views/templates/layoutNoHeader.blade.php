@@ -13,26 +13,54 @@
     @include('templates.components.css')
     @include('templates.components.javascript')
 </head>
+<style>
+    .navbar-custom {
+        background-color: #D6FDFF !important;
+    }
+</style>
+<header id="topnav">
+<!-- Topbar Start -->
+<div class="navbar-custom">
+    <div class="container-fluid">
+        <!-- LOGO -->
+        <div class="logo-box">
+            <a href="{{url('/')}}" class="logo text-center">
+                <span class="logo-lg">
+                    <img src="{{ asset('assets/images/logo.webp')}}" alt="" height="50">
+                    <!-- <span class="logo-lg-text-light">UBold</span> -->
+                </span>
+                <span class="logo-sm">
+                    <!-- <span class="logo-sm-text-dark">U</span> -->
+                    <img src="{{ asset('assets/themes')}}/assets/images/logo-sm.png" alt="" height="24">
+                </span>
+            </a>
+        </div>
+
+    </div> <!-- end container-fluid-->
+</div>
+<!-- end Topbar -->
+</header>
 
 <body class="menubar-dark">
     <!-- End Preloader-->
     <!-- ============================================================== -->
     <!-- Start Page Content here -->
     <!-- ============================================================== -->
-
-    <div class="container-fluid">
-        <!-- start page title -->
-        <div class="row">
-            <div class="col-12">
-                <div class="page-title-box text-center">
-                    <h3 class="page-title">{{$titlePage}}</h3>
+    <div class="wrapper" style="padding-top: 70px !important;">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box text-center">
+                        <h3 class="page-title">{{$titlePage}}</h3>
+                    </div>
                 </div>
             </div>
-        </div>
-        <!-- end page title -->
-        @yield('content')
-        <!-- end row -->
-    </div> <!-- end container -->
+            <!-- end page title -->
+            @yield('content')
+            <!-- end row -->
+        </div> <!-- end container -->
+    </div>
     <!-- ============================================================== -->
     <!-- End Page content -->
     <!-- ============================================================== -->
