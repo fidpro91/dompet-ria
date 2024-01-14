@@ -7,6 +7,7 @@ use App\Models\Diklat;
 use Illuminate\Support\Facades\Validator;
 use DataTables;
 use fidpro\builder\Create;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class DiklatController extends Controller
@@ -25,6 +26,7 @@ class DiklatController extends Controller
         'lokasi_pelatihan'   =>  '',
         'sertifikat_file'   =>  ''
     ];
+
     public $defaultValue = [
         'id'   =>  '',
         'dari_tanggal'   =>  '',
@@ -36,9 +38,15 @@ class DiklatController extends Controller
         'lokasi_pelatihan'   =>  '',
         'sertifikat_file'   =>  ''
     ];
+
     public function index()
     {
         return $this->themes($this->folder . '.index', null, $this);
+    }
+
+    public function verifikasi_diklat()
+    {
+        return $this->themes($this->folder . '.verifikasi_diklat', null, "Verifikasi Skor Sertifikat Diklat");
     }
 
     public function get_dataTable(Request $request)
@@ -78,6 +86,73 @@ class DiklatController extends Controller
             return $button;
         })->rawColumns(['action']);
         return $datatables->make(true);
+    }
+    
+    public function get_data_diklat(Request $request)
+    {
+        $data = Diklat::from( 'diklat as dk' )
+                ->whereNull("indikator_skor")
+                ->join("employee as e","e.emp_id","=","dk.peserta_id")
+                ->join("ms_unit as mu","mu.unit_id","=","e.unit_id_kerja")
+                ->select([
+                    'dk.*',
+                    'e.emp_name',
+                    'e.emp_no',
+                    'mu.unit_name'
+                ]);
+
+        if ($request->unit_id) {
+            $data->where("mu.unit_id",$request->unit_id);
+        }
+        $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
+            $button = Create::action("<i class=\"fas fa-eye\"></i>", [
+                "class"     => "btn btn-primary btn-xs",
+                "onclick"   => "view_file($data->id)",
+            ]);
+
+            $button .= Create::action("<i class=\"fas fa-trash\"></i>", [
+                "class"     => "btn btn-danger btn-xs",
+                "onclick"   => "delete_row(this)",
+                "x-token"   => csrf_token(),
+                "data-url"  => route($this->route . ".destroy", $data->id),
+            ]);
+
+            $button .= Create::action("<i class=\"fas fa-check\"></i>", [
+                "class"     => "btn btn-success btn-xs",
+                "onclick"   => "set_indikator($data->id,this)"
+            ]);
+            return $button;
+        })
+        ->addColumn('indikator_skor', function($data){
+            $indikator = Create::dropDown("indikator_skor_$data->id",[
+                "data" => [
+                    "model"     => "Detail_indikator",
+                    "filter"    => ["indikator_id" => 4],
+                    "column"    => ["detail_id","detail_name"]
+                ],
+                "extra"    => [
+                    "class"    => "form-control indikator_skor"
+                ]
+            ])->render();
+
+            return $indikator;
+        })
+        ->rawColumns(['action','indikator_skor']);
+        return $datatables->make(true);
+    }
+
+    public function set_indikator_skor($id,$skor)
+    {
+        $diklat = Diklat::find($id);
+        $diklat->update([
+            "created_by"        => Auth::id(),
+            "indikator_skor"    => $skor
+        ]);
+
+        return response()->json([
+            "code"      => 200,
+            "message"   => "Sertifikat berhasil diverifikasi"
+        ]);
     }
 
     public function create()

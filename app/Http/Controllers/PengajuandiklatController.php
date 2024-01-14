@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
 
 class PengajuandiklatController extends Controller
 {
-    public $titlePage = "Form Pengajuan Sertifikat Pendidikan & Pelatihan";
+    public $titlePage = "Form Upload Sertifikat Pendidikan & Pelatihan";
     
     public function index()
     {
@@ -28,11 +28,21 @@ class PengajuandiklatController extends Controller
                     ->join("ms_unit as mu","mu.unit_id","=","e.unit_id_kerja")
                     ->where([
                         "emp_id"            => $request->peserta_id,
-                        // "nomor_rekening"    => $request->nomor_rekening,
+                        "nomor_rekening"    => $request->nomor_rekening,
                     ])->first();
         if (!$employee) {
-            return "Data pegawai tidak sesuai";
+            $message = '<div class="alert alert-success">
+                <strong>Data pegawai tidak sesuai!</strong> Mohon Sesuaikan nama pegawai dengan nomor rekening. <button class="btn btn-primary" onclick="history.go(-1)">Kembali</button>
+            </div>';
+            return $message;
         }
+
+        //update data pegawai
+        Employee::find($request->peserta_id)->update([
+            "phone"     => $request->phone,
+            "email"     => $request->email
+        ]);
+
         Session::put("peserta",$employee);
         return redirect("pengajuan_diklat/form_pengajuan");
     }
@@ -72,8 +82,10 @@ class PengajuandiklatController extends Controller
             'judul_pelatihan'   =>  'required',
             'penyelenggara'     =>  'required',
             'peserta_id'        =>  'required',
+            'sertifikat_file'   => 'required|mimes:pdf',
         ],[
-            "capcha_log.captcha"   => "Kode captcha tidak sesuai",
+            "capcha_log.captcha"        => "Kode captcha tidak sesuai",
+            'sertifikat_file.mimes'     => 'File harus berformat PDF',
         ]);
 
         if ($validator->fails()) {

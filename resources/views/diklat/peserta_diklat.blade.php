@@ -25,6 +25,16 @@ Widget::_init(["select2"]);
             "required" => "true"
         ])->render("group");
     !!}
+    {!! 
+        Create::input("phone",[
+            "required" => "true"
+        ])->render("group","NO. WA/TELP");
+    !!}
+    {!! 
+        Create::input("email",[
+            "required" => "true"
+        ])->render("group","Alamat E-mail");
+    !!}
 </div>
 <div class="card-footer text-center">
     {!! Form::submit('Cari Data',['class' => 'btn btn-success']); !!}

@@ -51,7 +51,7 @@ Widget::_init(["daterangepicker"])
         ])->render("group");
     !!}
     {!! 
-        Create::upload("sertifikat_file")->render("group");
+        Create::upload("sertifikat_file")->render("group","File sertifikat (PDF)");
     !!}
     <div class="form-group">
         <span class="captcha">{!! captcha_img() !!}</span>

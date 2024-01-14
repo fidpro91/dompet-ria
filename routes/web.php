@@ -8,6 +8,7 @@ use App\Http\Controllers\LoginController;
 use App\Libraries\Servant;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\SendEmail;
+use App\Models\Diklat;
 use App\Traits\WablasTrait;
 /*
 |--------------------------------------------------------------------------
@@ -200,6 +201,13 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::get('ms_unit/get_dataTable','Ms_unitController@get_dataTable');
     Route::resource('ms_unit', Ms_unitController::class);
 
+    Route::get('diklat/set_indikator_skor/{id?}/{skor_id?}','DiklatController@set_indikator_skor');
+    Route::get('diklat/view_file/{id?}',function($id){
+        $data = Diklat::findOrFail($id);
+        return view("diklat.view_file_sertifikat",compact('data'));
+    });
+    Route::get('diklat/verifikasi_diklat','DiklatController@verifikasi_diklat');
+    Route::get('diklat/get_data_diklat','DiklatController@get_data_diklat');
     Route::get('diklat/get_dataTable','DiklatController@get_dataTable');
     Route::post('diklat/update_data','DiklatController@update_data');
     Route::resource('diklat', DiklatController::class);
