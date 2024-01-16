@@ -1,11 +1,15 @@
 <?php
 namespace App\Libraries;
 
+use App\Models\Log_messager;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
  
 class Servant
 {
+    public static $apiKeyWa = 'Wz5Wz6pRJ1oSw3bz6M7TwLLNnBFhvJ';
+    public static $phoneWa  = '6285161591314';
+    
     public static function connect_simrs($method,$url,$data = array()){
         $ch = curl_init(); 
         $base_url = "http://localhost:88/ehos/api/api_internal/";
@@ -58,30 +62,30 @@ class Servant
         return str_replace('NOMOR', $query->nomax, $data['text']);
 	}
 
-    public static function erm($tipe,$url,$cparam){
-        $url = "192.168.1.8:81/".$url;
-        $ch           = curl_init();
-		curl_setopt ($ch, CURLOPT_URL, $url);
-		if($tipe == 'post'){
-			curl_setopt ($ch, CURLOPT_POST, 1);
-			curl_setopt ($ch, CURLOPT_POSTFIELDS, $cparam);
-		}else if($tipe == 'put'){
-			curl_setopt ($ch, CURLOPT_CUSTOMREQUEST, "PUT");
-			curl_setopt ($ch, CURLOPT_POSTFIELDS, $cparam);
-		}else if($tipe =='delete'){
-			curl_setopt ($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
-			curl_setopt ($ch, CURLOPT_POSTFIELDS, $cparam);
-		}else if($tipe =='get'){
-			curl_setopt ($ch, CURLOPT_POST, 0);
-			curl_setopt ($ch, CURLOPT_POSTFIELDS, $cparam);
-		}
-		curl_setopt($ch, CURLOPT_HEADER, false);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_HTTPHEADER,array("Content-Type: application/json")); // DO NOT RETURN HTTP HEADERS
-		$data = curl_exec($ch);		
-		print_r($data);
-        die;
-		curl_close($ch);
-		return $data;
+    public static function send_wa($method,$param){
+        $ch = curl_init(); 
+        $url = "http://wagateway.rsudibnusinagresik.com/send-message";
+        $data = [
+            "api_key"   => self::$apiKeyWa,
+            "sender"    => self::$phoneWa
+        ];
+        $param = array_merge($data,$param);
+        $param = json_encode($param);
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt ($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+        curl_setopt($ch, CURLOPT_HTTPHEADER,array("Content-Type: application/json"));
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $param);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
+        $result = curl_exec($ch);
+        if(curl_errno($ch)){
+            echo 'Request Error:' . curl_error($ch);
+        }
+        curl_close($ch);
+        $resp = [
+            "param"     => $param,
+            "response"  => json_decode($result,true)
+        ];
+        return $resp;
     }
 }

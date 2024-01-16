@@ -41,7 +41,8 @@ class DiklatController extends Controller
 
     public function index()
     {
-        return $this->themes($this->folder . '.index', null, $this);
+        $data["totalPengajuan"] = Diklat::whereNull('indikator_skor')->count();
+        return $this->themes($this->folder . '.index', $data, $this);
     }
 
     public function verifikasi_diklat()

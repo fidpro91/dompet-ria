@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Libraries\Servant;
 use Illuminate\Http\Request;
 use App\Models\Diklat;
 use App\Models\Employee;
+use App\Models\Log_messager;
 use Illuminate\Support\Facades\Validator;
 use DataTables;
 use fidpro\builder\Create;
@@ -30,9 +32,23 @@ class PengajuandiklatController extends Controller
                         "emp_id"            => $request->peserta_id,
                         "nomor_rekening"    => $request->nomor_rekening,
                     ])->first();
+        
         if (!$employee) {
             $message = '<div class="alert alert-success">
                 <strong>Data pegawai tidak sesuai!</strong> Mohon Sesuaikan nama pegawai dengan nomor rekening. <button class="btn btn-primary" onclick="history.go(-1)">Kembali</button>
+            </div>';
+            return $message;
+        }
+
+        //validasi kode OTP
+        $logMessager = Log_messager::where([
+            "phone_number"  => $request->phone,
+            "otp_verified"  => '1',
+            "kode_otp"      =>  $request->kode_otp 
+        ])->whereDate("created_at","=",date("Y-m-d"))->first();
+        if (!$logMessager) {
+            $message = '<div class="alert alert-success">
+                <strong>Kode OTP Tidak Sesuai!</strong> <button class="btn btn-primary" onclick="history.go(-1)">Kembali</button>
             </div>';
             return $message;
         }
@@ -45,6 +61,49 @@ class PengajuandiklatController extends Controller
 
         Session::put("peserta",$employee);
         return redirect("pengajuan_diklat/form_pengajuan");
+    }
+
+    public function send_otp(Request $request)
+    {
+        $otpCode = rand(100000, 999999);
+        $message = [
+            "message"   => "Kode OTP anda : $otpCode",
+            "number"    => $request->phone
+        ];
+
+        $logMessager = Log_messager::where([
+            "phone_number"  => $request->phone,
+            "message_type"  =>  1 
+        ])->count();
+
+        if ($logMessager > 3) {
+            return response()->json([
+                "code"      => 202,
+                "message"   => "Pengajuan kode OTP lebih dari 3x. Silahkan coba kembali esok hari"
+            ]);
+        }
+
+        $otp = Servant::send_wa("POST",$message);
+        if ($otp["response"]["status"] != false) {
+            $resp = [
+                "code"      => 200,
+                "message"   => "Kode OTP berhasil dikirim, silahkankan cek whatsapp anda"
+            ];
+            //insert log_messager
+            Log_messager::create([
+                'param'             => $otp["param"],
+                'kode_otp'          => $otpCode,
+                'phone_number'      => $request->phone,
+                'message_status'    => 2,
+                'message_type'      => 1,
+            ]);
+        }else{
+            $resp = [
+                "code"      => 201,
+                "message"   => $otp["errors"]
+            ];
+        }
+        return response()->json($resp);
     }
 
     public function validasi_capcha(Request $request)
