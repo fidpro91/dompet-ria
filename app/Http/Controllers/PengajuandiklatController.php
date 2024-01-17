@@ -30,7 +30,7 @@ class PengajuandiklatController extends Controller
                     ->join("ms_unit as mu","mu.unit_id","=","e.unit_id_kerja")
                     ->where([
                         "emp_id"            => $request->peserta_id,
-                        "nomor_rekening"    => $request->nomor_rekening,
+                        // "nomor_rekening"    => $request->nomor_rekening,
                     ])->first();
         
         if (!$employee) {
@@ -52,6 +52,11 @@ class PengajuandiklatController extends Controller
             </div>';
             return $message;
         }
+
+        //update kode OTP
+        Log_messager::find($logMessager->id)->update([
+            "otp_verified"     => 2
+        ]);
 
         //update data pegawai
         Employee::find($request->peserta_id)->update([
