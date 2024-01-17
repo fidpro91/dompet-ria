@@ -26,6 +26,7 @@ use App\Traits\WablasTrait;
 Route::post('actionlogin', [LoginController::class, 'actionlogin'])->name('actionlogin');
 Route::get('logout', [LoginController::class, 'actionlogout']);
 Route::get('login/reload_capcha', [LoginController::class, 'reload_capcha']);
+Route::post('login/login_verif', [LoginController::class, 'login_verif']);
 Route::get('/', [LoginController::class, 'login'])->name('login');
 
 Route::group(['prefix'=>'mobile','middleware' => ['auth','client']], function(){
@@ -148,6 +149,17 @@ Route::group(['middleware' => ['auth']], function (){
     Route::post('user_profil/update_data','UserprofilController@update_data');
 });
 
+
+Route::get('verifikasi_skor/login',function(){
+    $titlePage = "Login Verifikator Skor";
+    return view("verifikasi_skor/form_login",compact('titlePage'));
+});
+Route::get('verifikasi_skor','Verifikasi_skorController@index');
+Route::get('verifikasi_skor/get_data/{bulan?}','Verifikasi_skorController@get_data');
+Route::post('verifikasi_skor/validasi_otp','Verifikasi_skorController@validasi_otp');
+Route::post('verifikasi_skor/save_keluhan','Verifikasi_skorController@save_keluhan');
+Route::get('verifikasi_skor/konfirmasi_skor/{id?}','Verifikasi_skorController@konfirmasi_skor');
+
 Route::group(['middleware' => ['auth','admin']], function (){
     
     Route::get('beranda/index', 'HomeController@index');
@@ -223,11 +235,6 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::resource('klasifikasi_jasa', Klasifikasi_jasaController::class);
     Route::get('komponen_jasa/get_dataTable','Komponen_jasaController@get_dataTable');
     Route::resource('komponen_jasa', Komponen_jasaController::class);
-
-    Route::get('verifikasi_skor','Verifikasi_skorController@index');
-    Route::post('verifikasi_skor/save_keluhan','Verifikasi_skorController@save_keluhan');
-    Route::get('verifikasi_skor/konfirmasi_skor/{id?}','Verifikasi_skorController@konfirmasi_skor');
-
     
     Route::get('skor_pegawai/set_skor/{type?}','Skor_pegawaiController@set_skor');
     Route::get('skor_pegawai/error_skor','Skor_pegawaiController@error_skor');

@@ -1,21 +1,36 @@
 <?php
 
 use \fidpro\builder\Create;
+use \fidpro\builder\Widget;
+
+Widget::_init(["select2"]);
 ?>
 {!! Form::open(['route' => 'ms_unit.store','id'=>'form_ms_unit']) !!}
 <div class="card-body">
     {!! Form::hidden('unit_id', $ms_unit->unit_id, array('id' => 'unit_id')) !!}
-    {!! Create::input("unit_name",[
-    "value" => $ms_unit->unit_name,
-    "required" => "true"
-    ])->render("group");
+    {!! 
+        Create::input("unit_name",[
+            "value" => $ms_unit->unit_name,
+            "required" => "true"
+        ])->render("group");
+    !!}
+    {!! 
+        Widget::select2("ka_unit",[
+            "data" => [
+                "model"     => "Employee",
+                "filter"    => ["emp_active" => "t"],
+                "column"    => ["emp_id","emp_name"]
+            ],
+            "selected"  => $ms_unit->ka_unit
+        ])->render("group","Kepala Unit")
     !!}
     {!! 
         Create::dropDown("is_active",[
-        "data" => [
-            ["t" => "Aktif"],
-            ["f" => "Non Aktif"]
-            ]
+            "data" => [
+                ["t" => "Aktif"],
+                ["f" => "Non Aktif"]
+            ],
+            "selected"  => $ms_unit->is_active
         ])->render("group")
     !!}
     {!! 
@@ -24,7 +39,8 @@ use \fidpro\builder\Create;
                 "model"     => "Detail_indikator",
                 "filter"    => ["indikator_id" => 5],
                 "column"    => ["detail_id","detail_name"]
-            ]
+            ],
+            "selected"  => $ms_unit->resiko_infeksi
         ])->render("group")
     !!}
     {!! 
@@ -33,7 +49,8 @@ use \fidpro\builder\Create;
                 "model"     => "Detail_indikator",
                 "filter"    => ["indikator_id" => 6],
                 "column"    => ["detail_id","detail_name"]
-            ]
+            ],
+            "selected"  => $ms_unit->resiko_admin
         ])->render("group")
     !!}
     {!! 
@@ -42,7 +59,8 @@ use \fidpro\builder\Create;
                 "model"     => "Detail_indikator",
                 "filter"    => ["indikator_id" => 7],
                 "column"    => ["detail_id","detail_name"]
-            ]
+            ],
+            "selected"  => $ms_unit->emergency_id
         ])->render("group")
     !!}
 </div>

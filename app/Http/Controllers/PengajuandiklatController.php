@@ -26,13 +26,14 @@ class PengajuandiklatController extends Controller
 
     public function find(Request $request)
     {
+        $request["phone"]   = '62'.$request->phone;
         $employee = Employee::from("employee as e")
                     ->join("ms_unit as mu","mu.unit_id","=","e.unit_id_kerja")
                     ->where([
                         "emp_id"            => $request->peserta_id,
                         // "nomor_rekening"    => $request->nomor_rekening,
                     ])->first();
-        
+
         if (!$employee) {
             $message = '<div class="alert alert-success">
                 <strong>Data pegawai tidak sesuai!</strong> Mohon Sesuaikan nama pegawai dengan nomor rekening. <button class="btn btn-primary" onclick="history.go(-1)">Kembali</button>
@@ -70,12 +71,12 @@ class PengajuandiklatController extends Controller
 
     public function send_otp(Request $request)
     {
+        $request["phone"]   = '62'.$request->phone;
         $otpCode = rand(100000, 999999);
         $message = [
             "message"   => "Kode OTP anda : $otpCode",
             "number"    => $request->phone
         ];
-
         $logMessager = Log_messager::where([
             "phone_number"  => $request->phone,
             "message_type"  =>  1 
