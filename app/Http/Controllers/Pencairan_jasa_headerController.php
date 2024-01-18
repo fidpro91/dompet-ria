@@ -561,6 +561,7 @@ class Pencairan_jasa_headerController extends Controller
 
     public function print_pdf($id)
     {
+        set_time_limit(0);
         ini_set("memory_limit",-1);
         $cacheKey = 'laporan-' . $id;
         $data = Cache::get($cacheKey);
