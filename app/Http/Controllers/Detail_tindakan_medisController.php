@@ -180,7 +180,7 @@ class Detail_tindakan_medisController extends Controller
 			}, $bill);
             foreach (array_chunk($bill,1000) as $t)  
             {
-                DB::table('Detail_tindakan_medis')->insert($t); 
+                DB::table('detail_tindakan_medis')->insert($t); 
             }
             // DB::table("Detail_tindakan_medis")->insert();
             /* $skor = Cache::get('skorCache');

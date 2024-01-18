@@ -483,7 +483,7 @@ class Jasa_pelayananController extends Controller
                 }
                 $dataJasa[$key]['total_jasa'] = $totalJasa;
             }elseif ($value->type_jasa == 2) {
-                $data = Detail_tindakan_medis::from("Detail_tindakan_medis as dm")
+                $data = Detail_tindakan_medis::from("detail_tindakan_medis as dm")
                 ->join("employee as e","e.emp_nip","=","dm.nip")
                 ->groupBy(["e.emp_no","e.emp_id","e.emp_name"])
                 ->select(["e.emp_id","e.emp_no","e.emp_name",DB::raw('SUM((dm.skor_jasa/10000)) AS total_skor'),DB::raw('json_arrayagg(dm.tindakan_id) AS id_tindakan')])
@@ -550,7 +550,7 @@ class Jasa_pelayananController extends Controller
         $jasaHeader=[];
         Cache::forget('cacheEksekutif');
         //hitung pelayanan eksekutif
-        $data = Detail_tindakan_medis::from("Detail_tindakan_medis as dm")
+        $data = Detail_tindakan_medis::from("detail_tindakan_medis as dm")
                 ->join("employee as e","e.emp_nip","=","dm.nip")
                 ->groupBy(["e.emp_no","e.emp_id","e.emp_name"])
                 ->select(["e.emp_id","e.emp_no","e.emp_name",DB::raw('SUM(dm.skor_jasa) AS total_skor'),DB::raw('json_arrayagg(dm.tindakan_id) AS id_tindakan')])
