@@ -1,6 +1,7 @@
 @extends('templates.layoutNoHeader')
 @section('content')
 <?php
+use fidpro\builder\Bootstrap;
 use fidpro\builder\Widget;
 Widget::_init(["datepicker"]);
 ?>
@@ -8,7 +9,7 @@ Widget::_init(["datepicker"]);
 <div class="card border-0 shadow rounded" id="page_potongan_statis">
     <div class="card-header">
         <div class="float-right">
-            <button class="btn btn-primary"><i class="fas fa-info-circle"></i></button>
+            <button class="btn btn-primary" id="btn-info"><i class="fas fa-info-circle"></i></button>
         </div>
         <div class="row">
             <div class="col-sm-3">
@@ -32,10 +33,24 @@ Widget::_init(["datepicker"]);
         </div>
     </div>
 </div>
-
+{{
+    Bootstrap::modal('modal_info',[
+        "title"   => 'Informasi Indikator Skor Pegawai',
+        "size"    => "modal-lg",
+        "body"    => [
+            "content"   => function(){
+                return view('verifikasi_skor.info_indikator');
+            }
+        ]
+    ])
+}}
 <script>
     $(document).ready(()=>{
         loadTable();
+
+        $("#btn-info").click(()=>{
+            $("#modal_info").modal("show");
+        })
     })
 
     function konfirmasi_skor(id) {
