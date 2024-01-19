@@ -32,15 +32,17 @@ class Potongan_penghasilanController extends Controller
         'potongan_method'   =>  'required',
         'created_by'   =>  'required',
     ];
+    
     public $defaultValue = [
         'id'   =>  '',
         'pajak_no'   =>  '',
         'id_cair_header'   =>  '',
         'kategori_potongan'   =>  '',
         'total_potongan'   =>  '',
-        'potongan_method'   =>  '',
+        'potongan_method'   =>  '1',
         'created_by'   =>  '',
     ];
+
     public function index($id_cair)
     {
         $data["pencairan"] = Pencairan_jasa_header::find($id_cair);

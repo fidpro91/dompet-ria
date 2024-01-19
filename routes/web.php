@@ -239,6 +239,7 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::get('skor_pegawai/set_skor/{type?}','Skor_pegawaiController@set_skor');
     Route::get('skor_pegawai/error_skor','Skor_pegawaiController@error_skor');
     Route::post('skor_pegawai/clear_all_data','Skor_pegawaiController@clear_all_data');
+    Route::post('skor_pegawai/send_to_verifikator','Skor_pegawaiController@send_to_verifikator');
     Route::post('skor_pegawai/save_skor','Skor_pegawaiController@save_skor');
     Route::post('skor_pegawai/generate_skor','Skor_pegawaiController@generate_skor');
     Route::get('skor_pegawai/hasil_skor','Skor_pegawaiController@hasil_skor');
