@@ -576,16 +576,17 @@ class Pencairan_jasa_headerController extends Controller
                 json_object('kategori_id',x.kategori_potongan, 'potongan', x.total_potongan)
             )detail
             FROM (
-                SELECT e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,ph.kategori_potongan,pj.total_brutto,sum(pm.potongan_value)total_potongan
+                SELECT e.ordering_mode,e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,ph.kategori_potongan,pj.total_brutto,sum(pm.potongan_value)total_potongan
                 FROM pencairan_jasa pj
                 join employee e on e.emp_id = pj.emp_id
                 JOIN potongan_jasa_medis pm ON pm.pencairan_id = pj.id_cair
                 JOIN potongan_penghasilan ph ON ph.id = pm.header_id
                 where pj.id_header = '$id'
-                group by e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,ph.kategori_potongan,pj.total_brutto
+                group by e.ordering_mode,e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,ph.kategori_potongan,pj.total_brutto
             )x
-            GROUP BY x.golongan,x.emp_no,x.emp_name,x.nomor_rekening,
-            x.total_brutto");
+            GROUP BY x.ordering_mode,x.golongan,x.emp_no,x.emp_name,x.nomor_rekening,
+            x.total_brutto
+            order by IFNULL(ordering_mode, '07'),x.emp_name");
             Cache::put($cacheKey,$data,60);
         }
         // return view("pencairan_jasa_header.printout.print_pencairan",compact('data'));

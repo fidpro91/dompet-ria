@@ -154,11 +154,14 @@ Route::get('verifikasi_skor/login',function(){
     $titlePage = "Login Verifikator Skor";
     return view("verifikasi_skor/form_login",compact('titlePage'));
 });
-Route::get('verifikasi_skor','Verifikasi_skorController@index');
-Route::get('verifikasi_skor/get_data/{bulan?}','Verifikasi_skorController@get_data');
-Route::post('verifikasi_skor/validasi_otp','Verifikasi_skorController@validasi_otp');
-Route::post('verifikasi_skor/save_keluhan','Verifikasi_skorController@save_keluhan');
-Route::get('verifikasi_skor/konfirmasi_skor/{id?}','Verifikasi_skorController@konfirmasi_skor');
+
+Route::group(['middleware' => ['verifikator']], function (){
+    Route::get('verifikasi_skor','Verifikasi_skorController@index');
+    Route::get('verifikasi_skor/get_data/{bulan?}','Verifikasi_skorController@get_data');
+    Route::post('verifikasi_skor/validasi_otp','Verifikasi_skorController@validasi_otp');
+    Route::post('verifikasi_skor/save_keluhan','Verifikasi_skorController@save_keluhan');
+    Route::get('verifikasi_skor/konfirmasi_skor/{id?}','Verifikasi_skorController@konfirmasi_skor');
+});
 
 Route::group(['middleware' => ['auth','admin']], function (){
     
@@ -342,10 +345,13 @@ Route::get('potongan_penghasilan/data/{id?}','Potongan_penghasilanController@dat
 Route::get('potongan_penghasilan/get_dataTable','Potongan_penghasilanController@get_dataTable');
 Route::resource('potongan_penghasilan', Potongan_penghasilanController::class);
 
+//route pengajuan diklat
 Route::get('pengajuan_diklat','PengajuandiklatController@index');
 Route::post('pengajuan_diklat/send_otp','PengajuandiklatController@send_otp');
 Route::post('pengajuan_diklat/find','PengajuandiklatController@find');
-Route::post('pengajuan_diklat/validasi_capcha','PengajuandiklatController@validasi_capcha');
-Route::post('pengajuan_diklat/store','PengajuandiklatController@store');
-Route::get('pengajuan_diklat/form_pengajuan','PengajuandiklatController@form_pengajuan');
-Route::get('pengajuan_diklat/finish','PengajuandiklatController@finish');
+Route::group(['middleware' => ['userUpload']], function (){
+    Route::post('pengajuan_diklat/store','PengajuandiklatController@store');
+    Route::get('pengajuan_diklat/form_pengajuan','PengajuandiklatController@form_pengajuan');
+    Route::get('pengajuan_diklat/finish','PengajuandiklatController@finish');
+    Route::post('pengajuan_diklat/validasi_capcha','PengajuandiklatController@validasi_capcha');
+});
