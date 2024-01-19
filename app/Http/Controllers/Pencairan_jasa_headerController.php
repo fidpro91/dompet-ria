@@ -473,13 +473,14 @@ class Pencairan_jasa_headerController extends Controller
                 "id_cair"           => $id
             ];
             $medisNonEks = DB::select("
-            SELECT dm.nama_penjamin,
-            sum(dm.skor_jasa/10000) as total_skor
-            FROM detail_tindakan_medis dm
+            SELECT mr.reff_name as penjamin,
+            sum(dm.skor/10000) as total_skor
+            FROM point_medis dm
+            JOIN ms_reff mr on mr.reff_code = dm.penjamin
             JOIN jp_byname_medis jm ON jm.jp_medis_id = dm.jp_medis_id
             JOIN jasa_pelayanan jp ON jm.jaspel_id = jp.jaspel_id
             WHERE jp.id_cair = $id AND jm.komponen_id = 7
-            GROUP BY dm.nama_penjamin");
+            GROUP BY mr.reff_name");
             $bagianNonEks=$data->total_nominal-$ekseKutif[0]->total;
             $medisArray = array_map(function ($medisNonEks) {
                 return (array)$medisNonEks;
@@ -488,7 +489,7 @@ class Pencairan_jasa_headerController extends Controller
             foreach ($medisNonEks as $key => $value) {
                 $hitungProporsi = ($value->total_skor/$totalSkor*$bagianNonEks)/$bagianNonEks*(100-$percent);
                 $percentase[] = [
-                    "penjamin"          => $value->nama_penjamin,
+                    "penjamin"          => $value->penjamin,
                     "persentase_jasa"   => ($hitungProporsi),
                     "id_cair"           => $id
                 ];
@@ -572,15 +573,16 @@ class Pencairan_jasa_headerController extends Controller
             $data['detail'] = DB::select("SELECT x.golongan,x.emp_no,x.emp_name,x.nomor_rekening,
             x.total_brutto,
             json_arrayagg(
-                json_object('kategori_id',x.kategori_id, 'potongan', x.total_potongan)
+                json_object('kategori_id',x.kategori_potongan, 'potongan', x.total_potongan)
             )detail
             FROM (
-                SELECT e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,pm.kategori_id,pj.total_brutto,sum(pm.potongan_value)total_potongan
+                SELECT e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,ph.kategori_potongan,pj.total_brutto,sum(pm.potongan_value)total_potongan
                 FROM pencairan_jasa pj
                 join employee e on e.emp_id = pj.emp_id
                 JOIN potongan_jasa_medis pm ON pm.pencairan_id = pj.id_cair
+                JOIN potongan_penghasilan ph ON ph.id = pm.header_id
                 where pj.id_header = '$id'
-                group by e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,pm.kategori_id,pj.total_brutto
+                group by e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,ph.kategori_potongan,pj.total_brutto
             )x
             GROUP BY x.golongan,x.emp_no,x.emp_name,x.nomor_rekening,
             x.total_brutto");

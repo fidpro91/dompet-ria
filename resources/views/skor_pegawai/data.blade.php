@@ -20,6 +20,12 @@ Widget::_init(["datepicker"]);
                         "onclick"   => "clear_data()"
                     ])
                 !!}
+                {!!
+                    Form::button("Publish Skor",[
+                        "class"     => "btn btn-secondary",
+                        "onclick"   => "publish_skor()"
+                    ])
+                !!}
             </div>
             <div class="col-md-3">
                 {!! 
@@ -134,6 +140,42 @@ Widget::_init(["datepicker"]);
                     'dataType': 'json',
                     'success': function(data) {
                         if (data.success) {
+                            Swal.fire("Sukses!", data.message, "success").then(() => {
+                                tb_table_skor.draw();
+                            });
+                        } else {
+                            Swal.fire("Oopss...!!", data.message, "error");
+                        }
+                    }
+                });
+            }
+        })
+    }
+
+    function publish_skor() {
+        var bulanSkor = $("#bulan_filter").val();
+        Swal.fire({
+            title: 'Kirim Notifikasi Skor?',
+            text : `Notifikasi Skor Akan Dikirimkan Ke Verifikator Skor Lewat Pesan Whatsapp`,
+            type: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes'
+        }).then((result) => {
+            if (result.value) {
+                $.ajax({
+                    'data': {
+                        bulan_skor : bulanSkor
+                    },
+                    'headers': {
+                        'X-CSRF-TOKEN': "<?=csrf_token()?>"
+                    },
+                    'url' : '{{url("skor_pegawai/send_to_verifikator")}}',
+                    'type' : 'post',
+                    'dataType': 'json',
+                    'success': function(data) {
+                        if (data.code == 200) {
                             Swal.fire("Sukses!", data.message, "success").then(() => {
                                 tb_table_skor.draw();
                             });

@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Libraries\Servant;
 use App\Models\Detail_indikator;
 use App\Models\Diklat;
 use App\Models\Employee;
 use App\Models\Employee_off;
+use App\Models\Log_messager;
 use App\Models\Ms_unit;
 use App\Models\Performa_index;
 use Illuminate\Http\Request;
@@ -66,6 +68,37 @@ class Skor_pegawaiController extends Controller
     public function index()
     {
         return $this->themes($this->folder . '.index', null, $this);
+    }
+
+    public function send_to_verifikator(Request $request)
+    {
+        $dataUnit = Ms_unit::from("ms_unit as mu")
+                    ->join("employee as e","e.emp_id","=","mu.ka_unit")
+                    ->get();
+        $sentMessage=$failedMessage=0;
+        foreach ($dataUnit as $key => $value) {
+            $message = [
+                "message"   => "Assalamu'alaikum. Silahkan verifikasi skor individu pegawai lewat link dibawah ini.".url("192.168.1.27/verifikasi_skor/login"),
+                "number"    => $value->phone
+            ];
+            $wa = Servant::send_wa("POST",$message);
+            if ($wa["response"]["status"] != false) {
+                $sentMessage++;
+                //insert log_messager
+                Log_messager::create([
+                    'param'             => $wa["param"],
+                    'phone_number'      => $request->phone,
+                    'message_status'    => 2,
+                    'message_type'      => 2,
+                ]);
+            }else{
+                $failedMessage++;
+            }
+        }
+        return response()->json([
+            "code"      => 200,
+            "message"   => "Terkirim : $sentMessage. Gagal : $failedMessage"
+        ]);
     }
 
     public function get_data()

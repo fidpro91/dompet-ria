@@ -57,7 +57,7 @@ use \fidpro\builder\Bootstrap;
                         <a href="javascript: void(0);" class="social-list-item border-success text-success"><i class="mdi mdi-file-excel"></i></a>
                     </li>
                     <li class="list-inline-item">
-                        <a href="javascript: void(0);" class="social-list-item border-danger text-danger"><i class="mdi mdi-share-variant"></i></a>
+                        <a href="javascript: void(0);" class="social-list-item border-danger text-danger btn-final"><i class="mdi mdi-share-variant"></i></a>
                     </li>
                 </ul>
 
@@ -91,6 +91,38 @@ use \fidpro\builder\Bootstrap;
 <script>
     $(document).ready(() => {
         $(".nav-link.active").trigger('click');
+        $(".btn-final").click(()=>{
+            Swal.fire({
+                title: 'Final pencairan jasa?',
+                text : 'Hasil perhitungan jasa akan dishare ke pengguna aplikasi. Final pencairan tidak dapat dibatalkan.',
+                type: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes'
+            }).then((result) => {
+                if (result.value) {
+                    $.ajax({
+                        'dataType': 'json',
+                        'type'  : 'get',
+                        'beforeSend': function() {
+                            showLoading();
+                        },
+                        'url'   : '<?=url("pencairan_jasa_header/final_pencairan/".$pencairan->id_cair_header."")?>',
+                        'success': function(data) {
+                            if (data.success) {
+                                Swal.fire("Sukses!", data.message, "success").then(() => {
+                                    // location.reload();
+                                    location.href = "{{url('pencairan_jasa_header')}}";
+                                });
+                            }else{
+                                Swal.fire("Oopss...!!", data.message, "error");
+                            }
+                        }
+                    });
+                }
+            })
+        })
     })
 
     function show_potongan(id) {
