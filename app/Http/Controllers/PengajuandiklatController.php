@@ -80,7 +80,7 @@ class PengajuandiklatController extends Controller
         $logMessager = Log_messager::where([
             "phone_number"  => $request->phone,
             "message_type"  =>  1 
-        ])->count();
+        ])->whereDate("created_at",date("Y-m-d"))->count();
 
         if ($logMessager > 3) {
             return response()->json([
