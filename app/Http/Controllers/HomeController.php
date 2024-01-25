@@ -28,7 +28,6 @@ class HomeController extends Controller
             ->backgroundcolor("rgb(30, 211, 202)");
 
         $data   = Pencairan_jasa_header::where("is_published",1)->latest()->first();
-        $chart['last_remun'] = null;
         if ($data) {
             $chart['last_remun']  = new RemunChart;
             $dataPercent   = DB::table("persentase_jasa")->where("id_cair",$data->id_cair_header);
