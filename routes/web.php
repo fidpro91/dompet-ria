@@ -337,9 +337,9 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::get('potongan_penghasilan/data/{id?}','Potongan_penghasilanController@data');
     Route::get('potongan_penghasilan/get_dataTable','Potongan_penghasilanController@get_dataTable');
     Route::resource('potongan_penghasilan', Potongan_penghasilanController::class);
+    Route::get('activity_log/get_dataTable','activity_logController@get_dataTable');
+    Route::resource('activity_log', activity_logController::class);
 });
-Route::get('activity_log/get_dataTable','activity_logController@get_dataTable');
-Route::resource('activity_log', activity_logController::class);
 
 Route::get('data_simr/get_dataTable','Data_simrsController@get_dataTable');
 Route::resource('data_simr', Data_simrsController::class);

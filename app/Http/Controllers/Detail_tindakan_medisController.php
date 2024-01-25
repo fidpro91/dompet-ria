@@ -184,7 +184,7 @@ class Detail_tindakan_medisController extends Controller
             foreach (array_chunk($bill,1000) as $t)  
             {
                 foreach ($t as $key => $value) {
-                    if ($value["unit_vip"] == 't' && $value["jenis_tagihan"] == 1) {
+                    if ($value["unit_vip"] == '1' && $value["jenis_tagihan"] == 1) {
                         $totalEksekutif     += $value["skor_jasa"];
                     }else{
                         $totalNonEksekutif  += $value["skor_jasa"];
@@ -378,8 +378,8 @@ class Detail_tindakan_medisController extends Controller
                     "tarif_tindakan"		=> $r->tarif,
                     "id_klasifikasi_jasa"	=> $r->id_klasifikasi_jasa,
                     "klasifikasi_jasa"		=> $r->klasifikasi_jasa,
-                    "percentase_jasa"		=> (($r->is_vip=='t')?$r->percentase_eksekutif:$r->percentase_non_eksekutif),
-                    "skor_jasa"				=> (($r->is_vip=='t')?$r->skor_eksekutif:$r->skor_noneksekutif),
+                    "percentase_jasa"		=> (($r->is_vip=='1')?$r->percentase_eksekutif:$r->percentase_non_eksekutif),
+                    "skor_jasa"				=> (($r->is_vip=='1')?$r->skor_eksekutif:$r->skor_noneksekutif),
                     "qty_tindakan"			=> $r->billing_qty,
                     "visit_id"				=> $r->visit_id,
                     "id_dokter"			    => trim($r->kode_remun),

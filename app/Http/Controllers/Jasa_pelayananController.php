@@ -615,7 +615,7 @@ class Jasa_pelayananController extends Controller
                         ->join("employee as e","e.emp_id","=","pm.employee_id")
                         ->groupBy(["e.emp_no","e.emp_id","e.emp_name"])
                         ->select(["e.emp_id","e.emp_nip","e.emp_no","e.emp_name",DB::raw('SUM((pm.skor/10000)) AS total_skor'),DB::raw('json_arrayagg(pm.id) AS id_tindakan')])
-                        ->whereRaw("(is_eksekutif = 'f' or (is_eksekutif = 't' and jenis_tagihan='2'))")
+                        ->whereRaw("(is_eksekutif = '0' or (is_eksekutif = '1' and jenis_tagihan='2'))")
                         ->where("repo_id",$request->repo_id);
                 /* $query = str_replace(array('?'), array('\'%s\''), $data->toSql());
                 $query = vsprintf($query, $data->getBindings());
@@ -685,7 +685,7 @@ class Jasa_pelayananController extends Controller
                 ->select(["e.emp_id","e.emp_no","e.emp_name",DB::raw('SUM(pm.skor) AS total_skor'),DB::raw('json_arrayagg(pm.id) AS id_tindakan')])
                 ->where("repo_id",$request->repo_id)
                 ->where([
-                    "is_eksekutif"          => "t",
+                    "is_eksekutif"          => "1",
                     "is_usage"              => "f",
                     "jenis_tagihan"         => "1"
                 ]);
