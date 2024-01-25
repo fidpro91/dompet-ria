@@ -89,10 +89,15 @@
     <div class="col-md-6">
         <div class="card border-0 shadow rounded">
             <div class="card-body">
-                
+                @if($chart['last_remun'])
+                {!! $chart['last_remun']->container() !!}
+                @endif
             </div>
         </div>
     </div>
 </div>
-
+{!! $chart['statistik']->script() !!}
+@if($chart['last_remun'])
+{!! $chart['last_remun']->script() !!}
+@endif
 @endsection
