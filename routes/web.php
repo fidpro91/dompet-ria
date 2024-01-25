@@ -328,6 +328,15 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::post('laporan/laporan_potongan','LaporanController@get_lap_potongan');
     Route::get('pencairan_jasa/get_dataTable','Pencairan_jasaController@get_dataTable');
     Route::resource('pencairan_jasa', Pencairan_jasaController::class);
+
+    Route::get('komplain_skor/get_dataTable','Komplain_skorController@get_dataTable');
+    Route::resource('komplain_skor', Komplain_skorController::class);
+
+    Route::get('potongan_penghasilan/index/{id_cair?}','Potongan_penghasilanController@index');
+    Route::get('potongan_penghasilan/show/{id?}','Potongan_penghasilanController@show');
+    Route::get('potongan_penghasilan/data/{id?}','Potongan_penghasilanController@data');
+    Route::get('potongan_penghasilan/get_dataTable','Potongan_penghasilanController@get_dataTable');
+    Route::resource('potongan_penghasilan', Potongan_penghasilanController::class);
 });
 Route::get('activity_log/get_dataTable','activity_logController@get_dataTable');
 Route::resource('activity_log', activity_logController::class);
@@ -339,12 +348,6 @@ Route::resource('data_simr', Data_simrsController::class);
 Route::get('detail_tindakan_medi/get_dataTable','Detail_tindakan_medisController@get_dataTable');
 Route::resource('detail_tindakan_medi', Detail_tindakan_medisController::class);
 
-Route::get('potongan_penghasilan/index/{id_cair?}','Potongan_penghasilanController@index');
-Route::get('potongan_penghasilan/show/{id?}','Potongan_penghasilanController@show');
-Route::get('potongan_penghasilan/data/{id?}','Potongan_penghasilanController@data');
-Route::get('potongan_penghasilan/get_dataTable','Potongan_penghasilanController@get_dataTable');
-Route::resource('potongan_penghasilan', Potongan_penghasilanController::class);
-
 //route pengajuan diklat
 Route::get('pengajuan_diklat','PengajuandiklatController@index');
 Route::post('pengajuan_diklat/send_otp','PengajuandiklatController@send_otp');
@@ -355,3 +358,7 @@ Route::group(['middleware' => ['userUpload']], function (){
     Route::get('pengajuan_diklat/finish','PengajuandiklatController@finish');
     Route::post('pengajuan_diklat/validasi_capcha','PengajuandiklatController@validasi_capcha');
 });
+
+            
+            Route::get('komplain_skor/get_dataTable','Komplain_skorController@get_dataTable');
+            Route::resource('komplain_skor', Komplain_skorController::class);

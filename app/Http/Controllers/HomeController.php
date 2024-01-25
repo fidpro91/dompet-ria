@@ -27,19 +27,22 @@ class HomeController extends Controller
             ->color("rgb(216, 255, 119 )")
             ->backgroundcolor("rgb(30, 211, 202)");
 
-        $chart['last_remun']  = new RemunChart;
         $data   = Pencairan_jasa_header::where("is_published",1)->latest()->first();
-        $dataPercent   = DB::table("persentase_jasa")->where("id_cair",$data->id_cair_header);
-        $dataChart=$background=[];
-        foreach ($dataPercent->get() as $key => $value) {
-            $dataChart[$value->penjamin] = $value->persentase_jasa;
-            $background[] = "rgb(".rand(100,250).",".rand(50,200).", ".rand(10,125).")";
+        $chart['last_remun'] = null;
+        if ($data) {
+            $chart['last_remun']  = new RemunChart;
+            $dataPercent   = DB::table("persentase_jasa")->where("id_cair",$data->id_cair_header);
+            $dataChart=$background=[];
+            foreach ($dataPercent->get() as $key => $value) {
+                $dataChart[$value->penjamin] = $value->persentase_jasa;
+                $background[] = "rgb(".rand(100,250).",".rand(50,200).", ".rand(10,125).")";
+            }
+            
+            $chart['last_remun']->labels(array_keys($dataChart));
+            $chart['last_remun']->dataset('Jasa Pelayanan', 'pie', array_values($dataChart))
+                ->color("rgb(216, 255, 119 )")
+                ->backgroundcolor($background);
         }
-        
-        $chart['last_remun']->labels(array_keys($dataChart));
-        $chart['last_remun']->dataset('Jasa Pelayanan', 'pie', array_values($dataChart))
-            ->color("rgb(216, 255, 119 )")
-            ->backgroundcolor($background);
         
         //info shortcut
         $chart['pegawai'] = Employee::where("emp_active","t")->count();
