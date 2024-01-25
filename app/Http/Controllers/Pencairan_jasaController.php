@@ -13,70 +13,70 @@ class Pencairan_jasaController extends Controller
     public $model   = "Pencairan_jasa";
     public $folder  = "pencairan_jasa";
     public $route   = "pencairan_jasa";
-    
+
     public $param = [
-'no_pencairan'   =>  '',
-'tanggal_cair'   =>  '',
-'create_by'   =>  '',
-'create_date'   =>  '',
-'emp_id'   =>  'required',
-'total_brutto'   =>  'required',
-'total_potongan'   =>  '',
-'total_netto'   =>  '',
-'jaspel_id'   =>  '',
-'id_header'   =>  '',
-'nomor_rekening'   =>  ''
-];
+        'no_pencairan'   =>  '',
+        'tanggal_cair'   =>  '',
+        'create_by'   =>  '',
+        'create_date'   =>  '',
+        'emp_id'   =>  'required',
+        'total_brutto'   =>  'required',
+        'total_potongan'   =>  '',
+        'total_netto'   =>  '',
+        'jaspel_id'   =>  '',
+        'id_header'   =>  '',
+        'nomor_rekening'   =>  ''
+    ];
     public $defaultValue = [
-'id_cair'   =>  '',
-'no_pencairan'   =>  '',
-'tanggal_cair'   =>  '',
-'create_by'   =>  '',
-'create_date'   =>  'CURRENT_TIMESTAMP',
-'emp_id'   =>  '',
-'total_brutto'   =>  '',
-'total_potongan'   =>  '',
-'total_netto'   =>  '',
-'jaspel_id'   =>  '',
-'id_header'   =>  '',
-'nomor_rekening'   =>  ''
-];
+        'id_cair'   =>  '',
+        'no_pencairan'   =>  '',
+        'tanggal_cair'   =>  '',
+        'create_by'   =>  '',
+        'create_date'   =>  'CURRENT_TIMESTAMP',
+        'emp_id'   =>  '',
+        'total_brutto'   =>  '',
+        'total_potongan'   =>  '',
+        'total_netto'   =>  '',
+        'jaspel_id'   =>  '',
+        'id_header'   =>  '',
+        'nomor_rekening'   =>  ''
+    ];
     public function index()
     {
-        return $this->themes($this->folder . '.index',null,$this);
+        return $this->themes($this->folder . '.index', null, $this);
     }
 
     public function get_dataTable(Request $request)
     {
         $data = Pencairan_jasa::select([
-'id_cair',
-'no_pencairan',
-'tanggal_cair',
-'create_by',
-'create_date',
-'emp_id',
-'total_brutto',
-'total_potongan',
-'total_netto',
-'jaspel_id',
-'id_header',
-'nomor_rekening'
-]);
+            'id_cair',
+            'no_pencairan',
+            'tanggal_cair',
+            'create_by',
+            'create_date',
+            'emp_id',
+            'total_brutto',
+            'total_potongan',
+            'total_netto',
+            'jaspel_id',
+            'id_header',
+            'nomor_rekening'
+        ]);
 
         $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
-            $button = Create::action("<i class=\"fas fa-edit\"></i>",[
+            $button = Create::action("<i class=\"fas fa-edit\"></i>", [
                 "class"     => "btn btn-primary btn-xs",
                 "onclick"   => "set_edit(this)",
-                "data-url"  => route($this->route.".edit",$data->id_cair),
-                "ajax-url"  => route($this->route.'.update',$data->id_cair),
+                "data-url"  => route($this->route . ".edit", $data->id_cair),
+                "ajax-url"  => route($this->route . '.update', $data->id_cair),
                 "data-target"  => "page_pencairan_jasa"
             ]);
-            
-            $button .= Create::action("<i class=\"fas fa-trash\"></i>",[
+
+            $button .= Create::action("<i class=\"fas fa-trash\"></i>", [
                 "class"     => "btn btn-danger btn-xs",
                 "onclick"   => "delete_row(this)",
                 "x-token"   => csrf_token(),
-                "data-url"  => route($this->route.".destroy",$data->id_cair),
+                "data-url"  => route($this->route . ".destroy", $data->id_cair),
             ]);
             return $button;
         })->rawColumns(['action']);
@@ -86,13 +86,13 @@ class Pencairan_jasaController extends Controller
     public function create()
     {
         $pencairan_jasa = (object)$this->defaultValue;
-        return view($this->folder . '.form',compact('pencairan_jasa'));
+        return view($this->folder . '.form', compact('pencairan_jasa'));
     }
 
     public function store(Request $request)
     {
         $valid = $this->form_validasi($request->all());
-        if($valid['code'] != 200){
+        if ($valid['code'] != 200) {
             return response()->json([
                 'success' => false,
                 'message' => $valid['message']
@@ -104,22 +104,23 @@ class Pencairan_jasaController extends Controller
                 'success' => true,
                 'message' => 'Data Berhasil Disimpan!'
             ];
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             $resp = [
                 'success' => false,
-                'message' => 'Data Gagal Disimpan! <br>'.$e->getMessage()
+                'message' => 'Data Gagal Disimpan! <br>' . $e->getMessage()
             ];
         }
         return response()->json($resp);
     }
 
-    private function form_validasi($data){
+    private function form_validasi($data)
+    {
         $validator = Validator::make($data, $this->param);
         //check if validation fails
         if ($validator->fails()) {
             return [
                 "code"      => "201",
-                "message"   => implode("<br>",$validator->errors()->all())
+                "message"   => implode("<br>", $validator->errors()->all())
             ];
         }
         //filter
@@ -142,7 +143,7 @@ class Pencairan_jasaController extends Controller
     public function update(Request $request, Pencairan_jasa $pencairan_jasa)
     {
         $valid = $this->form_validasi($request->all());
-        if($valid['code'] != 200){
+        if ($valid['code'] != 200) {
             return response()->json([
                 'success' => false,
                 'message' => $this->form_validasi($request->all())['message']
@@ -155,10 +156,10 @@ class Pencairan_jasaController extends Controller
                 'success' => true,
                 'message' => 'Data Berhasil Diupdate!'
             ];
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             $resp = [
                 'success' => false,
-                'message' => 'Data Gagal Diupdate! <br>'.$e->getMessage()
+                'message' => 'Data Gagal Diupdate! <br>' . $e->getMessage()
             ];
         }
         return response()->json($resp);
