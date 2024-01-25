@@ -339,14 +339,12 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::resource('potongan_penghasilan', Potongan_penghasilanController::class);
     Route::get('activity_log/get_dataTable','activity_logController@get_dataTable');
     Route::resource('activity_log', activity_logController::class);
+    Route::get('komplain_skor/get_dataTable','Komplain_skorController@get_dataTable');
+    Route::resource('komplain_skor', Komplain_skorController::class);
 });
 
-Route::get('data_simr/get_dataTable','Data_simrsController@get_dataTable');
-Route::resource('data_simr', Data_simrsController::class);
-Route::get('data_simr/get_dataTable','Data_simrsController@get_dataTable');
-Route::resource('data_simr', Data_simrsController::class);
-Route::get('detail_tindakan_medi/get_dataTable','Detail_tindakan_medisController@get_dataTable');
-Route::resource('detail_tindakan_medi', Detail_tindakan_medisController::class);
+Route::get('detail_tindakan_medis/get_dataTable','Detail_tindakan_medisController@get_dataTable');
+Route::resource('detail_tindakan_medis', Detail_tindakan_medisController::class);
 
 //route pengajuan diklat
 Route::get('pengajuan_diklat','PengajuandiklatController@index');
@@ -360,5 +358,4 @@ Route::group(['middleware' => ['userUpload']], function (){
 });
 
             
-            Route::get('komplain_skor/get_dataTable','Komplain_skorController@get_dataTable');
-            Route::resource('komplain_skor', Komplain_skorController::class);
+            
