@@ -35,9 +35,20 @@ use fidpro\builder\Bootstrap;
 </style>
 <table width="100%">
     <tr>
-        <th>LOGO1</th>
-        <th><h3>RINCIAN PERHITUNGAN JASA PELAYANAN</h3></th>
-        <th>LOGO2</th>
+        <th colspan="3">
+            <table width="100%" style="margin-bottom: 20px;">
+                <tr>
+                    <th width="18%">
+                        <img src="{{asset('assets/images/logo.webp')}}" alt="" style="width: 100%;">
+                    </th>
+                    <th style="text-align: left; padding:0px">
+                        <b style="font-size: 8pt; margin:0px">RINCIAN PERHITUNGAN JASA PELAYANAN</b><br>
+                        <span style="font-size: 9pt; margin:0px">RUMAH SAKIT UMUM DAERAH IBNU SINA KABUPATEN GRESIK</span> <br>
+                        <i style="font-size: 6pt; margin:0px">Jl. DR. Wahidin Sudiro Husodo No.243B Kabupaten Gresik Jawa Timur (61124)</i>
+                    </th>
+                </tr>
+            </table>
+        </th>
     </tr>
     <tr>
         <th width="15%" class="text-left">NIP</th>
@@ -107,7 +118,9 @@ use fidpro\builder\Bootstrap;
 </table>
 <p></p>
 <p>DETAIL SKOR INDIVIDU PEGAWAI</p>
-
+{!!
+    Bootstrap::tableData($skorPegawai,["class" => "table"])
+!!}
 @if(Session::get('sesLogin')->is_medis == 't' || Session::get('sesLogin')->group_type == 1)
 <p>JASA PELAYANAN BY PENJAMIN (BRUTTO)</p>
 {!!

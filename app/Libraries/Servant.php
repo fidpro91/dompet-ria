@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\DB;
  
 class Servant
 {
-    public static $apiKeyWa = 'Wz5Wz6pRJ1oSw3bz6M7TwLLNnBFhvJ';
-    public static $phoneWa  = '6285161591314';
+    public static $apiKeyWa = 'c2DHeetEhpyKecQ2XrVQt1hudWBFNL';
+    public static $phoneWa  = '6285655448087';
     
     public static function connect_simrs($method,$url,$data = array()){
         $ch = curl_init(); 
@@ -64,7 +64,8 @@ class Servant
 
     public static function send_wa($method,$param){
         $ch = curl_init(); 
-        $url = "http://wagateway.rsudibnusinagresik.com/send-message";
+        // $url = "http://wagateway.rsudibnusinagresik.com/send-message";
+        $url = "https://wabeta.m-pedia.my.id/send-message";
         $data = [
             "api_key"   => self::$apiKeyWa,
             "sender"    => self::$phoneWa
