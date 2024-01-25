@@ -89,11 +89,10 @@
     <div class="col-md-6">
         <div class="card border-0 shadow rounded">
             <div class="card-body">
-                {!! $chart['last_remun']->container() !!}
+                
             </div>
         </div>
     </div>
 </div>
-{!! $chart['statistik']->script() !!}
-{!! $chart['last_remun']->script() !!}
+
 @endsection
