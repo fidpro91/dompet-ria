@@ -13,14 +13,14 @@ class Komplain_skor extends Model
     protected $primaryKey = 'id_komplain';
     protected $table = 'komplain_skor';
     protected $fillable = [
-            'id_komplain',
-            'tanggal',
-            'id_skor',
-            'employee_id',
-            'isi_komplain',
-            'tanggapan_komplain',
-            'status_komplain',
-            'user_komplain',
-            'user_approve'
-        ];
+        'id_komplain',
+        'tanggal',
+        'id_skor',
+        'employee_id',
+        'isi_komplain',
+        'tanggapan_komplain',
+        'status_komplain',
+        'user_komplain',
+        'user_approve'
+    ];
 }

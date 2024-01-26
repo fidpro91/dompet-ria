@@ -84,9 +84,24 @@ Widget::_init(["datepicker","select2"]);
         </div>
     </div>
 </div>
+{{
+    Bootstrap::modal('modal_komplain',[
+        "title"   => 'Informasi Skor Individu#<span id="titleCom"></span>',
+        "size"    => "modal-xl"
+    ])
+}}
 <script>
     function loadData() {
         tb_table_data.draw();
+    }
+
+    function get_info(row,idkompain,idskor) {
+        $("#modal_komplain").modal("show");
+        $("#modal_komplain").find(".modal-body").load("{{url('komplain_skor/get_data_skor')}}/"+idskor,function(){
+            var title = $(row).closest('tr').find("td").eq(4).text();
+            $("#titleCom").text(title);
+            $("#id_skor").val(idskor);
+        });
     }
 </script>
 @endsection

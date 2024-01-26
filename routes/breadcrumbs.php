@@ -153,3 +153,7 @@ Breadcrumbs::for("ms_classification", function (BreadcrumbTrail $trail) {
                 $trail->parent("home");
                 $trail->push("komplain_skor", route("komplain_skor.index"));
             });
+            Breadcrumbs::for("detail_skor_pegawai", function (BreadcrumbTrail $trail) {
+                $trail->parent("home");
+                $trail->push("detail_skor_pegawai", route("detail_skor_pegawai.index"));
+            });

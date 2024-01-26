@@ -29,113 +29,11 @@ Route::get('login/reload_capcha', [LoginController::class, 'reload_capcha']);
 Route::post('login/login_verif', [LoginController::class, 'login_verif']);
 Route::get('/', [LoginController::class, 'login'])->name('login');
 
-Route::group(['prefix'=>'mobile','middleware' => ['auth','client']], function(){
-    // Route::get('/', [LoginController::class, 'login'])->name('login');
-    Route::get('/index', function () {
-        return view("mobile.index");
-    }); 
+Route::get('slip_remun/{filepdf}', function ($filepdf) {
+    $pdfPath = storage_path('app/public/slip_remun/THP_00016_03.01.2024/'.$filepdf);
+    return response()->file($pdfPath);
+})->where('filepdf', '.*');
 
-    Route::get('/profil',"Mobile\ProfilController@index");
-    Route::get('/profil/info/{id?}',"Mobile\ProfilController@load_info");
-
-    Route::get('/jasa_pelayanan/detail/{id?}',"Mobile\JaspelController@detail");
-    Route::get('/jasa_pelayanan',"Mobile\JaspelController@index");
-    Route::get('jasa_pelayanan/monitoring_remun',"Mobile\JaspelController@monitoring_remun");
-    Route::get('/jasa_pelayanan/skoring',"Mobile\JaspelController@skoring");
-    Route::get('/jasa_pelayanan/point_medis/{id?}',"Mobile\JaspelController@point_medis");
-});
-
-Route::get('/tes_package', function () {
-
-    Servant::send_wa("POST","",null);
-    die;
-    $pegawai = \App\Models\Employee::all();
-    foreach ($pegawai as $key => $pgw) {
-        \App\Models\Diklat::from("diklat as dk")
-        ->where("peserta_id",$pgw->emp_id)
-        ->join("detail_indikator as di","di.detail_id","=","dk.indikator_skor")
-        ->join("indikator as i","i.id","=","di.indikator_id");
-    }
-    die;
-    $kumpulan_data=[];
-    //KIRIM WA
-    $data['phone'] = '085655448087';
-    $data['message'] = 'INI PESAN';
-    $data['secret'] = false;
-    $data['retry'] = false;
-    $data['isGroup'] = false;
-    array_push($kumpulan_data, $data);
-    WablasTrait::sendText($kumpulan_data);
-    die;
-
-    $data = [
-        'name' => 'Syahrizal As',
-        'body' => 'Testing Kirim Email di Santri Koding'
-    ];
-   
-    Mail::to('ufi.alfi@gmail.com')->send(new SendEmail($data));
-   
-    dd("Email Berhasil dikirim.");
-    die;
-    // echo config('app.name');
-    /* $data=DB::table("users")->get();
-    ini_set('max_execution_time', -1);
-        ini_set('memory_limit', -1);
-    foreach ($data as $key => $value) {
-        $value->password = bcrypt($value->password_decrypt);
-        $input = (array) $value;
-        DB::table("users")->where("id",$value->id)->update($input);
-    }
-    die; */
-    $nomor = Servant::generate_code_transaksi([
-        "text"	=> "INSENT/NOMOR/".date("d.m.Y"),
-        "table"	=> "jasa_pelayanan",
-        "column"	=> "no_jasa",
-        "delimiterFirst" => "/",
-        "delimiterLast" => "/",
-        "limit"	=> "2",
-        "number"	=> "-1",
-    ]);
-    print_r($nomor);
-    die;
-    $data = function(){
-        return "tes";
-    };
-    if (is_callable($data)) {
-        return 'ini fungsi';
-    }
-    print_r(bcrypt('123456'));
-    die;
-    // Cache::store('file')->get('foo');
-    /* $tes = DB::table("employee_off")->whereRaw("('02-2023' between bulan_jasa_awal and bulan_jasa_akhir)")->get();
-    print_r($tes);
-    die;
-    Cache::add('tes', '123', 60);
-    print_r(Cache::store('file')->get('tes'));
-    die; */
-    // echo Servant::doSomethingUseful();
-    /* print_r(bcrypt('admin@mail.com'));
-    die;
-    $hasil = Ms_menu::where('menu_parent_id', '0')->get();
-    print_r($hasil);die; */
-    $hasil = Schema::getColumnListing('ms_group');
-    $results = DB::select('SHOW FIELDS FROM ms_group');
-    foreach ($results as $x => $rs) {
-        echo $rs->Null;
-    }
-    // print_r($row);
-    /* echo(Breadcrumbs::render('ms_group'));
-    $hasil = \fidpro\builder\Create::input("nama_pegawai")->render();
-    echo ($hasil);
-    $hasil = \fidpro\builder\Create::dropDown("pegawai",[
-        "data" => [
-            "model"     => "Models_builder\Employee",
-            "custom"    => "tes_data",
-            "column"    => ["emp_id","emp_name"]
-        ]
-    ])->render("group","pegawai");
-    print_r ($hasil); */
-});
 Route::get('/builder/example/form_basic', [Example::class, 'form_basic']);
 Route::get('/builder/example/form_widget', [Example::class, 'form_widget']);
 Route::get('/builder/example/bootsrap_component', [Example::class, 'bosstrap_comp']);
@@ -329,9 +227,6 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::get('pencairan_jasa/get_dataTable','Pencairan_jasaController@get_dataTable');
     Route::resource('pencairan_jasa', Pencairan_jasaController::class);
 
-    Route::get('komplain_skor/get_dataTable','Komplain_skorController@get_dataTable');
-    Route::resource('komplain_skor', Komplain_skorController::class);
-
     Route::get('potongan_penghasilan/index/{id_cair?}','Potongan_penghasilanController@index');
     Route::get('potongan_penghasilan/show/{id?}','Potongan_penghasilanController@show');
     Route::get('potongan_penghasilan/data/{id?}','Potongan_penghasilanController@data');
@@ -339,8 +234,14 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::resource('potongan_penghasilan', Potongan_penghasilanController::class);
     Route::get('activity_log/get_dataTable','activity_logController@get_dataTable');
     Route::resource('activity_log', activity_logController::class);
+
+    Route::get('komplain_skor/get_data_skor/{id_skor?}','Komplain_skorController@get_data_skor');
     Route::get('komplain_skor/get_dataTable','Komplain_skorController@get_dataTable');
     Route::resource('komplain_skor', Komplain_skorController::class);
+    
+    Route::get('detail_skor_pegawai/data/{kode?}','Detail_skor_pegawaiController@data');
+    Route::get('detail_skor_pegawai/get_dataTable','Detail_skor_pegawaiController@get_dataTable');
+    Route::resource('detail_skor_pegawai', Detail_skor_pegawaiController::class);
 });
 
 Route::get('detail_tindakan_medis/get_dataTable','Detail_tindakan_medisController@get_dataTable');
@@ -356,6 +257,3 @@ Route::group(['middleware' => ['userUpload']], function (){
     Route::get('pengajuan_diklat/finish','PengajuandiklatController@finish');
     Route::post('pengajuan_diklat/validasi_capcha','PengajuandiklatController@validasi_capcha');
 });
-
-            
-            

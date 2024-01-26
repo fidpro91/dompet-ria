@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Komplain_skor;
+use App\Models\Skor_pegawai;
 use Illuminate\Support\Facades\Validator;
 use DataTables;
 use fidpro\builder\Create;
@@ -71,11 +72,9 @@ class Komplain_skorController extends Controller
                 "data-target"  => "page_komplain_skor"
             ]);
 
-            $button .= Create::action("<i class=\"fas fa-trash\"></i>", [
+            $button .= Create::action("<i class=\"fas fa-eye\"></i>", [
                 "class"     => "btn btn-danger btn-xs",
-                "onclick"   => "delete_row(this)",
-                "x-token"   => csrf_token(),
-                "data-url"  => route($this->route . ".destroy", $data->id_komplain),
+                "onclick"   => "get_info(this,$data->id_komplain,$data->id_skor)",
             ]);
             return $button;
         })->rawColumns(['action']);
@@ -139,6 +138,29 @@ class Komplain_skorController extends Controller
     {
         return view($this->folder . '.form', compact('komplain_skor'));
     }
+    
+    public function get_data_skor($id)
+    {
+        $data = Skor_pegawai::from("skor_pegawai as sp")
+                ->join("employee as e","e.emp_id","=","sp.emp_id")
+                ->join("ms_unit as mu","mu.unit_id","=","e.unit_id_kerja")
+                ->where("sp.id",$id)
+                ->select([
+                    "e.emp_no",
+                    "e.emp_name",
+                    "mu.unit_name",
+                    'sp.basic_index',
+                    'sp.capacity_index',
+                    'sp.emergency_index',
+                    'sp.unit_risk_index',
+                    'sp.admin_risk_index',
+                    'sp.position_index',
+                    'sp.competency_index',
+                    'sp.total_skor',
+                ])->first()->toArray();
+        return view($this->folder . '.data_skor',compact('data'));
+    }
+
     public function update(Request $request, Komplain_skor $komplain_skor)
     {
         $valid = $this->form_validasi($request->all());

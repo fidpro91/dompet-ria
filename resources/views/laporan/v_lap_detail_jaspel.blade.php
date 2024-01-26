@@ -123,8 +123,30 @@ use fidpro\builder\Bootstrap;
 !!}
 @if(Session::get('sesLogin')->is_medis == 't' || Session::get('sesLogin')->group_type == 1)
 <p>JASA PELAYANAN BY PENJAMIN (BRUTTO)</p>
+<?php
+$jasa_by_penjamin = array_map('get_object_vars', $jasa_by_penjamin);
+?>
 {!!
-    Bootstrap::tableData($jasa_by_penjamin,["class" => "table"])
+    Bootstrap::tableData($jasa_by_penjamin,["class" => "table"],[
+        'NO' => [
+            'data'  => 'number'
+        ],
+        'PELAYANAN' => [
+            'data'  => 'pelayanan'
+        ],
+        'NAMA PENJAMIN' => [
+            'data'  => 'nama_penjamin'
+        ],
+        'SKOR JASA'  => [
+            'data'      => 'skor_jasa'
+        ],
+        'JASA TUNAI'  => [
+            'data'      => 'jasa_tunai',
+            'custom'    => function($a){
+                return convert_currency2($a['jasa_tunai']);
+            }
+        ],
+    ])
 !!}
 <p>DETAIL POINT PELAYANAN EKSEKUTIF</p>
 <?php
@@ -166,12 +188,6 @@ use fidpro\builder\Bootstrap;
                         ],
                         'ID KUNJUNGAN' => [
                             'data'  => 'id_kunjungan'
-                        ],
-                        'NORM' => [
-                            'data' => 'norm'
-                        ],
-                        'NAMA' => [
-                            'data'  => 'name'
                         ],
                         'TINDAKAN' => [
                             'data'  => 'tindakan'
@@ -218,12 +234,6 @@ use fidpro\builder\Bootstrap;
                         ],
                         'ID KUNJUNGAN' => [
                             'data'  => 'id_kunjungan'
-                        ],
-                        'NORM' => [
-                            'data' => 'norm'
-                        ],
-                        'NAMA' => [
-                            'data'  => 'name'
                         ],
                         'TINDAKAN' => [
                             'data'  => 'tindakan'
