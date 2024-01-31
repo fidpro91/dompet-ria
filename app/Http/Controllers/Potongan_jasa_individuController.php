@@ -57,7 +57,15 @@ class Potongan_jasa_individuController extends Controller
                     'max_angsuran',
                     'pot_status'
                 ]);
+        
+        if ($request->jenis_potongan) {
+            $data->where("pj.kategori_potongan",$request->jenis_potongan);
+        }
 
+        if ($request->potongan_status) {
+            $data->where("pot_status",$request->potongan_status);
+        }
+        
         $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
             $button = Create::action("<i class=\"fas fa-edit\"></i>", [
                 "class"     => "btn btn-primary btn-xs",

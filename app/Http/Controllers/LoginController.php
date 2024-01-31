@@ -58,6 +58,17 @@ class LoginController extends Controller
                        ->leftJoin("potongan_statis as ps","ps.pot_stat_code","=","e.kode_ptkp")
                        ->select(["e.*","mg.*","mu.unit_name","di.detail_name AS jabatan_struktural_name","di2.detail_name AS jabatan_fungsional_name","ps.nama_potongan"])
                        ->where("us.email",$data['email'])->first();
+            /* $query = str_replace(array('?'), array('\'%s\''), $dataEmp->toSql());
+            $query = vsprintf($query, $dataEmp->getBindings());
+            print_r($query);
+            print_r($dataEmp);
+            die; */
+            if (!$dataEmp) {
+                $resp = [
+                    "code"      => 203,
+                    "message"   => "Data pengguna belum termapping"
+                ];
+            }
             Session::put('sesLogin',$dataEmp);
             $groupMobile = [4,6];
             if (in_array(Auth::user()->group_id,$groupMobile) ) {

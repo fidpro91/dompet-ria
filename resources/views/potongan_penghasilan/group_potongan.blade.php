@@ -111,9 +111,14 @@ use \fidpro\builder\Bootstrap;
                         'url'   : '<?=url("pencairan_jasa_header/final_pencairan/".$pencairan->id_cair_header."")?>',
                         'success': function(data) {
                             if (data.success) {
-                                Swal.fire("Sukses!", data.message, "success").then(() => {
-                                    // location.reload();
-                                    location.href = "{{url('pencairan_jasa_header')}}";
+                                Swal.fire({
+                                    title: "Sukses!",
+                                    text: data.message,
+                                    icon: "success",
+                                    timer: 2000,  // Waktu dalam milidetik sebelum SweetAlert ditutup otomatis
+                                    onClose : () => {
+                                        location.href = "{{url('pencairan_jasa_header')}}";
+                                    }
                                 });
                             }else{
                                 Swal.fire("Oopss...!!", data.message, "error");

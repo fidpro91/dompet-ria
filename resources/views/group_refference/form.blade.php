@@ -52,8 +52,14 @@ use \fidpro\builder\Create;
                             'dataType': 'json',
                             'success': function(data) {
                                 if (data.success) {
-                                    Swal.fire("Sukses!", data.message, "success").then(() => {
-                                        location.reload();
+                                    Swal.fire({
+                                        title: "Sukses!",
+                                        text: resp.message,
+                                        icon: "success",
+                                        timer: 5,  // Waktu dalam milidetik sebelum SweetAlert ditutup otomatis,
+                                        onClose : () => {
+                                            location.reload();
+                                        }
                                     });
                                 } else {
                                     Swal.fire("Oopss...!!", data.message, "error");

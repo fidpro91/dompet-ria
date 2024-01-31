@@ -59,10 +59,19 @@ Widget::_init(["select2"]);
                     $.ajax({
                         'data': $('#form_potongan_penghasilan').serialize()+"&kategori_potongan="+$("#kategori_potongan").val(),
                         'dataType': 'json',
+                        'beforeSend': function() {
+                            showLoading();
+                        },
                         'success': function(data) {
                             if (data.success) {
-                                Swal.fire("Sukses!", data.message, "success").then(() => {
-                                    location.reload();
+                                Swal.fire({
+                                    title: "Sukses!",
+                                    text: resp.message,
+                                    type: "success",
+                                    timer: 1500,  // Waktu dalam milidetik sebelum SweetAlert ditutup otomatis
+                                    onClose : () => {
+                                        location.reload();
+                                    }
                                 });
                             }else{
                                 Swal.fire("Oopss...!!", data.message, "error");

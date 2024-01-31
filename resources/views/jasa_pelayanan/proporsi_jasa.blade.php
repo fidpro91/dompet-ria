@@ -39,7 +39,6 @@ Widget::_init(["select2", "datepicker"]);
                         ],[
                             "url"       => "jasa_pelayanan/get_dataTableEmployee",
                             "filter"    => [
-                                "emp_active"    => "'t'",
                                 "komponen_id"   => "$('#komponen_id').val()",
                                 "bulan_jasa"    => "$('#bulan_pelayanan').val()",
                                 "jabatan_type"  => "$('#jabatan_type').val()",

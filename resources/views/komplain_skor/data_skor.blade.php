@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Detail_skor_pegawai;
-use App\Models\Indikator;
 use fidpro\builder\Bootstrap;
 
 $info = '<table class="table">';

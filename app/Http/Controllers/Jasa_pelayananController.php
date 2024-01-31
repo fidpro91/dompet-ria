@@ -232,7 +232,6 @@ class Jasa_pelayananController extends Controller
     public function get_dataTableEmployee(Request $request)
     {
         $data = Employee::from("employee as e")
-                ->where("e.emp_active",$request->emp_active)
                 ->join("ms_unit as mu","mu.unit_id","=","e.unit_id_kerja")
                 ->select([
                     'emp_id',

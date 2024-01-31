@@ -191,8 +191,11 @@ $allJasa=Cache::get("cacheJasaMerger");
         showLoading();
         $.get("{{url('jasa_pelayanan/simpan_per_proporsi')}}/"+jaspelId+"/"+komponen_id,function(resp){
             if (resp.code == 200) {
-                Swal.fire("Sukses!", resp.message, "success").then(() => {
-                    
+                Swal.fire({
+                    title: "Sukses!",
+                    text: resp.message,
+                    type: "success",
+                    timer: 1500,  // Waktu dalam milidetik sebelum SweetAlert ditutup otomatis
                 });
             }else{
                 Swal.fire("Oopss...!!", data.message, "error");
