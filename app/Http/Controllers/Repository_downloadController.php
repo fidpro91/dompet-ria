@@ -102,8 +102,8 @@ class Repository_downloadController extends Controller
             $html = "<div>
                         <b>
                             Total Data : $data->total_data <br>
-                            Total Eksekutif : $data->skor_eksekutif <br>
-                            Total Non Eksekutif : $data->skor_non_eksekutif
+                            Total Eksekutif : ".convert_currency2($data->skor_eksekutif)." <br>
+                            Total Non Eksekutif : ".convert_currency2($data->skor_non_eksekutif)."
                         </b>
                     </div>";
             return $html;
