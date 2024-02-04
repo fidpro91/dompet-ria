@@ -373,6 +373,9 @@ class Detail_tindakan_medisController extends Controller
                         "id_kunjungan"          => $r->visit_id
                     ];
                 } */
+                if ($r->tarif < 1) {
+                    continue;
+                }
                 $tindakanMedis[$xx] = [
                     "tanggal_tindakan"		=> date("Y-m-d",strtotime($r->visit_end_date)),
                     "nama_tindakan"			=> addslashes($r->bill_name.'|'.$r->px_norm.'|'.$r->unit_name.'|'.$r->surety_name),

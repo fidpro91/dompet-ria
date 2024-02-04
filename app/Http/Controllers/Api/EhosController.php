@@ -179,7 +179,7 @@ class EhosController extends Controller
                     JOIN finance.klasifikasi_jasa kj ON mb.klasifikasi_jasa_id = kj.id_klasifikasi_jasa
                     JOIN admin.ms_unit mu ON s.unit_id=mu.unit_id
                     WHERE 0=0 and bcs.cash_id is null and v.visit_status != '35' and s.srv_status != '35' 
-                    $where
+                    $where 
                 ) x
                 JOIN hr.employee e ON x.pelaksana = e.employee_id
                 JOIN hr.employee_categories ec ON e.empcat_id = ec.empcat_id
