@@ -171,9 +171,6 @@ class Detail_tindakan_medisController extends Controller
                 $totalEksekutif=$totalNonEksekutif=0;
                 $totalData = count($bill);
             }else{
-                list($tanggal1,$tanggal2) = explode('-',$input['periode_tindakan']);
-                $tanggal1 = date("Y-m-d",strtotime($tanggal1));
-                $tanggal2 = date("Y-m-d",strtotime($tanggal2)); 
                 $repoId = $input["id"];
                 $totalEksekutif     = $input["skor_eksekutif"];
                 $totalNonEksekutif  = $input["skor_non_eksekutif"];
@@ -197,7 +194,7 @@ class Detail_tindakan_medisController extends Controller
 
             Repository_download::find($repoId)->update([
                 "skor_eksekutif"        => $totalEksekutif,
-                "periode_akhir"         => $tanggal2,
+                // "periode_akhir"         => $tanggal2,
                 "total_data"            => $totalData,
                 "skor_non_eksekutif"    => $totalNonEksekutif
             ]);
