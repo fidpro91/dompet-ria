@@ -171,6 +171,9 @@ class Detail_tindakan_medisController extends Controller
                 $totalEksekutif=$totalNonEksekutif=0;
                 $totalData = count($bill);
             }else{
+                list($tanggal1,$tanggal2) = explode('-',$input['periode_tindakan']);
+                $tanggal1 = date("Y-m-d",strtotime($tanggal1));
+                $tanggal2 = date("Y-m-d",strtotime($tanggal2)); 
                 $repoId = $input["id"];
                 $totalEksekutif     = $input["skor_eksekutif"];
                 $totalNonEksekutif  = $input["skor_non_eksekutif"];
