@@ -147,6 +147,7 @@ class EhosController extends Controller
         if ($surety) {
             $where .= " AND v.surety_id in ($surety)";
         }
+        
         $ehos = DB::connection("ehos");
 		$result = $ehos->select("
         select x.kode_remun,x.namapelaksana,x.klasifikasi_jasa,COALESCE(NULLIF(x.tarifcomponen,0),x.tarifnormal)tarif,

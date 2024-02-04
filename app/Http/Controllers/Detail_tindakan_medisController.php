@@ -158,7 +158,6 @@ class Detail_tindakan_medisController extends Controller
                 ]);
                 $repoDownload = [
                     'download_date'     =>  date('Y-m-d'),
-                    'bulan_jasa'        =>  $input['bulan_jasa'],
                     'bulan_pelayanan'   =>  $input['bulan_pelayanan'],
                     'periode_awal'      =>  $tanggal1,
                     'periode_akhir'     =>  $tanggal2,
@@ -195,9 +194,11 @@ class Detail_tindakan_medisController extends Controller
 
             Repository_download::find($repoId)->update([
                 "skor_eksekutif"        => $totalEksekutif,
+                "periode_akhir"         => $tanggal2,
                 "total_data"            => $totalData,
                 "skor_non_eksekutif"    => $totalNonEksekutif
             ]);
+            
             /* $resp = [
                 'success' => false,
                 'message' => 'Data Berhasil Disimpan!'
@@ -402,8 +403,7 @@ class Detail_tindakan_medisController extends Controller
                     $skor[$x] = [
                         "employee_id" => $value->emp_id,
                         "skor"		  => $value->total_skor,
-                        "bulan"		  => $value->bulan_update,
-                        "bulan_jasa_cair"	=> $input['bulan_jasa']
+                        "bulan"		  => $value->bulan_update
                     ];
                 }
                 Cache::add('skorCache', $skor, 6000);

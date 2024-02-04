@@ -18,16 +18,6 @@ Widget::_init(["select2","datepicker","daterangepicker"]);
         !!}
         <div id="download_baru">
             {!!
-                Widget::datepicker("bulan_jasa",[
-                    "format" =>"mm-yyyy",
-                    "viewMode" => "year",
-                    "minViewMode" => "year",
-                    "autoclose" =>true
-                ],[
-                    "readonly" => true,
-                    "value" => date('m-Y')
-                ])->render("group","Bulan Pembagian Jasa")!!}
-            {!!
                 Widget::datepicker("bulan_pelayanan",[
                     "format" =>"mm-yyyy",
                     "viewMode" => "year",

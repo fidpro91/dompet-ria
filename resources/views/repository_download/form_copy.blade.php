@@ -21,18 +21,6 @@ Widget::_init(["select2","datepicker"]);
         ])->render("group")
     !!}
     {!!
-        Widget::datepicker("bulan_skor",[
-            "format" =>"mm-yyyy",
-            "viewMode" => "year",
-            "minViewMode" => "year",
-            "autoclose" =>true
-        ],[
-            "readonly"  => true,
-            "required"  => true,
-            "value"     => date('m-Y')
-        ])->render("group")
-    !!}
-    {!!
         Widget::select2("group_penjamin",[
             "data" => [
                 "model"     => "Ms_reff",

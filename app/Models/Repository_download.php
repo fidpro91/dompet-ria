@@ -12,7 +12,6 @@ class Repository_download extends Model
     protected $table = 'repository_download';
     protected $fillable = [
         'download_date',
-        'bulan_jasa',
         'bulan_pelayanan',
         'periode_awal',
         'periode_akhir',

@@ -21,7 +21,7 @@ class Repository_downloadController extends Controller
 
     public $param = [
         'download_date'   =>  'required',
-        'bulan_jasa'   =>  'required',
+        'bulan_jasa'   =>  '',
         'bulan_pelayanan'   =>  'required',
         'periode_awal'   =>  'required',
         'periode_akhir'   =>  'required',
@@ -30,6 +30,7 @@ class Repository_downloadController extends Controller
         'download_by'   =>  '',
         'download_no'   => 'required',
     ];
+    
     public $defaultValue = [
         'id'   =>  '',
         'download_date'   =>  '',
@@ -41,6 +42,7 @@ class Repository_downloadController extends Controller
         'jenis_pembayaran'   =>  '',
         'download_by'   =>  '',
     ];
+
     public function index()
     {
         return $this->themes($this->folder . '.index', null, $this);
@@ -53,7 +55,6 @@ class Repository_downloadController extends Controller
                     'id',
                     'download_date',
                     'download_no',
-                    'bulan_jasa',
                     'bulan_pelayanan',
                     'periode_awal',
                     'periode_akhir',
@@ -137,6 +138,7 @@ class Repository_downloadController extends Controller
         DB::beginTransaction();
         DB::disableQueryLog();
         try {
+            $repoDownload = Repository_download::findOrFail($request->id);
             Point_medis::where([
                 "repo_id"   => $request->id,
                 "is_usage"  => "f"
@@ -154,7 +156,7 @@ class Repository_downloadController extends Controller
                 where dm.repo_id = $request->id $where
             ");
 
-            DB::table("skor_pegawai")->where("bulan_update",$request->bulan_skor)->update([
+            DB::table("skor_pegawai")->where("bulan_update",$repoDownload->bulan_pelayanan)->update([
                 "prepare_remun"         => "t",
                 "prepare_remun_month"   => $request->bulan_jaspel
             ]);
