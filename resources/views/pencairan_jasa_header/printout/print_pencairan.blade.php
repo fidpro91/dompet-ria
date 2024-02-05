@@ -113,6 +113,7 @@
     <?php
     $row = "";
     $totalBrutto=$totalNetto=0;
+    $totalPotongan=[];
     foreach ($data['detail'] as $key => $value) {
         $detail = json_decode($value->detail,true);
         $totalBrutto += $value->total_brutto;

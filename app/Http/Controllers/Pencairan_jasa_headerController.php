@@ -579,8 +579,8 @@ class Pencairan_jasa_headerController extends Controller
                 SELECT e.ordering_mode,e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,ph.kategori_potongan,pj.total_brutto,sum(pm.potongan_value)total_potongan
                 FROM pencairan_jasa pj
                 join employee e on e.emp_id = pj.emp_id
-                JOIN potongan_jasa_medis pm ON pm.pencairan_id = pj.id_cair
-                JOIN potongan_penghasilan ph ON ph.id = pm.header_id
+                LEFT JOIN potongan_jasa_medis pm ON pm.pencairan_id = pj.id_cair
+                LEFT JOIN potongan_penghasilan ph ON ph.id = pm.header_id
                 where pj.id_header = '$id'
                 group by e.ordering_mode,e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,ph.kategori_potongan,pj.total_brutto
             )x
