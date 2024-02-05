@@ -14,7 +14,13 @@
             buttons: [
                 'csv', 'excel', 'pdf', 'print' // Menambahkan tombol untuk mendownload data
             ],
-            "paging": false
+            "paging": false,
+            columnDefs: [
+                {
+                    targets: [5,6,7,9], // Indeks kolom yang ingin Anda atur formatnya (misalnya, kolom kedua)
+                    render: $.fn.dataTable.render.number(',', '.', 2), // Format angka
+                },
+            ]
         });
     })
 </script>

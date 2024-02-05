@@ -36,7 +36,13 @@ use \fidpro\builder\Bootstrap;
                             "orderable" => "false", 
                             "searchable" => "false"
                         ],
-                        'pajak_no','id_cair_header','kategori_potongan','total_potongan','potongan_method'
+                        'pajak_no','id_cair_header','kategori_potongan',
+                        'total_potongan'     => [
+                            "data"      => "total_potongan",
+                            "settings"  => [
+                                "render"    => "$.fn.dataTable.render.number( ',', '.', 2)"
+                            ]
+                        ],'potongan_method'
                     ]
                 ])
             }}

@@ -435,7 +435,6 @@ class Potongan_penghasilanController extends Controller
                 if ($value->emp_status == 1) {
                     continue;
                 }
-
                 /* $totalJasaBrutto = DB::select("
                     select max(akumulasi_penghasilan_pajak)pajak,max(pm.percentase_pajak)pajak_old from potongan_jasa_medis pm
                     join pencairan_jasa pj on pm.pencairan_id = pj.id_cair
@@ -451,7 +450,7 @@ class Potongan_penghasilanController extends Controller
                 if (!empty($totalJasaBrutto)) {
                     $totalJasaBrutto=$totalJasaBrutto[0];
                 }else{
-                    $totalJasaBrutto = new stdClass;
+                    $totalJasaBrutto = new \stdClass;
                     $totalJasaBrutto->pajak = 0;
                     $totalJasaBrutto->pajak_old = 0;
                 }
