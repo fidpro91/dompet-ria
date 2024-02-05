@@ -206,6 +206,7 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::get('pencairan_jasa_header/final_pencairan/{id?}','Pencairan_jasa_headerController@final_pencairan');
     Route::get('pencairan_jasa_header/detail/{type?}/{id_kategori?}/{id_jasa?}','Pencairan_jasa_headerController@detail');
     Route::get('pencairan_jasa_header/kroscek/{id?}','Pencairan_jasa_headerController@kroscek');
+    Route::get('pencairan_jasa_header/excel/{id?}','Pencairan_jasa_headerController@file_excel');
     Route::get('pencairan_jasa_header/print/{id?}','Pencairan_jasa_headerController@print_pdf');
     Route::get('pencairan_jasa_header/get_dataTable','Pencairan_jasa_headerController@get_dataTable');
     Route::resource('pencairan_jasa_header', Pencairan_jasa_headerController::class);
