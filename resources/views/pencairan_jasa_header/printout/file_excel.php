@@ -4,6 +4,7 @@
         <th >NO. REK</th>
         <th >NAMA</th>
         <th >GOLONGAN</th>
+        <th >UNIT KERJA</th>
         <th >BRUTTO</th>
         <?php
             foreach ($data['potongan'] as $key => $value) {
@@ -26,6 +27,7 @@
             <td>$value->nomor_rekening</td>
             <td>$value->emp_name</td>
             <td>$value->golongan</td>
+            <td>".str_replace('&','Dan',$value->unit_name)."</td>
             <td>" . convert_currency2($value->total_brutto) . "</td>";
         foreach ($data['potongan'] as $x => $v) {
             $kategori = $v->kategori_potongan_id;
@@ -52,7 +54,7 @@
     ?>
     <tr>
         <td></td>
-        <td colspan="3">TOTAL</td>
+        <td colspan="4">TOTAL</td>
         <td><?=convert_currency2($totalBrutto)?></td>
         <?php
             $row = "";

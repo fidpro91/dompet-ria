@@ -612,27 +612,28 @@ class Pencairan_jasa_headerController extends Controller
             $data['potongan']   = Kategori_potongan::where("potongan_active","t")->get();
             $data['header']     = Pencairan_jasa_header::find($id);
 
-            $data['detail'] = DB::select("SELECT x.golongan,x.emp_no,x.emp_name,x.nomor_rekening,
+            $data['detail'] = DB::select("SELECT x.unit_name,x.golongan,x.emp_no,x.emp_name,x.nomor_rekening,
             x.total_brutto,
             json_arrayagg(
                 json_object('kategori_id',x.kategori_potongan, 'potongan', x.total_potongan)
             )detail
             FROM (
                 SELECT e.ordering_mode,e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,ph.kategori_potongan,pj.total_brutto,sum(pm.potongan_value)total_potongan,
-                e.unit_id_kerja
+                e.unit_id_kerja,mu.unit_name
                 FROM pencairan_jasa pj
                 join employee e on e.emp_id = pj.emp_id
+                join ms_unit mu on mu.unit_id = e.unit_id_kerja
                 LEFT JOIN potongan_jasa_medis pm ON pm.pencairan_id = pj.id_cair
                 LEFT JOIN potongan_penghasilan ph ON ph.id = pm.header_id
                 where pj.id_header = '$id'
-                group by e.ordering_mode,e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,ph.kategori_potongan,pj.total_brutto,e.unit_id_kerja
+                group by e.ordering_mode,e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,ph.kategori_potongan,pj.total_brutto,e.unit_id_kerja,mu.unit_name
             )x
             GROUP BY x.ordering_mode,x.golongan,x.emp_no,x.emp_name,x.nomor_rekening,
-            x.total_brutto,x.unit_id_kerja
+            x.total_brutto,x.unit_id_kerja,x.unit_name
             order by IFNULL(ordering_mode, '07'),x.unit_id_kerja,x.emp_name");
             Cache::put($cacheKey,$data,60);
         }
-        return view("pencairan_jasa_header.printout.print_pencairan",compact('data'));
+        return view("pencairan_jasa_header.printout.file_excel",compact('data'));
     } */
 
     public function file_excel($id)
