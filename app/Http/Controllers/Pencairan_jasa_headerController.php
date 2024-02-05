@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Charts\RemunChart;
+use App\Exports\PencairanExport;
 use App\Libraries\Servant;
 use App\Models\Jasa_pelayanan;
 use App\Models\Kategori_potongan;
@@ -601,7 +602,7 @@ class Pencairan_jasa_headerController extends Controller
         
     }
 
-    public function file_excel($id)
+    /* public function file_excel($id)
     {
         set_time_limit(0);
         ini_set("memory_limit",-1);
@@ -632,10 +633,11 @@ class Pencairan_jasa_headerController extends Controller
             Cache::put($cacheKey,$data,60);
         }
         return view("pencairan_jasa_header.printout.print_pencairan",compact('data'));
-        /* $pdf = PDF::loadview("pencairan_jasa_header.printout.print_pencairan",compact('data'))
-               ->setPaper([0, 0, 750, 1500], 'landscape');
-        // return $pdf->download('laporan-pegawai.pdf');
-        return $pdf->stream(); */
-        
+    } */
+
+    public function file_excel($id)
+    {
+        $pencairan =  Pencairan_jasa_header::find($id);
+        return Excel::download(new PencairanExport($id), "".($pencairan->keterangan??"jaspel_$id").".xlsx");
     }
 }

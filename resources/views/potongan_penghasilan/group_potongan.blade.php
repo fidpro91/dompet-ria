@@ -54,7 +54,7 @@ use \fidpro\builder\Bootstrap;
                         <a href="javascript: void(0);" onclick="get_pdf_report()" class="social-list-item border-warning text-warning"><i class="mdi mdi-file-pdf"></i></a>
                     </li>
                     <li class="list-inline-item">
-                        <a href="javascript: void(0);" class="social-list-item border-success text-success"><i class="mdi mdi-file-excel"></i></a>
+                        <a href="{{url('pencairan_jasa_header/excel/'.$pencairan->id_cair_header)}}" class="social-list-item border-success text-success"><i class="mdi mdi-file-excel"></i></a>
                     </li>
                     <li class="list-inline-item">
                         <a href="javascript: void(0);" class="social-list-item border-danger text-danger btn-final"><i class="mdi mdi-share-variant"></i></a>
