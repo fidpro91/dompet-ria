@@ -796,7 +796,10 @@ class Jasa_pelayananController extends Controller
         $data = Jasa_pelayanan::findOrFail($id);
         DB::beginTransaction();
         try {
-            DB::table("repository_download")->where("id",$data->repo_id);
+            DB::table("repository_download")->where("id",$data->repo_id)->update([
+                "is_used"   => "f"
+            ]);
+
             DB::table("proporsi_jasa_individu")->where("id_jaspel",$id)
             ->update([
                 "is_used"   => "f",

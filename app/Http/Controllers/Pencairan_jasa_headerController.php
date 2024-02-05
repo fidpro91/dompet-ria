@@ -403,16 +403,19 @@ class Pencairan_jasa_headerController extends Controller
         try {
             DB::statement("UPDATE potongan_jasa_individu pi
 			JOIN (
-			SELECT pi.pot_ind_id FROM potongan_jasa_medis pm
-			JOIN pencairan_jasa pj ON pm.pencairan_id = pj.id_cair
-			JOIN kategori_potongan kp on pm.kategori_id = kp.kategori_potongan_id
-			JOIN potongan_jasa_individu pi ON pi.emp_id = pj.emp_id
-			WHERE pj.id_header = $id and pi.pot_status = 't'
+                SELECT pi.pot_ind_id FROM potongan_jasa_medis pm
+                JOIN pencairan_jasa pj ON pm.pencairan_id = pj.id_cair
+                JOIN kategori_potongan kp on pm.kategori_id = kp.kategori_potongan_id
+                JOIN potongan_jasa_individu pi ON pi.emp_id = pj.emp_id
+                WHERE pj.id_header = $id and pi.pot_status = 't'
 			) x ON x.pot_ind_id = pi.pot_ind_id
 			SET pi.last_angsuran = (pi.last_angsuran-1)");
+            
             Jasa_pelayanan::where("id_cair",$id)->update([
-                "status"    => 1
+                "status"    => 2,
+                "id_cair"   => null
             ]);
+            
             $data->delete();
             DB::commit();
             $resp = [
@@ -576,17 +579,18 @@ class Pencairan_jasa_headerController extends Controller
                 json_object('kategori_id',x.kategori_potongan, 'potongan', x.total_potongan)
             )detail
             FROM (
-                SELECT e.ordering_mode,e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,ph.kategori_potongan,pj.total_brutto,sum(pm.potongan_value)total_potongan
+                SELECT e.ordering_mode,e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,ph.kategori_potongan,pj.total_brutto,sum(pm.potongan_value)total_potongan,
+                e.unit_id_kerja
                 FROM pencairan_jasa pj
                 join employee e on e.emp_id = pj.emp_id
                 LEFT JOIN potongan_jasa_medis pm ON pm.pencairan_id = pj.id_cair
                 LEFT JOIN potongan_penghasilan ph ON ph.id = pm.header_id
                 where pj.id_header = '$id'
-                group by e.ordering_mode,e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,ph.kategori_potongan,pj.total_brutto
+                group by e.ordering_mode,e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,ph.kategori_potongan,pj.total_brutto,e.unit_id_kerja
             )x
             GROUP BY x.ordering_mode,x.golongan,x.emp_no,x.emp_name,x.nomor_rekening,
-            x.total_brutto
-            order by IFNULL(ordering_mode, '07'),x.emp_name");
+            x.total_brutto,x.unit_id_kerja
+            order by IFNULL(ordering_mode, '07'),x.unit_id_kerja,x.emp_name");
             Cache::put($cacheKey,$data,60);
         }
         // return view("pencairan_jasa_header.printout.print_pencairan",compact('data'));
