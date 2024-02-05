@@ -23,8 +23,6 @@ class Detail_tindakan_medis extends Model
         'percentase_jasa',
         'skor_jasa',
         'qty_tindakan',
-        'unit_layanan',
-        'unit_layanan_id',
         'visit_id',
         'nama_dokter',
         'unit_vip',

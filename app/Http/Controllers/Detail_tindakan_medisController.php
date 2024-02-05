@@ -74,46 +74,27 @@ class Detail_tindakan_medisController extends Controller
         return $this->themes($this->folder . '.index', null, $this);
     }
 
+    public function data()
+    {
+        return view($this->folder . '.list_tindakan', null, $this);
+    }
+
     public function get_dataTable(Request $request)
     {
-        $data = Detail_tindakan_medis::select([
-            'tindakan_id',
-            'jp_medis_id',
-            'tanggal_tindakan',
-            'nama_tindakan',
-            'tarif_tindakan',
-            'id_klasifikasi_jasa',
-            'klasifikasi_jasa',
-            'percentase_jasa',
-            'skor_jasa',
-            'qty_tindakan',
-            'px_norm',
-            'px_name',
-            'unit_layanan',
-            'unit_layanan_id',
-            'visit_id',
-            'nip',
-            'nama_dokter',
-            'unit_vip',
-            'penjamin_id',
-            'nama_penjamin',
-            'status_bayar',
-            'tanggal_import',
-            'billing_id',
-            'status_jasa',
-            'jasa_tindakan_bulan'
-        ]);
+        $data = Detail_tindakan_medis::select(['*']);
+
+        $data->where('repo_id',$request->repo_id);
 
         $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
-            $button = Create::action("<i class=\"fas fa-edit\"></i>", [
+            /* $button = Create::action("<i class=\"fas fa-edit\"></i>", [
                 "class"     => "btn btn-primary btn-sm",
                 "onclick"   => "set_edit(this)",
                 "data-url"  => route($this->route . ".edit", $data->tindakan_id),
                 "ajax-url"  => route($this->route . '.update', $data->tindakan_id),
                 "data-target"  => "page_detail_tindakan_medis"
-            ]);
+            ]); */
 
-            $button .= Create::action("<i class=\"fas fa-trash\"></i>", [
+            $button = Create::action("<i class=\"fas fa-trash\"></i>", [
                 "class"     => "btn btn-danger btn-sm",
                 "onclick"   => "delete_row(this)",
                 "x-token"   => csrf_token(),

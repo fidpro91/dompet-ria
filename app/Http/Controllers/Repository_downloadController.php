@@ -91,6 +91,11 @@ class Repository_downloadController extends Controller
                 "onclick"   => "copy_data($data->id)"
             ]);
 
+            $button .= Create::action("<i class=\"fas fa-eye\"></i>", [
+                "class"     => "btn btn-purple btn-xs",
+                "onclick"   => "show_data($data->id)"
+            ]);
+
             return $button;
         })->addColumn('jml_jaspel', function ($data) {
             return $data->hasCopy->count();

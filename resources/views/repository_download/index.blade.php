@@ -44,10 +44,25 @@ use \fidpro\builder\Bootstrap;
         ]
     ])
 }}
+{{
+    Bootstrap::modal('modal_detail',[
+        "title"   => 'List Data Download Tindakan Pelayanan',
+        "size"    => "modal-xl",
+        "body"    => [
+            "url"   => url("detail_tindakan_medis/data_tindakan")
+        ]
+    ])
+}}
 <script>
+    var repoId;
     function copy_data(id) {
         $("#modal_copy").modal("show");
         $("#modal_copy").find("#id").val(id);
+    }
+
+    function show_data(id) {
+        repoId=id;
+        $("#modal_detail").modal("show");
     }
 
     function delete_copy(id) {

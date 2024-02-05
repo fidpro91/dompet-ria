@@ -242,10 +242,9 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::get('detail_skor_pegawai/data/{kode?}','Detail_skor_pegawaiController@data');
     Route::get('detail_skor_pegawai/get_dataTable','Detail_skor_pegawaiController@get_dataTable');
     Route::resource('detail_skor_pegawai', Detail_skor_pegawaiController::class);
+
 });
 
-Route::get('detail_tindakan_medis/get_dataTable','Detail_tindakan_medisController@get_dataTable');
-Route::resource('detail_tindakan_medis', Detail_tindakan_medisController::class);
 
 //route pengajuan diklat
 Route::get('pengajuan_diklat','PengajuandiklatController@index');
