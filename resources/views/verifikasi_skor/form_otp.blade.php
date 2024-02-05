@@ -24,11 +24,15 @@ $sess = Session::get('sesLogin');
             headers: {
                 'X-CSRF-TOKEN': '<?=csrf_token()?>'
             },
+            'beforeSend': function() {
+                showLoading();
+            },
             'type'    : 'post',
             'url'     : '{{url("verifikasi_skor/validasi_otp")}}',
             'dataType': 'json',
             'success': function(data) {
                 if (data.code == 200) {
+                    Swal.close();
                     window.location.assign(data.redirect);
                 }else{
                     Swal.fire("Oopss...!!", data.message, "error");

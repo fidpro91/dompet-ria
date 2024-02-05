@@ -76,6 +76,9 @@ Widget::_init(["daterangepicker"])
             headers: {
                 'X-CSRF-TOKEN': '<?=csrf_token()?>'
             },
+            'beforeSend': function() {
+                showLoading();
+            },
             'dataType': 'json',
             "url" 	: "{{url('pengajuan_diklat/store')}}",
             "type"	  : "post",

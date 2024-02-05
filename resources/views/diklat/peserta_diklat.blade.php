@@ -64,6 +64,9 @@ Widget::_init(["select2"]);
             headers: {
                 'X-CSRF-TOKEN': '<?=csrf_token()?>'
             },
+            'beforeSend': function() {
+                showLoading();
+            },
             'type'    : 'post',
             'url'     : '{{url("pengajuan_diklat/send_otp")}}',
             'dataType': 'json',

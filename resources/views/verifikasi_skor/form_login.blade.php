@@ -46,11 +46,15 @@ Widget::_init(["select2"]);
 			headers: {
 					'X-CSRF-TOKEN': '<?=csrf_token()?>'
 				},
+            'beforeSend': function() {
+                showLoading();
+            },
 			"url" 	: "{{url('login/login_verif')}}",
 			'dataType': 'json',
 			"type"	  : "post",
 			'success': function(resp) {
 				if (resp.code == "200") {
+                    Swal.close();
                     $("#page_login").html(resp.content);
 				}else{
                     Swal.fire("Oopss...!!", resp.message, "error");

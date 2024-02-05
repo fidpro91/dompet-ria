@@ -18,6 +18,15 @@
         background-color: #D6FDFF !important;
     }
 </style>
+<script>
+    var showLoading = function() {
+        Swal.fire({
+            html: '<i class="mdi mdi-spin mdi-loading"></i><br>Mohon tunggu....',
+            allowOutsideClick: false,
+            showConfirmButton: false
+        });
+  };
+</script>
 <header id="topnav">
 <!-- Topbar Start -->
 <div class="navbar-custom">
