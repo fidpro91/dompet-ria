@@ -8,9 +8,11 @@ use App\Libraries\Servant;
 use App\Models\Jasa_pelayanan;
 use App\Models\Kategori_potongan;
 use App\Models\Klasifikasi_pajak_penghasilan;
+use App\Models\Pencairan_jasa;
 use Illuminate\Http\Request;
 use App\Models\Pencairan_jasa_header;
 use App\Models\Potongan_jasa_individu;
+use App\Models\Potongan_penghasilan;
 use App\Models\Potongan_statis;
 use Illuminate\Support\Facades\Validator;
 use DataTables;
@@ -404,11 +406,11 @@ class Pencairan_jasa_headerController extends Controller
         try {
             DB::statement("UPDATE potongan_jasa_individu pi
 			JOIN (
-                SELECT pi.pot_ind_id FROM potongan_jasa_medis pm
-                JOIN pencairan_jasa pj ON pm.pencairan_id = pj.id_cair
-                JOIN kategori_potongan kp on pm.kategori_id = kp.kategori_potongan_id
-                JOIN potongan_jasa_individu pi ON pi.emp_id = pj.emp_id
-                WHERE pj.id_header = $id and pi.pot_status = 't'
+                SELECT pi.pot_ind_id FROM potongan_jasa_individu pi
+                join pencairan_jasa pj on pi.emp_id = pj.emp_id
+                join potongan_jasa_medis pm ON pj.id_cair = pm.pencairan_id
+                JOIN potongan_penghasilan ph ON pm.header_id = ph.id AND ph.kategori_potongan = pi.kategori_potongan
+                WHERE pj.id_header = $id
 			) x ON x.pot_ind_id = pi.pot_ind_id
 			SET pi.last_angsuran = (pi.last_angsuran-1)");
             
@@ -416,6 +418,11 @@ class Pencairan_jasa_headerController extends Controller
                 "status"    => 2,
                 "id_cair"   => null
             ]);
+
+            //potongan penghasilan
+            Potongan_penghasilan::where("id_cair_header",$id)->delete();
+
+            Pencairan_jasa::where("id_header",$id)->delete();
             
             $data->delete();
             DB::commit();

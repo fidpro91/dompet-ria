@@ -234,12 +234,14 @@ class Potongan_penghasilanController extends Controller
                             "total_netto"       => $value->total_brutto-($value->total_potongan+$value->potongan_value)
                         ]);
                         $lastAngsuran = $value->last_angsuran + 1;
-                        $lunas = "f";
+                        $aktif = "t";
+                        
                         if (($lastAngsuran == $value->max_angsuran)) {
-                            $lunas = "t";
+                            $aktif = "f";
                         }
+                        
                         Potongan_jasa_individu::find($value->pot_ind_id)->update([
-                            "pot_status"    => $lunas,
+                            "pot_status"    => $aktif,
                             "last_angsuran" => $lastAngsuran
                         ]);
                         $totalPotongan += $value->potongan_value;

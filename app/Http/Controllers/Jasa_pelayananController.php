@@ -820,6 +820,9 @@ class Jasa_pelayananController extends Controller
                     "prepare_remun"  => "t"
                 ]);
             }
+            DB::table("jp_byname_medis")->where("jaspel_id",$id)->delete();
+            DB::table("jasa_pelayanan_detail")->where("jaspel_id",$id)->delete();
+
             $data->delete();
             DB::commit();
             $resp = [
