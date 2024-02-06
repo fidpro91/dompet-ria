@@ -64,10 +64,10 @@ class LoginController extends Controller
             print_r($dataEmp);
             die; */
             if (!$dataEmp) {
-                $resp = [
+                return response()->json([
                     "code"      => 203,
-                    "message"   => "Data pengguna belum termapping"
-                ];
+                    "message"   => "Data pengguna belum termapping atau sudah tidak aktif"
+                ]);
             }
             Session::put('sesLogin',$dataEmp);
             $groupMobile = [4,6];

@@ -12,6 +12,7 @@ use App\Models\Pencairan_jasa;
 use Illuminate\Http\Request;
 use App\Models\Pencairan_jasa_header;
 use App\Models\Potongan_jasa_individu;
+use App\Models\Potongan_jasa_medis;
 use App\Models\Potongan_penghasilan;
 use App\Models\Potongan_statis;
 use Illuminate\Support\Facades\Validator;
@@ -420,7 +421,11 @@ class Pencairan_jasa_headerController extends Controller
             ]);
 
             //potongan penghasilan
-            Potongan_penghasilan::where("id_cair_header",$id)->delete();
+            $dataPotongan = Potongan_penghasilan::where("id_cair_header",$id)->get();
+            foreach ($dataPotongan as $key => $value) {
+                Potongan_jasa_medis::where("header_id",$value->id)->delete();
+                Potongan_penghasilan::find($value->id)->delete();
+            }
 
             Pencairan_jasa::where("id_header",$id)->delete();
             
@@ -428,13 +433,13 @@ class Pencairan_jasa_headerController extends Controller
             DB::commit();
             $resp = [
                 'success' => true,
-                'message' => 'Data Berhasil Diupdate!'
+                'message' => 'Data Berhasil Dihapus!'
             ];
         } catch (\Exception $e) {
             DB::rollBack();
             $resp = [
                 'success' => false,
-                'message' => 'Data Gagal Diupdate! <br>' . $e->getMessage()
+                'message' => 'Data Gagal Dihapus! <br>' . $e->getMessage()
             ];
         }
         return response()->json($resp);
