@@ -66,7 +66,7 @@ Widget::_init(["select2"]);
                             if (data.success) {
                                 Swal.fire({
                                     title: "Sukses!",
-                                    text: resp.message,
+                                    text: data.message,
                                     type: "success",
                                     timer: 1500,  // Waktu dalam milidetik sebelum SweetAlert ditutup otomatis
                                     onClose : () => {
