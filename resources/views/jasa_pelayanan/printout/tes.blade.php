@@ -48,6 +48,7 @@
     <tr>
         <th>NO</th>
         <th>NIP</th>
+        <th>NO REK</th>
         <th>NAMA</th>
         <th>SKOR</th>
         <th>NOMINAL</th>
@@ -57,6 +58,7 @@
     @php ($totalRow += $v->nominal);
     <tr>
         <td>{{($x+1)}}</td>
+        <td>{{$v->nomor_rekening}}</td>
         <td>{{$v->nip}}</td>
         <td>{{$v->nama}}</td>
         <td>{{$v->skor}}</td>

@@ -133,6 +133,7 @@ body {
                     <tr>
                         <th>NO</th>
                         <th>NIP</th>
+                        <th>NO REK</th>
                         <th>NAMA</th>
                         <th>UNIT KERJA</th>
                         <th>SKOR</th>
@@ -146,6 +147,7 @@ body {
                         <tr>
                             <td>".($x+1)."</td>
                             <td>$v->nip</td>
+                            <td>$v->nomor_rekening</td>
                             <td>$v->nama</td>
                             <td>$v->unit</td>
                             <td>$v->skor</td>
@@ -155,7 +157,7 @@ body {
                 $row .= "
                 <tr>
                     <th></th>
-                    <th colspan=\"4\">TOTAL</th>
+                    <th colspan=\"5\">TOTAL</th>
                     <th>".convert_currency2($totalRow)."</th>
                 </tr>";
             }
