@@ -1,6 +1,8 @@
 <?php
 
+use App\Libraries\Servant;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,7 +16,37 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('slip_remun/{filepdf}', function ($filepdf) {
+    // Kunci khusus
+    $customKey = '@RSig2024';
+    $filepdf = '1-35';
+    // Mengenkripsi data dengan kunci khusus
+    $encryptedData = Crypt::encryptString($filepdf, $customKey);
+
+    echo "Original Data: $filepdf\n";
+    echo "Encrypted Data: $encryptedData\n";
+
+    // Mendekripsi data dengan kunci khusus
+    $decryptedData = Crypt::decryptString($filepdf, $customKey);
+
+    echo "Decrypted Data: $decryptedData\n";
+    /* $pdfPath = storage_path('app/public/slip_remun/THP_00016_03.01.2024/'.$filepdf);
+    return response()->file($pdfPath); */
+})->where('filepdf', '.*');
+
 Route::get('/tes_package', function () {
+    $customKey = '@RSig2024';
+    $link = Crypt::encryptString("1|35",$customKey);
+    $link = "http://localhost:88/slip_remun/download/".$link;
+    $message = [
+        "message"   => "*SLIP REMUNRASI*.\n button \nSilahkan Klik link dibawah ini untuk mengetahui rincian perolehan jasa pelayanan anda. Link ini bersifat privasi dan tidak boleh dishare. Terima Kasih.\n\n\n".$link,
+        "number"    => "6285755555091",
+        "button"    => ["button 1","button 2","button 3"]
+    ];
+    $respond=Servant::send_wa("POST",$message);
+
+    print_r($respond);
+    die;
     $pegawai = \App\Models\Employee::all();
     foreach ($pegawai as $key => $pgw) {
         \App\Models\Diklat::from("diklat as dk")

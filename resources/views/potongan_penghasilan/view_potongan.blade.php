@@ -17,7 +17,7 @@
             "paging": false,
             columnDefs: [
                 {
-                    targets: [5,6,7,9], // Indeks kolom yang ingin Anda atur formatnya (misalnya, kolom kedua)
+                    targets: [6,7,8,10],
                     render: $.fn.dataTable.render.number(',', '.', 2), // Format angka
                 },
             ]

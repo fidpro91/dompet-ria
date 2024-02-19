@@ -69,10 +69,23 @@ use \fidpro\builder\Bootstrap;
         ]
     ])
 }}
+{{
+    Bootstrap::modal('modal_edit',[
+        "title"   => 'Form Edit Perhitungan Jasa Pelayanan',
+        "size"    => "modal-xl",
+        "body"    => []
+    ])
+}}
 <script>
     function open_print(id) {
         $("#modal_report").modal("show");
         $("#modal_report").find("#jaspel_id").val(id);
+    }
+    var jaspelId;
+    function set_editable(id) {
+        jaspelId = id;
+        $("#modal_edit").modal("show");
+        $("#modal_edit").find(".modal-body").load('{{url("jp_byname_medis/index")}}/'+id);
     }
 </script>
 @endsection

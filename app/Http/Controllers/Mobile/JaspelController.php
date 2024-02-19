@@ -19,7 +19,7 @@ class JaspelController extends MobileController
     
     public function index()
     {
-        $data['pencairan'] = Pencairan_jasa_header::latest()->paginate(5);
+        $data['pencairan'] = Pencairan_jasa_header::where("is_published","1")->paginate(5);
         return view('mobile.jasa_pelayanan',compact('data'));
     }
 
@@ -62,8 +62,14 @@ class JaspelController extends MobileController
         $this->sess = Session::get('sesLogin');
         $data['skoring'] = DB::table("jasa_by_skoring as js")
                             ->join("jasa_pelayanan as jp","jp.jaspel_id","=","js.jaspel_id")
+                            ->join("jp_byname_medis as jm","jm.jp_medis_id","=","js.jp_medis_id")
                             ->join("skor_pegawai as sp","sp.id","=","js.skor_id")
-                            ->select(["js.*","sp.bulan_update","sp.total_skor"])
+                            ->select([
+                                "bulan_update as skor_bulan",
+                                "jp.keterangan",
+                                DB::raw("coalesce(sp.skor_koreksi,sp.total_skor) as skor"),
+                                "jm.nominal_terima as nilai_brutto"
+                            ])
                             ->where([
                                 "jp.id_cair"    => $idCair,
                                 "sp.emp_id"     => $this->sess->emp_id,
@@ -76,19 +82,19 @@ class JaspelController extends MobileController
         $idCair = Session::get('id_cair');
         $this->sess = Session::get('sesLogin');
         $data['pointMedis'] = 
-        DB::select("SELECT x.komponen_id,x.nama_penjamin,x.periode_awal,x.periode_akhir,
+        DB::select("SELECT x.komponen_id,x.periode_awal,x.periode_akhir,
         json_arrayagg(
                 json_object('klasifikasi_jasa',x.klasifikasi_jasa, 'skor', x.total_skor)
         )detail
         FROM (
-            SELECT jm.komponen_id,nama_penjamin,rd.periode_awal,rd.periode_akhir,klasifikasi_jasa,sum(skor_jasa)total_skor FROM detail_tindakan_medis dm
+            SELECT jm.komponen_id,rd.periode_awal,rd.periode_akhir,klasifikasi_jasa,sum(skor_jasa)total_skor FROM detail_tindakan_medis dm
             JOIN repository_download rd ON dm.repo_id = rd.id
             JOIN jp_byname_medis jm ON jm.jaspel_id = rd.jaspel_id AND jm.jp_medis_id = dm.jp_medis_id
             JOIN jasa_pelayanan jp ON jp.jaspel_id = rd.jaspel_id AND jp.jaspel_id = jm.jaspel_id
             WHERE jp.id_cair = '$idCair' and jm.komponen_id = $id and jm.emp_id = ".$this->sess->emp_id."
             GROUP BY jm.komponen_id,nama_penjamin,rd.periode_awal,rd.periode_akhir,klasifikasi_jasa
         )x
-        GROUP BY x.komponen_id,x.nama_penjamin,x.periode_awal,x.periode_akhir");
+        GROUP BY x.komponen_id,x.periode_awal,x.periode_akhir");
         return view('mobile.components.point_medis',$data);
     }
 }

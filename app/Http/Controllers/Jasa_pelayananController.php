@@ -120,6 +120,11 @@ class Jasa_pelayananController extends Controller
                 "onclick"   => "open_print(".$data->jaspel_id.")"
             ]);
             if (!$data->id_cair) {
+                $button .= Create::action("<i class=\"fas fa-edit\"></i>", [
+                    "class"     => "btn btn-primary btn-xs",
+                    "onclick"   => "set_editable($data->jaspel_id)",
+                ]);
+                
                 $button .= Create::action("<i class=\"fas fa-trash\"></i>", [
                     "class"     => "btn btn-danger btn-xs",
                     "onclick"   => "delete_row(this)",
@@ -619,6 +624,8 @@ class Jasa_pelayananController extends Controller
                         ->where([
                             "repo_id"           => $request->repo_id,
                             "pi.komponen_id"    => $value->id,
+                            "pm.is_usage"       => "f",
+                            "pi.is_used"        => "f",
                             "pi.jasa_bulan"     => $request->jaspel_bulan
                         ]);
                 /* $query = str_replace(array('?'), array('\'%s\''), $data->toSql());
@@ -694,6 +701,7 @@ class Jasa_pelayananController extends Controller
                     "is_usage"              => "f",
                     "jenis_tagihan"         => "1",
                     "pi.komponen_id"        => 9,
+                    "pi.is_used"            => "f",
                     "pi.jasa_bulan"         => $request->jaspel_bulan
                 ]);
         /* $query = str_replace(array('?'), array('\'%s\''), $data->toSql());

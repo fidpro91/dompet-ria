@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\SendEmail;
 use App\Models\Diklat;
 use App\Traits\WablasTrait;
+use Illuminate\Support\Facades\Crypt;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -28,11 +30,7 @@ Route::get('logout', [LoginController::class, 'actionlogout']);
 Route::get('login/reload_capcha', [LoginController::class, 'reload_capcha']);
 Route::post('login/login_verif', [LoginController::class, 'login_verif']);
 Route::get('/', [LoginController::class, 'login'])->name('login');
-
-Route::get('slip_remun/{filepdf}', function ($filepdf) {
-    $pdfPath = storage_path('app/public/slip_remun/THP_00016_03.01.2024/'.$filepdf);
-    return response()->file($pdfPath);
-})->where('filepdf', '.*');
+Route::get('slip_remun/download/{code}', 'Slip_remun@download');
 
 Route::get('/builder/example/form_basic', [Example::class, 'form_basic']);
 Route::get('/builder/example/form_widget', [Example::class, 'form_widget']);
@@ -164,6 +162,11 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::get('ms_reff/data/{id?}', 'Ms_reffController@data');
     Route::get('ms_reff/get_dataTable','Ms_reffController@get_dataTable');
     Route::resource('ms_reff', Ms_reffController::class);
+    
+    Route::get('jp_byname_medis/index/{jaspel_id?}', 'Jp_byname_medisController@index');
+    Route::get('jp_byname_medis/get_data/{komponen_id?}', 'Jp_byname_medisController@get_data');
+    Route::get('jp_byname_medis/get_dataTable','Jp_byname_medisController@get_dataTable');
+    Route::resource('jp_byname_medis', Jp_byname_medisController::class);
 
     Route::get('performa_index/data/{performa_id?}','Performa_indexController@data');
     Route::get('performa_index/create/{performa_id?}','Performa_indexController@create');
