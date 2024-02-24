@@ -106,7 +106,7 @@ class PengajuandiklatController extends Controller
         }else{
             $resp = [
                 "code"      => 201,
-                "message"   => $otp["errors"]
+                "message"   => $otp["response"]["errors"]
             ];
         }
         return response()->json($resp);

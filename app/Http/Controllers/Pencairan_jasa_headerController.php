@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Charts\RemunChart;
 use App\Exports\PencairanExport;
 use App\Libraries\Servant;
+use App\Models\Employee;
 use App\Models\Jasa_pelayanan;
 use App\Models\Kategori_potongan;
 use App\Models\Klasifikasi_pajak_penghasilan;
@@ -12,6 +13,7 @@ use App\Models\Pencairan_jasa;
 use Illuminate\Http\Request;
 use App\Models\Pencairan_jasa_header;
 use App\Models\Potongan_jasa_individu;
+use App\Models\Potongan_jasa_medis;
 use App\Models\Potongan_penghasilan;
 use App\Models\Potongan_statis;
 use Illuminate\Support\Facades\Validator;
@@ -19,6 +21,7 @@ use DataTables;
 use fidpro\builder\Create;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use stdClass;
 use Maatwebsite\Excel\Facades\Excel;
@@ -420,7 +423,11 @@ class Pencairan_jasa_headerController extends Controller
             ]);
 
             //potongan penghasilan
-            Potongan_penghasilan::where("id_cair_header",$id)->delete();
+            $dataPotongan = Potongan_penghasilan::where("id_cair_header",$id)->get();
+            foreach ($dataPotongan as $key => $value) {
+                Potongan_jasa_medis::where("header_id",$value->id)->delete();
+                Potongan_penghasilan::find($value->id)->delete();
+            }
 
             Pencairan_jasa::where("id_header",$id)->delete();
             
@@ -428,13 +435,13 @@ class Pencairan_jasa_headerController extends Controller
             DB::commit();
             $resp = [
                 'success' => true,
-                'message' => 'Data Berhasil Diupdate!'
+                'message' => 'Data Berhasil Dihapus!'
             ];
         } catch (\Exception $e) {
             DB::rollBack();
             $resp = [
                 'success' => false,
-                'message' => 'Data Gagal Diupdate! <br>' . $e->getMessage()
+                'message' => 'Data Gagal Dihapus! <br>' . $e->getMessage()
             ];
         }
         return response()->json($resp);
@@ -506,6 +513,25 @@ class Pencairan_jasa_headerController extends Controller
                 ];
             }
             DB::table('persentase_jasa')->insert($percentase);
+
+            //publish ke pegawai;
+            $employee = Pencairan_jasa::from("pencairan_jasa pj")
+                        ->join("employee as e","e.emp_id","=","pj.emp_id")
+                        ->where("pj.id_header",$id)
+                        ->whereNotNull("e.phone")
+                        ->get();
+            $customKey = '@RSig2024';
+            foreach ($employee as $key => $value) {
+                $link = Crypt::encryptString($id."-".$value->emp_id,$customKey);
+                $link = "http://localhost:88/slip_remun/download/".$link;
+
+                $message = [
+                    "message"   => "<b>$data->keterangan</b>.<br>Silahkan Klik link dibawah ini untuk mengetahui rincian perolehan jasa pelayanan anda. Link ini bersifat privasi dan tidak boleh dishare. Terima Kasih.<br><br><br>".$link,
+                    "number"    => $value->phone
+                ];
+                Servant::send_wa("POST",$message);
+            }
+
             DB::commit();
             $resp = [
                 'success' => true,

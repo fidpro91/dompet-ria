@@ -120,6 +120,11 @@ class Jasa_pelayananController extends Controller
                 "onclick"   => "open_print(".$data->jaspel_id.")"
             ]);
             if (!$data->id_cair) {
+                $button .= Create::action("<i class=\"fas fa-edit\"></i>", [
+                    "class"     => "btn btn-primary btn-xs",
+                    "onclick"   => "set_editable($data->jaspel_id)",
+                ]);
+                
                 $button .= Create::action("<i class=\"fas fa-trash\"></i>", [
                     "class"     => "btn btn-danger btn-xs",
                     "onclick"   => "delete_row(this)",
@@ -612,10 +617,17 @@ class Jasa_pelayananController extends Controller
             }elseif ($value->type_jasa == 2) {
                 $data = DB::table("point_medis as pm")
                         ->join("employee as e","e.emp_id","=","pm.employee_id")
+                        ->join("proporsi_jasa_individu as pi","e.emp_id","=","pi.employee_id")
                         ->groupBy(["e.emp_no","e.emp_id","e.emp_name"])
                         ->select(["e.emp_id","e.emp_nip","e.emp_no","e.emp_name",DB::raw('SUM((pm.skor/10000)) AS total_skor'),DB::raw('json_arrayagg(pm.id) AS id_tindakan')])
                         ->whereRaw("(is_eksekutif = '0' or (is_eksekutif = '1' and jenis_tagihan='2'))")
-                        ->where("repo_id",$request->repo_id);
+                        ->where([
+                            "repo_id"           => $request->repo_id,
+                            "pi.komponen_id"    => $value->id,
+                            "pm.is_usage"       => "f",
+                            "pi.is_used"        => "f",
+                            "pi.jasa_bulan"     => $request->jaspel_bulan
+                        ]);
                 /* $query = str_replace(array('?'), array('\'%s\''), $data->toSql());
                 $query = vsprintf($query, $data->getBindings());
                 print_r($query); */
@@ -680,13 +692,17 @@ class Jasa_pelayananController extends Controller
         //hitung pelayanan eksekutif
         $data = DB::table("point_medis as pm")
                 ->join("employee as e","e.emp_id","=","pm.employee_id")
+                ->join("proporsi_jasa_individu as pi","e.emp_id","=","pi.employee_id")
                 ->groupBy(["e.emp_no","e.emp_id","e.emp_name"])
                 ->select(["e.emp_id","e.emp_no","e.emp_name",DB::raw('SUM(pm.skor) AS total_skor'),DB::raw('json_arrayagg(pm.id) AS id_tindakan')])
                 ->where("repo_id",$request->repo_id)
                 ->where([
                     "is_eksekutif"          => "1",
                     "is_usage"              => "f",
-                    "jenis_tagihan"         => "1"
+                    "jenis_tagihan"         => "1",
+                    "pi.komponen_id"        => 9,
+                    "pi.is_used"            => "f",
+                    "pi.jasa_bulan"         => $request->jaspel_bulan
                 ]);
         /* $query = str_replace(array('?'), array('\'%s\''), $data->toSql());
         $query = vsprintf($query, $data->getBindings());

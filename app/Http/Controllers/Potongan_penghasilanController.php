@@ -179,12 +179,16 @@ class Potongan_penghasilanController extends Controller
             ->where("pm.header_id", $id);
 
         if ($potongan->is_pajak == "t") {
-            $data->select(["e.nomor_rekening", "e.emp_name","mu.unit_name as unit_kerja", "e.golongan", "pm.akumulasi_penghasilan_pajak as akumulasi_pendapatan", "pm.jasa_brutto", "pm.penghasilan_pajak", "pm.percentase_pajak", "pm.potongan_value"]);
+            $data->select(["e.nomor_rekening", "e.emp_name","mu.unit_name as unit_kerja", "e.golongan", "e.kode_ptkp", "e.gaji_pokok", "pm.jasa_brutto",
+            DB::raw("coalesce(pm.akumulasi_penghasilan_pajak,(e.gaji_pokok+pm.jasa_brutto)) as akumulasi_pendapatan")
+            , "pm.penghasilan_pajak", "pm.percentase_pajak", "pm.potongan_value"]);
         } else {
             $data->select(["e.nomor_rekening", "e.emp_name","mu.unit_name as unit_kerja", "pm.jasa_brutto", "pm.potongan_value"]);
         }
         // Tambahkan orderBy jika diperlukan
-        $data->orderBy("ordering_mode", "asc")->orderBy("emp_name", "asc");
+        $data->orderBy("ordering_mode", "asc")
+             ->orderBy("mu.unit_name", "asc")
+             ->orderBy("e.emp_name", "asc");
         // Simpan hasil query ke dalam variabel
         $data = $data->get();
 
@@ -362,7 +366,7 @@ class Potongan_penghasilanController extends Controller
                     if (!$cekPajak) {
                         continue;
                     }
-                    $penghasilanWajibPajak = ($value->gaji_pokok+$value->total_brutto)*12;
+                    $penghasilanWajibPajak = (($value->gaji_pokok)+$value->total_brutto)*12;
                     $penghasilanWajibPajak = $penghasilanWajibPajak-$cekPajak->potongan_nominal;
                     $pajakPercent=0;
                     $pajak=0;
@@ -384,6 +388,7 @@ class Potongan_penghasilanController extends Controller
                         "pencairan_id"      => $value->id_cair,
                         "header_id"         => $potonganPenghasilan["header_id"]
                     ];
+                    
                     Potongan_jasa_medis::create($pajakBlud);
                     DB::table("pencairan_jasa")->where("id_cair",$value->id_cair)
                     ->update([
@@ -646,6 +651,7 @@ class Potongan_penghasilanController extends Controller
             ]);
         }
 
+        Potongan_jasa_medis::where("header_id",$id)->delete();
         $data->delete();
         return response()->json([
             'success' => true,
