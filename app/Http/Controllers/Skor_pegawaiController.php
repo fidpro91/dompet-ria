@@ -479,6 +479,7 @@ class Skor_pegawaiController extends Controller
     }
     public function update(Request $request, Skor_pegawai $skor_pegawai)
     {
+        $request['skor_type']   = 1;
         $valid = $this->form_validasi($request->all());
         if ($valid['code'] != 200) {
             return response()->json([
