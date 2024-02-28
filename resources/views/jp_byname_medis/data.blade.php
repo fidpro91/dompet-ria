@@ -35,7 +35,33 @@ use \fidpro\builder\Bootstrap;
                             "orderable" => "false", 
                             "searchable" => "false"
                         ],
-                        'emp_no','emp_name','unit_name','skor','nominal_terima'
+                        'emp_no'    => [
+                            "data"  => "emp_no",
+                            "name"  => "e.emp_no"
+                        ],
+                        'emp_name'  => [
+                            "data"  => "emp_name",
+                            "name"  => "e.emp_name"
+                        ],
+                        'unit_name' => [
+                            "data"  => "unit_name",
+                            "name"  => "mu.unit_name"
+                        ],
+                        'skor'  => [
+                            "data"  => "skor",
+                            "name"  => "jm.skor"
+                        ],
+                        'nominal_terima'     => [
+                            "data"      => "nominal_terima",
+                            "name"      => "jm.nominal_terima",
+                            "settings"  => [
+                                "render"    => "$.fn.dataTable.render.number( ',', '.', 2)"
+                            ]
+                        ],
+                    ],
+                    "dataTable" => [
+                        "order"         => "[[4,'asc'],[3,'asc']]",
+                        "autoWidth"     => "false"
                     ]
                 ])
             }}

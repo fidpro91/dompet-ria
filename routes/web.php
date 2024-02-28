@@ -100,6 +100,7 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::get('detail_tindakan_medis/get_dataTable','Detail_tindakan_medisController@get_dataTable');
     Route::resource('detail_tindakan_medis', Detail_tindakan_medisController::class);
 
+    Route::get('employee_off/update_skor','Employee_offController@update_skor');
     Route::get('employee_off/get_dataTable','Employee_offController@get_dataTable');
     Route::resource('employee_off', Employee_offController::class);
 
@@ -231,11 +232,13 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::get('pencairan_jasa/get_dataTable','Pencairan_jasaController@get_dataTable');
     Route::resource('pencairan_jasa', Pencairan_jasaController::class);
 
+    Route::post('potongan_penghasilan/destroy_all','Potongan_penghasilanController@destroy_all');
     Route::get('potongan_penghasilan/index/{id_cair?}','Potongan_penghasilanController@index');
     Route::get('potongan_penghasilan/show/{id?}','Potongan_penghasilanController@show');
     Route::get('potongan_penghasilan/data/{id?}','Potongan_penghasilanController@data');
     Route::get('potongan_penghasilan/get_dataTable','Potongan_penghasilanController@get_dataTable');
     Route::resource('potongan_penghasilan', Potongan_penghasilanController::class);
+    
     Route::get('activity_log/get_dataTable','activity_logController@get_dataTable');
     Route::resource('activity_log', activity_logController::class);
 
@@ -260,3 +263,5 @@ Route::group(['middleware' => ['userUpload']], function (){
     Route::get('pengajuan_diklat/finish','PengajuandiklatController@finish');
     Route::post('pengajuan_diklat/validasi_capcha','PengajuandiklatController@validasi_capcha');
 });
+            Route::get('potongan_jasa_medis/get_dataTable','Potongan_jasa_medisController@get_dataTable');
+            Route::resource('potongan_jasa_medis', Potongan_jasa_medisController::class);

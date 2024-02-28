@@ -148,6 +148,9 @@ class Jasa_pelayananController extends Controller
                 $groupPenjamin[$key] = implode("<br>",$penjamin);
             }
             $groupPenjamin = implode('<br>',array_unique($groupPenjamin,SORT_REGULAR));
+            $groupPenjamin .= "
+            <br>
+            <small>$data->keterangan</small>";
             return $groupPenjamin;
         })->rawColumns(['action','penjamin']);
         return $datatables->make(true);
@@ -503,6 +506,15 @@ class Jasa_pelayananController extends Controller
 
     public function finish_jaspel(Request $request)
     {
+        $input      = Cache::get('cacheInputJasa');
+        $repo       = Repository_download::find($input["repo_id"]);
+
+        //skor pegawai
+        Skor_pegawai::where("bulan_update",$repo->bulan_pelayanan)->update([
+            "prepare_remun"             => "f",
+            "prepare_remun_month"       => null,
+        ]);
+
         cache::forget('cacheInputJasa');
         cache::forget('cacheJasaHeader');
         cache::forget('cacheJasaProporsi');
@@ -833,7 +845,8 @@ class Jasa_pelayananController extends Controller
             foreach ($dataSkor->get() as $key => $value) {
                 DB::table("skor_pegawai")->where("id",$value->skor_id)
                 ->update([
-                    "prepare_remun"  => "t"
+                    "prepare_remun"         => "t",
+                    "prepare_remun_month"   => $data->jaspel_bulan."-".$data->jaspel_tahun,
                 ]);
             }
             DB::table("jp_byname_medis")->where("jaspel_id",$id)->delete();
@@ -882,7 +895,8 @@ class Jasa_pelayananController extends Controller
             foreach ($dataSkor->get() as $key => $value) {
                 DB::table("skor_pegawai")->where("id",$value->skor_id)
                 ->update([
-                    "prepare_remun"  => "t"
+                    "prepare_remun"         => "t",
+                    "prepare_remun_month"   => $data->jaspel_bulan."-".$data->jaspel_tahun,
                 ]);
             }
             $data->delete();

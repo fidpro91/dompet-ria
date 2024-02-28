@@ -72,7 +72,7 @@ use \fidpro\builder\Bootstrap;
 {{
     Bootstrap::modal('modal_edit',[
         "title"   => 'Form Edit Perhitungan Jasa Pelayanan',
-        "size"    => "modal-xl",
+        "size"    => "modal-xxl",
         "body"    => []
     ])
 }}

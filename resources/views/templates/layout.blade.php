@@ -11,6 +11,12 @@
     <meta content="Coderthemes" name="author" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     @include('templates.components.css')
+    <style>
+        .modal-xxl {
+            max-width: 90%;
+            width: 90%;
+        }
+    </style>
     @include('templates.components.javascript')
 </head>
 

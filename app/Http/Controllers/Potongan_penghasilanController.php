@@ -46,6 +46,8 @@ class Potongan_penghasilanController extends Controller
     public function index($id_cair)
     {
         $data["pencairan"] = Pencairan_jasa_header::find($id_cair);
+        Cache::put("data_pencairan_".Auth()->id(),$data["pencairan"]);
+
         return $this->themes($this->folder . '.group_potongan',$data, $this);
     }
 
@@ -56,19 +58,32 @@ class Potongan_penghasilanController extends Controller
 
     public function get_dataTable(Request $request)
     {
-        $data = Potongan_penghasilan::where([
-                    "kategori_potongan"  => $request->kategori_potongan,
-                    "id_cair_header"     => $request->id_cair,
+        $data = Potongan_penghasilan::from("potongan_penghasilan as pp")
+                ->where([
+                    "pp.kategori_potongan"  => $request->kategori_potongan,
+                    "pp.id_cair_header"     => $request->id_cair,
                 ])
+                ->join("potongan_jasa_medis as pm","pm.header_id","=","pp.id")
+                ->join("pencairan_jasa as pj",function($join){
+                    $join->on('pj.id_cair', '=', 'pm.pencairan_id');
+                })
+                ->join("employee as e","e.emp_id","=","pj.emp_id")
+                ->join("ms_unit as mu", "mu.unit_id", "=", "e.unit_id_kerja")
                 ->select(
                     [
-                        'id',
-                        'pajak_no',
-                        'id_cair_header',
-                        'kategori_potongan',
-                        'total_potongan',
-                        'potongan_method',
-                        'created_by'
+                        'pp.*',
+                        "e.nomor_rekening",
+                        "e.emp_name",
+                        "mu.unit_name as unit_kerja", 
+                        "e.golongan", 
+                        "e.kode_ptkp", 
+                        "e.gaji_pokok", 
+                        "pm.jasa_brutto",
+                        DB::raw("coalesce(pm.akumulasi_penghasilan_pajak,(e.gaji_pokok+pm.jasa_brutto)) as akumulasi_pendapatan"), 
+                        "pm.penghasilan_pajak", 
+                        "pm.percentase_pajak", 
+                        "pm.potongan_value",
+                        "pm.potongan_id"
                     ]
                 );
         
@@ -85,13 +100,13 @@ class Potongan_penghasilanController extends Controller
                 "class"     => "btn btn-danger btn-xs",
                 "onclick"   => "delete_row(this)",
                 "x-token"   => csrf_token(),
-                "data-url"  => route($this->route . ".destroy", $data->id),
+                "data-url"  => route("potongan_jasa_medis.destroy", $data->potongan_id),
             ]);
 
-            $button .= Create::action("<i class=\"fas fa-glasses\"></i>", [
+            /* $button .= Create::action("<i class=\"fas fa-glasses\"></i>", [
                 "class"     => "btn btn-success btn-xs",
                 "onclick"   => "show_potongan(".$data->id.")",
-            ]);
+            ]); */
 
             return $button;
         })->rawColumns(['action']);
@@ -636,6 +651,30 @@ class Potongan_penghasilanController extends Controller
             ];
         }
         return response()->json($resp);
+    }
+
+    public function destroy_all(Request $request)
+    {
+        $data = Potongan_penghasilan::where([
+            "kategori_potongan" => $request->kategori_potongan,
+            "id_cair_header"    => $request->id_cair
+        ])->first();
+        
+        //cek status pencairan
+        $pencairan = Pencairan_jasa_header::find($data->id_cair_header);
+        if ($pencairan->is_published == 1) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data pencairan sudah selesai. Data tidak dapat dihapus.'
+            ]);
+        }
+
+        Potongan_jasa_medis::where("header_id",$data->id)->delete();
+        $data->delete();
+        return response()->json([
+            'success' => true,
+            'message' => 'Data Berhasil Dihapus!'
+        ]);
     }
 
     public function destroy($id)

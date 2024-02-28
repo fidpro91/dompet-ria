@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Validator;
 use DataTables;
 use fidpro\builder\Create;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class Employee_offController extends Controller
 {
@@ -123,6 +124,45 @@ class Employee_offController extends Controller
             'code'      => 200,
             'message'   => "OK"
         ]);
+    }
+
+    public function update_skor(Request $request) {
+
+        $employee = Employee_off::where("bulan_skor",$request->bulan_skor)->get();
+        DB::beginTransaction();
+        try {
+            foreach ($employee as $key => $value) {
+                $dataSkor = Skor_pegawai::where([
+                    "bulan_update"  => $value->bulan_skor,
+                    "emp_id"        => $value->emp_id
+                ]);
+
+                if (empty($dataSkor->first())) {
+                    continue;
+                }
+
+                //kurangi data persentasi skor
+                $valueSkor = $dataSkor->first();
+                $totalSkor = $value->persentase_skor/100*$valueSkor->total_skor;
+                
+                $dataSkor->update([
+                    "skor_koreksi"    => $totalSkor
+                ]);
+            }
+            DB::commit();
+            $resp = [
+                'code'      => 200,
+                'message'   => "Skor berhasil diupdate"
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $resp = [
+                'code'      => 201,
+                'message'   => "Skor gagal diupdate"
+            ];
+        }
+
+        return response()->json($resp);
     }
 
     private function form_validasi($data)
