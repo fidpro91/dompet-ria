@@ -17,6 +17,7 @@ Widget::_init(["select2","datepicker"]);
                         "filter" => ["emp_active" => "t"],
                         "column" => ["emp_id","emp_name"]
                     ],
+                    "selected"  => $skor_pegawai->emp_id,
                     "extra" => [
                         "required"  => true
                     ]
