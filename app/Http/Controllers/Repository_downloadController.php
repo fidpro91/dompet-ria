@@ -287,6 +287,10 @@ class Repository_downloadController extends Controller
             'is_usage'  => 'f'
         ])->delete();
 
+        Repository_download::find($id)->update([
+            "is_used"   => "t"
+        ]);
+        
         return response()->json([
             'success' => true,
             'message' => 'Data Berhasil Dihapus!'
