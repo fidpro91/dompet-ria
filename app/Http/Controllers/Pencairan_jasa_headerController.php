@@ -515,7 +515,7 @@ class Pencairan_jasa_headerController extends Controller
             DB::table('persentase_jasa')->insert($percentase);
 
             //publish ke pegawai;
-            $employee = Pencairan_jasa::from("pencairan_jasa pj")
+            $employee = Pencairan_jasa::from("pencairan_jasa as pj")
                         ->join("employee as e","e.emp_id","=","pj.emp_id")
                         ->where("pj.id_header",$id)
                         ->whereNotNull("e.phone")

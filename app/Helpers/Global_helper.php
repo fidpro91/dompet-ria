@@ -28,7 +28,7 @@ function get_namaBulan($data = null){
 	if ($data) {
 		if (strripos($data,'-')>0) {
 			$data=explode("-",$data);
-			$data = $bulan[($data[0]-1)].' '.$data[1];
+			$data = $bulan[(intval($data[0]))].' '.$data[1];
 		}else{
 			$data = $bulan[(int)$data];
 		}

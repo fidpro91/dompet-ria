@@ -75,20 +75,10 @@
                 <!-- Single Accordion -->
                 <div class="accordion-item">
                     <div class="accordion-header" id="accordionSix" onclick="load_point(9,'point_eksekutif')">
-                        <h6 class="collapsed" data-bs-toggle="collapse" data-bs-target="#accordionStyleSix" aria-expanded="false" aria-controls="accordionStyleSix"><i class="bi bi-plus-lg"></i>Point Pelayanan Medis Eksekutif</h6>
+                        <h6 class="collapsed" data-bs-toggle="collapse" data-bs-target="#accordionStyleSix" aria-expanded="false" aria-controls="accordionStyleSix"><i class="bi bi-plus-lg"></i>Point Pelayanan Medis</h6>
                     </div>
                     <div class="accordion-collapse collapse" id="accordionStyleSix" aria-labelledby="accordionSix" data-bs-parent="#accordionStyle2">
                         <div class="accordion-body" id="point_eksekutif">
-                        </div>
-                    </div>
-                </div>
-                <!-- Single Accordion -->
-                <div class="accordion-item">
-                    <div class="accordion-header" id="accordionSeven" onclick="load_point(7,'point_nonEksekutif')">
-                        <h6 class="collapsed" data-bs-toggle="collapse" data-bs-target="#accordionStyleSeven" aria-expanded="false" aria-controls="accordionStyleSeven"><i class="bi bi-plus-lg"></i>Point Pelayanan Medis Non Eksekutif</h6>
-                    </div>
-                    <div class="accordion-collapse collapse" id="accordionStyleSeven" aria-labelledby="accordionSeven" data-bs-parent="#accordionStyle2">
-                        <div class="accordion-body" id="point_nonEksekutif">
                         </div>
                     </div>
                 </div>

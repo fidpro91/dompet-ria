@@ -27,6 +27,9 @@ use \fidpro\builder\Bootstrap;
                         ],
                         'download_no',
                         'jml_jaspel','bulan_pelayanan','periode_awal','group_penjamin','jenis_pembayaran','total_data'
+                    ],
+                    "dataTable"    => [
+                        "order"    => "[[2,'desc']]"
                     ]
                 ])
             }}

@@ -103,6 +103,9 @@ class Repository_downloadController extends Controller
         ->editColumn('periode_awal',function($data){
             return date_indo($data->periode_awal).'/'.date_indo($data->periode_akhir);
         })
+        ->editColumn('bulan_pelayanan',function($data){
+            return get_namaBulan($data->bulan_pelayanan);
+        })
         ->editColumn('total_data',function($data){
             $html = "<div>
                         <b>
@@ -290,7 +293,7 @@ class Repository_downloadController extends Controller
         Repository_download::find($id)->update([
             "is_used"   => "t"
         ]);
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Data Berhasil Dihapus!'

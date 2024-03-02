@@ -73,11 +73,40 @@ class JaspelController extends MobileController
                             ->where([
                                 "jp.id_cair"    => $idCair,
                                 "sp.emp_id"     => $this->sess->emp_id,
-                            ])->get();
+                            ])->get()
+                            ->map(function ($item) {
+                                return (array) $item;
+                            })
+                            ->toArray();
         return view('mobile.components.skoring',$data);
     }
+    
+    public function point_medis()
+    {
+        $idCair = Session::get('id_cair');
+        $this->sess = Session::get('sesLogin');
+        $data['skoring'] = DB::table("jp_byname_medis as jm")
+                            ->join("jasa_pelayanan as jp","jp.jaspel_id","=","jm.jaspel_id")
+                            ->join("komponen_jasa_sistem as ks","ks.id","=","jm.komponen_id")
+                            ->select([
+                                DB::raw("concat(ks.nama_komponen,'<br>',jp.keterangan) as keterangan"),
+                                DB::raw("jm.skor as point_medis"),
+                                "jm.nominal_terima as nilai_brutto"
+                            ])
+                            ->where("ks.id","!=",8)
+                            ->where([
+                                "jp.id_cair"    => $idCair,
+                                "jm.emp_id"     => $this->sess->emp_id,
+                            ])->get()
+                            ->map(function ($item) {
+                                return (array) $item;
+                            })
+                            ->toArray();
+        // $data['skoring'] = $data['skoring']->toArray();
+        return view('mobile.components.point_medis2',$data);
+    }
 
-    public function point_medis($id)
+    /* public function point_medis($id)
     {
         $idCair = Session::get('id_cair');
         $this->sess = Session::get('sesLogin');
@@ -96,5 +125,5 @@ class JaspelController extends MobileController
         )x
         GROUP BY x.komponen_id,x.periode_awal,x.periode_akhir");
         return view('mobile.components.point_medis',$data);
-    }
+    } */
 }
