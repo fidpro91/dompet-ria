@@ -22,10 +22,11 @@ class Proporsi_jasa_individu extends Model
     ];
 
     function get_jaspel($filter = null) {
-        $data = DB::table("proporsi_jasa_individu")
-                ->select(["id_jaspel","no_jaspel"])
+        $data = DB::table("proporsi_jasa_individu as pi")
+                ->select(["id_jaspel",DB::raw("coalesce(pi.no_jaspel,jp.no_jasa) as no_jaspel")])
+                ->leftJoin("jasa_pelayanan as jp","jp.jaspel_id","=","pi.id_jaspel")
                 ->orderBy("id_jaspel","desc")
-                ->groupBy(["id_jaspel","no_jaspel"])->get();
+                ->groupBy(["id_jaspel","no_jaspel","jp.no_jasa"])->get();
         return $data;
     }
 }
