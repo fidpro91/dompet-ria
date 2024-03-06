@@ -457,17 +457,17 @@ class Potongan_penghasilanController extends Controller
                 if ($value->emp_status == 1) {
                     continue;
                 }
-                /* $totalJasaBrutto = DB::select("
+                $totalJasaBrutto = DB::select("
                     select max(akumulasi_penghasilan_pajak)pajak,max(pm.percentase_pajak)pajak_old from potongan_jasa_medis pm
                     join pencairan_jasa pj on pm.pencairan_id = pj.id_cair
                     join employee e on e.emp_id = pj.emp_id
                     where e.emp_id = '".$value->emp_id."' and pm.potongan_nama = 'PAJAK BLUD MEDIS'
                     AND DATE_FORMAT(tanggal_cair, '%Y') = '".date('Y')."';
-                "); */
-                $totalJasaBrutto = DB::select("
+                ");
+                /* $totalJasaBrutto = DB::select("
                     select (brutto)pajak,(pajak)pajak_old from pajak_dokter_blud
                     where emp_id = '".$value->emp_id."';
-                ");
+                "); */
 
                 if (!empty($totalJasaBrutto)) {
                     $totalJasaBrutto=$totalJasaBrutto[0];
