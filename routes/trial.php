@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-Route::get('cekssl', function ($filepdf) {
+Route::get('cekssl', function () {
    // Generate RSA Key Pair
    $keyPair = openssl_pkey_new([
         'private_key_bits' => 2048,
