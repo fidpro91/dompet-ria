@@ -22,8 +22,20 @@ Route::get('cekssl', function () {
         'private_key_type' => OPENSSL_KEYTYPE_RSA,
     ]);
     $error = openssl_error_string();
-    echo "Error: $error";
-    die;
+    // Dapatkan kunci privat dan publik dari pasangan kunci
+    $success = openssl_pkey_export($keyPair, $privateKey);
+    if (!$success) {
+        die('Gagal mengekspor kunci privat');
+    }
+    $publicKeyDetails = openssl_pkey_get_details($keyPair);
+    $publicKey = $publicKeyDetails['key'];
+
+    // Tampilkan kunci privat dan publik
+    echo "Private Key:\n";
+    echo $privateKey . "\n\n";
+
+    echo "Public Key:\n";
+    echo $publicKey . "\n";
 });
 
 Route::get('slip_remun/{filepdf}', function ($filepdf) {
