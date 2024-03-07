@@ -222,6 +222,12 @@ class Employee_offController extends Controller
     public function destroy($id)
     {
         $data = Employee_off::findOrFail($id);
+        Skor_pegawai::where([
+            "emp_id"        => $data->emp_id,
+            "bulan_update"  => $data->bulan_skor
+        ])->update([
+            "skor_koreksi"  => null
+        ]);
         $data->delete();
         return response()->json([
             'success' => true,
