@@ -15,6 +15,16 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+Route::get('cekssl', function ($filepdf) {
+   // Generate RSA Key Pair
+   $keyPair = openssl_pkey_new([
+        'private_key_bits' => 2048,
+        'private_key_type' => OPENSSL_KEYTYPE_RSA,
+    ]);
+    $error = openssl_error_string();
+    echo "Error: $error";
+    die;
+});
 
 Route::get('slip_remun/{filepdf}', function ($filepdf) {
     // Kunci khusus
