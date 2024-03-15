@@ -41,7 +41,7 @@ class PencairanExport implements FromView
             )x
             GROUP BY x.ordering_mode,x.golongan,x.emp_no,x.emp_name,x.nomor_rekening,
             x.total_brutto,x.unit_id_kerja,x.unit_name
-            order by IFNULL(ordering_mode, '07'),x.unit_id_kerja,x.emp_name");
+            order by IFNULL(ordering_mode, '06'),x.unit_name,x.emp_name");
 
         return view('pencairan_jasa_header.printout.file_excel', [
             'data' => $data
