@@ -328,7 +328,7 @@ class Skor_pegawaiController extends Controller
                 }
                 $data[$key]['totalSkor'] = $data[$key]['totalSkor'] + $pgw->last_position_index;
                 $data[$key]['dataSkor']['position'] = [
-                    "skor"          => $skor,
+                    "skor"          => $pgw->last_position_index,
                     "keterangan"    => "POSITION INDEX - ".$posisi->detail_name
                 ];
                 
