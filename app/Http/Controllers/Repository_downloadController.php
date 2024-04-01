@@ -275,6 +275,18 @@ class Repository_downloadController extends Controller
                 'message' => 'Data tidak dapat dihapus karena sudah digunakan!'
             ]);
         }
+        //cek poin medis
+        $poinMedis = Point_medis::where("repo_id",$id)
+                     ->whereNotNull('nama_kolom')
+                     ->get()
+                     ->first();
+        if (!empty($poinMedis->id)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data tidak dapat dihapus karena sudah digunakan!'
+            ]);
+        }
+        
         Point_medis::where('repo_id',$id)->delete();
         $data->delete();
         return response()->json([

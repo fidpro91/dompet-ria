@@ -17,7 +17,6 @@ use fidpro\builder\Create;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use PhpParser\Node\Stmt\TryCatch;
 
 class Potongan_penghasilanController extends Controller
 {
@@ -439,7 +438,7 @@ class Potongan_penghasilanController extends Controller
         return $resp;
     }
 
-    public function pajak_blud_medis($req,$kategoriPotongan,$detailPencairan)
+    /* public function pajak_blud_medis($req,$kategoriPotongan,$detailPencairan)
     {
         DB::beginTransaction();
         try {
@@ -464,10 +463,6 @@ class Potongan_penghasilanController extends Controller
                     where e.emp_id = '".$value->emp_id."' and pm.potongan_nama = 'PAJAK BLUD MEDIS'
                     AND DATE_FORMAT(tanggal_cair, '%Y') = '".date('Y')."';
                 ");
-                /* $totalJasaBrutto = DB::select("
-                    select (brutto)pajak,(pajak)pajak_old from pajak_dokter_blud
-                    where emp_id = '".$value->emp_id."';
-                "); */
 
                 if (!empty($totalJasaBrutto)) {
                     $totalJasaBrutto=$totalJasaBrutto[0];
@@ -523,6 +518,72 @@ class Potongan_penghasilanController extends Controller
                     ];
                     $totalPotongan += $pajak;
                 }
+                Potongan_jasa_medis::insert($insertPotongan);
+                DB::table("pencairan_jasa")->where("id_cair",$value->id_cair)
+                ->update([
+                    "total_potongan"    => $value->total_potongan+$pajak,
+                    "total_netto"       => $value->total_brutto-($value->total_potongan+$pajak)
+                ]);
+                $totalPotongan += $pajak;
+            }
+            Potongan_penghasilan::find($potonganPenghasilan["header_id"])->update([
+                "total_potongan"    => $totalPotongan
+            ]);
+            DB::commit();
+            $resp = [
+                'success'       => true,
+                'message'       => 'Data Berhasil Disimpan!'
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $resp = [
+                'success' => false,
+                'message' => 'Data Gagal Disimpan! <br>' . $e->getMessage()
+            ];
+        }
+
+        return $resp;
+    } */
+
+    public function pajak_blud_medis($req,$kategoriPotongan,$detailPencairan)
+    {
+        DB::beginTransaction();
+        try {
+            $potonganPenghasilan = $this->insert_header($req);
+            if ($potonganPenghasilan["success"] == false) {
+                DB::rollBack();
+                return $potonganPenghasilan;
+            }
+            $totalPotongan=0;
+            foreach ($detailPencairan as $key => $value) {
+                $insertPotongan=[];
+                if ($value->is_medis != "t") {
+                    continue;
+                }
+                if ($value->emp_status == 1) {
+                    continue;
+                }
+
+                /* 
+                    Rumus potongan baru
+                    brutox50%x5%
+                */
+                $penghasilanWajibPajak = ($value->total_brutto*0.5);
+                $pajak = $penghasilanWajibPajak*0.05;
+                $insertPotongan = [
+                    "potongan_nama"		            => "PAJAK BLUD MEDIS",
+                    "jasa_brutto"		            => $value->total_brutto,
+                    "pencairan_id"                  => $value->id_cair,
+                    "penghasilan_pajak"	            => $penghasilanWajibPajak,
+                    "percentase_pajak"	            => 5,
+                    "potongan_value"	            => $pajak,
+                    // "akumulasi_penghasilan_pajak"	=> $limitPajak,
+                    "kategori_id"                   => 4,
+                    "header_id"                     => $potonganPenghasilan['header_id']
+                ];
+
+                $totalPotongan += $pajak;
+
                 Potongan_jasa_medis::insert($insertPotongan);
                 DB::table("pencairan_jasa")->where("id_cair",$value->id_cair)
                 ->update([
