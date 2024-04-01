@@ -290,7 +290,7 @@ class Skor_pegawaiController extends Controller
                     "nama"             => $pgw->emp_name
                 ];
 
-                $skor=ceil(($pgw->gaji_pokok/1000000*1) * 10) / 10;
+                $skor=floor(($pgw->gaji_pokok/1000000*1) * 10) / 10;
                 $data[$key]['dataSkor']['basic'] = [
                     "skor"          => $skor,
                     "keterangan"    => "BASIC INDEX BERDASARKAN GAJI POKOK"
