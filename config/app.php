@@ -180,7 +180,6 @@ return [
         App\Providers\ServantServiceProvider::class,
         ConsoleTVs\Charts\ChartsServiceProvider::class,
         Maatwebsite\Excel\ExcelServiceProvider::class,
-        Mews\Captcha\CaptchaServiceProvider::class,
         Barryvdh\Debugbar\ServiceProvider::class,
     ],
 
@@ -196,7 +195,6 @@ return [
     */
 
     'aliases' => [
-
         'App' => Illuminate\Support\Facades\App::class,
         'Arr' => Illuminate\Support\Arr::class,
         'Artisan' => Illuminate\Support\Facades\Artisan::class,
@@ -240,7 +238,6 @@ return [
         'Menu'      => Lavary\Menu\Facade::class,
         'Servant'   => App\Libraries\Servant::class,
         'Excel' => Maatwebsite\Excel\Facades\Excel::class,
-        'Captcha' => Mews\Captcha\Facades\Captcha::class,
         'Debugbar' => Barryvdh\Debugbar\Facade::class,
     ],
 

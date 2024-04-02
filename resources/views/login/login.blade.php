@@ -54,11 +54,7 @@
 						<span class="focus-input100"></span>
 					</div>
 					<div class="wrap-input100 validate-input m-b-18" data-validate = "Capcha is required">
-						<span class="captcha">{!! captcha_img() !!}</span>
-						<button type="button" class="btn btn-danger" onclick="reload_capcha()" class="reload" id="reload">
-							&#x21bb;
-						</button>
-						<input class="input100 upper" type="text" id="capcha_log" name="capcha_log" placeholder="Ketikkan capcha" autocomplete="off">
+						{!! htmlFormSnippet() !!}
 					</div> 
 					<div class="container-login100-form-btn">
 						<button class="login100-form-btn btn-block">
@@ -81,6 +77,7 @@
 	<script src="{{asset('assets/login_temp')}}/vendor/countdowntime/countdowntime.js"></script>
 <!--===============================================================================================-->
 	<script src="{{asset('assets/login_temp')}}/js/main.js"></script>
+	{!! ReCaptcha::htmlScriptTagJsApi() !!}
 <script>
   $('form').submit(function(){
 		$.ajax({
@@ -96,19 +93,12 @@
 					window.location.assign(resp.redirect);
 				}else{
 					alert(resp.message);
-					reload_capcha();
+					location.reload();
 				}
 			}
 		});
       return false;
   });
-
-  function reload_capcha() {
-	$('#capcha_log').val('');
-	$.get("login/reload_capcha",function(resp){
-		$(".captcha").html(resp.captcha);
-	});
-  }
 </script>
 </body>
 </html>

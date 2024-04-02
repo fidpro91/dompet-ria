@@ -16,14 +16,14 @@ class HomeController extends Controller
     {
         $name = Auth::user()->name;
         $chart['statistik'] = new RemunChart;
-        $data =  Pencairan_jasa_header::whereYear('tanggal_cair','=','2023')->get();
+        $data =  Pencairan_jasa_header::whereYear('tanggal_cair','=',date('Y'))->get();
         $dataChart=[];
         foreach ($data as $key => $value) {
-            $month = date('m-Y',strtotime($value->tanggal_cair));
+            $month = date('M',strtotime($value->tanggal_cair));
             $dataChart[$month] = $value->total_nominal;
         }
         $chart['statistik']->labels(array_keys($dataChart));
-        $chart['statistik']->dataset('Jasa Pelayanan', 'line', array_values($dataChart))
+        $chart['statistik']->dataset('Jasa Pelayanan '.date('Y'), 'line', array_values($dataChart))
             ->color("rgb(216, 255, 119 )")
             ->backgroundcolor("rgb(30, 211, 202)");
 

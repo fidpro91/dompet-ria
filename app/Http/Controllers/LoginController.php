@@ -32,12 +32,13 @@ class LoginController extends Controller
         $data = [
             'email' => $request->input('email_log'),
             'password' => $request->input('password_log'),
-            'captcha' => $request->input('capcha_log'),
+            'g-recaptcha-response' => $request->input('g-recaptcha-response'),
         ];
+        
         $validator = Validator::make($data,[
             'email' => ['required'],
             'password' => ['required'],
-            'captcha' => ['required','captcha'],
+            'g-recaptcha-response' =>  ['required', 'recaptcha'],
         ]);
 
         if ($validator->fails()) {
@@ -47,7 +48,8 @@ class LoginController extends Controller
             ]);
         }
         
-        unset($data['captcha']);
+        // unset($data['captcha']);
+        unset($data['g-recaptcha-response']);
         if (Auth::Attempt($data)) {
             $dataEmp = DB::table("employee AS e")
                        ->join("users as us","us.emp_id","=","e.emp_id")
