@@ -277,7 +277,7 @@ class Repository_downloadController extends Controller
         }
         //cek poin medis
         $poinMedis = Point_medis::where("repo_id",$id)
-                     ->whereNotNull('nama_kolom')
+                     ->whereNotNull('jaspel_id')
                      ->get()
                      ->first();
         if (!empty($poinMedis->id)) {

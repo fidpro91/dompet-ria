@@ -45,8 +45,7 @@ use \fidpro\builder\Bootstrap;
                                 "settings"  => [
                                     "render"    => "$.fn.dataTable.render.number( ',', '.', 2)"
                                 ]
-                            ],
-                            'keterangan'
+                            ]
                         ],
                         "dataTable" => [
                             "order"         => "[[2,'desc']]",
