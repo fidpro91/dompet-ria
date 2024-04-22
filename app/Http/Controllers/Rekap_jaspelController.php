@@ -48,11 +48,12 @@ class Rekap_jaspelController extends Controller
             $dataJasa = $this->get_detail_jasa($emp_id,$idHeader);
             $dataJasa["profil"] = $data["profil"];
             // Jika belum ada, buat PDF baru
-            $pdf = PDF::loadview("laporan.v_lap_detail_jaspel",$dataJasa);
+            // $pdf = PDF::loadview("laporan.v_lap_detail_jaspel",$dataJasa);
             // Simpan file PDF di storage/app/public/slip
-            $pdf->save($pdfPath);
+            // $pdf->save($pdfPath);
             // Buka file PDF di browser
-            return response()->file($pdfPath);
+            // return response()->file($pdfPath);
+            return view("laporan.v_lap_detail_jaspel",$dataJasa);
         }
         /* $pdf->save($pdfPath);
         // Buka file PDF di browser
@@ -123,17 +124,18 @@ class Rekap_jaspelController extends Controller
 
         $data['jasa_by_penjamin'] = DB::select("
             SELECT x.nama_komponen as pelayanan,x.nama_penjamin,x.skor_jasa,(x.skor_jasa/x.skor*x.nominal_terima)jasa_tunai FROM (
-                SELECT jm.komponen_id,ks.nama_komponen,mr.reff_name as nama_penjamin,jm.skor,jm.nominal_terima,
+                SELECT jm.komponen_id,ks.nama_komponen,concat(mr.reff_name,' BULAN ',rd.bulan_pelayanan) as nama_penjamin,jm.skor,jm.nominal_terima,
                 sum(IF(jm.komponen_id = 9,pm.skor,pm.skor/10000))skor_jasa
                 FROM jp_byname_medis jm
                 JOIN employee e ON e.emp_id = jm.emp_id
                 JOIN jasa_pelayanan jp ON jm.jaspel_id = jp.jaspel_id
                 JOIN komponen_jasa_sistem ks ON ks.id = jm.komponen_id
                 JOIN point_medis pm on pm.jp_medis_id = jm.jp_medis_id and pm.employee_id = e.emp_id
+                JOIN repository_download rd on pm.repo_id = rd.id
                 join ms_reff as mr on mr.reff_code = pm.penjamin and mr.reffcat_id = 5
                 WHERE jm.emp_id = '$emp_id' AND jp.id_cair = $idHeader->id_cair_header
-                GROUP BY jm.komponen_id,ks.nama_komponen,mr.reff_name,jm.skor,jm.nominal_terima
-                ORDER BY komponen_id
+                GROUP BY rd.bulan_pelayanan,jm.komponen_id,ks.nama_komponen,mr.reff_name,jm.skor,jm.nominal_terima
+                ORDER BY rd.bulan_pelayanan
             )x");
 
         return $data;

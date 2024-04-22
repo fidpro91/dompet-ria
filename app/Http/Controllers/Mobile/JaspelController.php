@@ -19,7 +19,9 @@ class JaspelController extends MobileController
     
     public function index()
     {
-        $data['pencairan'] = Pencairan_jasa_header::where("is_published","1")->paginate(5);
+        $data['pencairan'] = Pencairan_jasa_header::where("is_published","1")
+                             ->orderBy('tanggal_cair','desc')
+                             ->paginate(5);
         return view('mobile.jasa_pelayanan',compact('data'));
     }
 

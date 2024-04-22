@@ -102,7 +102,8 @@
         <th style="width: 2%;">NO</th>
         <th style="width: 5%;">NO. REK</th>
         <th style="width: 15%;">NAMA</th>
-        <th style="width: 10%;">GOLONGAN</th>
+        <th style="width: 10%;">UNIT KERJA</th>
+        <th style="width: 5%;">GOLONGAN</th>
         <th style="width: 5%;">BRUTTO</th>
         <?php
             foreach ($data['potongan'] as $key => $value) {
@@ -124,6 +125,7 @@
             <td>" . ($key + 1) . "</td>
             <td>$value->nomor_rekening</td>
             <td>$value->emp_name</td>
+            <td>$value->unit_name</td>
             <td>$value->golongan</td>
             <td>" . convert_currency2($value->total_brutto) . "</td>";
         foreach ($data['potongan'] as $x => $v) {
@@ -151,7 +153,7 @@
     ?>
     <tr>
         <td></td>
-        <td colspan="3">TOTAL</td>
+        <td colspan="4">TOTAL</td>
         <td><?=convert_currency2($totalBrutto)?></td>
         <?php
             $row = "";

@@ -376,7 +376,7 @@ class Potongan_penghasilanController extends Controller
                     if ($value->emp_status == 1) {
                         continue;
                     }
-                    $cekPajak = Potongan_statis::where("pot_stat_code",$value->kode_ptkp)->first();
+                    /* $cekPajak = Potongan_statis::where("pot_stat_code",$value->kode_ptkp)->first();
                     if (!$cekPajak) {
                         continue;
                     }
@@ -391,12 +391,25 @@ class Potongan_penghasilanController extends Controller
                         }
                         $pajak = ($penghasilanWajibPajak*$percent->percentase_pajak/100)/12;
                         $pajakPercent = $percent->percentase_pajak;
+                    } */
+                    $penghasilanWajibPajak = (($value->gaji_pokok)+$value->total_brutto);
+                    $cekPajak = DB::selectOne("
+                        SELECT gp.percentase FROM ptkp_to_grade pg
+                        JOIN grade_ptkp gp ON pg.grade_id = gp.id
+                        JOIN potongan_statis ps ON ps.pot_stat_id = pg.ptkp_id
+                        WHERE ps.pot_stat_code = '".$value->kode_ptkp."' AND (
+                            $penghasilanWajibPajak BETWEEN batas_bawah AND batas_atas
+                        )
+                    ");
+                    if (!$cekPajak) {
+                        continue;
                     }
+                    $pajak = $cekPajak->percentase*$penghasilanWajibPajak;
                     $pajakBlud = [
                         "potongan_nama"		=> $kategoriPotongan->nama_kategori,
                         "jasa_brutto"		=> $value->total_brutto,
                         "penghasilan_pajak"	=> $penghasilanWajibPajak,
-                        "percentase_pajak"	=> $pajakPercent,
+                        "percentase_pajak"	=> $cekPajak->percentase,
                         "potongan_value"	=> $pajak,
                         "akumulasi_penghasilan_pajak"	=> 0,
                         "pencairan_id"      => $value->id_cair,
@@ -720,7 +733,6 @@ class Potongan_penghasilanController extends Controller
             "kategori_potongan" => $request->kategori_potongan,
             "id_cair_header"    => $request->id_cair
         ])->first();
-        
         //cek status pencairan
         $pencairan = Pencairan_jasa_header::find($data->id_cair_header);
         if ($pencairan->is_published == 1) {
@@ -729,13 +741,32 @@ class Potongan_penghasilanController extends Controller
                 'message' => 'Data pencairan sudah selesai. Data tidak dapat dihapus.'
             ]);
         }
-
-        Potongan_jasa_medis::where("header_id",$data->id)->delete();
-        $data->delete();
-        return response()->json([
-            'success' => true,
-            'message' => 'Data Berhasil Dihapus!'
-        ]);
+        DB::beginTransaction();
+        try {
+            DB::statement("UPDATE potongan_jasa_individu pi
+            JOIN (
+                SELECT pi.pot_ind_id FROM potongan_jasa_individu pi
+                join pencairan_jasa pj on pi.emp_id = pj.emp_id
+                join potongan_jasa_medis pm ON pj.id_cair = pm.pencairan_id
+                JOIN potongan_penghasilan ph ON pm.header_id = ph.id AND ph.kategori_potongan = pi.kategori_potongan
+                WHERE pj.id_header = $request->id_cair and pi.kategori_potongan = $request->kategori_potongan
+            ) x ON x.pot_ind_id = pi.pot_ind_id
+            SET pi.last_angsuran = (pi.last_angsuran-1), pi.pot_status = 't'");
+            Potongan_jasa_medis::where("header_id",$data->id)->delete();
+            $data->delete();
+            DB::commit();
+            $resp = [
+                'success' => true,
+                'message' => 'Data Berhasil Dihapus!'
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $resp = [
+                'success' => false,
+                'message' => 'Data Gagal Dihapus! <br>' . $e->getMessage()
+            ];
+        }
+        return response()->json($resp);
     }
 
     public function destroy($id)
