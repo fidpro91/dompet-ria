@@ -35,7 +35,7 @@ class LaporanController extends Controller
             $data["unitKerja"] = implode(",",$unitKerja);
         }
         $data["skorPegawai"]    = DB::select("
-            XSELECT e.emp_no,emp_name,mu.unit_name,sp.total_skor,
+            SELECT e.emp_no,emp_name,mu.unit_name,sp.total_skor,
             json_arrayagg(
                     json_object('kode',ds.kode_skor, 'skor', ds.skor,'keterangan',ds.detail_skor)
             )detail
