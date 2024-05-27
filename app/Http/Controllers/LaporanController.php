@@ -35,13 +35,13 @@ class LaporanController extends Controller
             $data["unitKerja"] = implode(",",$unitKerja);
         }
         $data["skorPegawai"]    = DB::select("
-            SELECT e.emp_no,emp_name,mu.unit_name,sp.total_skor,
+            XSELECT e.emp_no,emp_name,mu.unit_name,sp.total_skor,
             json_arrayagg(
                     json_object('kode',ds.kode_skor, 'skor', ds.skor,'keterangan',ds.detail_skor)
             )detail
             FROM detail_skor_pegawai ds
             JOIN skor_pegawai sp ON ds.skor_id = sp.id
-            JOIN employee as e on ds.emp_id = e.emp_id
+            JOIN employee as e on ds.emp_id = e.emp_id AND sp.emp_id = e.emp_id
             JOIN ms_unit mu ON e.unit_id_kerja = mu.unit_id
             where 0=0 $where
             GROUP BY e.emp_no,emp_name,mu.unit_name,ordering_mode,sp.total_skor
