@@ -56,6 +56,10 @@ Route::get('slip_remun/{filepdf}', function ($filepdf) {
     return response()->file($pdfPath); */
 })->where('filepdf', '.*');
 
+Route::get('/get_ip', function (Request $request) {
+    dd($request->ip());
+});
+
 Route::get('/tes_package', function () {
     $customKey = '@RSig2024';
     $link = Crypt::encryptString("1|35",$customKey);
