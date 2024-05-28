@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\SendEmail;
 use App\Models\Diklat;
 use App\Traits\WablasTrait;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 
 /*
@@ -22,7 +23,9 @@ use Illuminate\Support\Facades\Crypt;
 | contains the "web" middleware group. Now create something great!
 |
 */
-
+Route::get('/get_ip', function (Request $request) {
+    dd($request->getClientIp());
+});
 // Route::post('login/login_act', 'LoginController@actionlogin');
 // Route::post('login','LoginController@actionlogin');
 Route::post('actionlogin', [LoginController::class, 'actionlogin'])->name('actionlogin');
