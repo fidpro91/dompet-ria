@@ -29,13 +29,18 @@ class ProfilController extends MobileController
     {
         $this->sess = Session::get('sesLogin');
         if ($id == 1) {
-            $data = DB::table('diklat')/* ->where("peserta_id",$this->sess->emp_id) */->select("sertifikat_no","judul_pelatihan","penyelenggara")->get();
+            $data = DB::table('diklat')->where("peserta_id",$this->sess->emp_id)->select("sertifikat_no","judul_pelatihan","penyelenggara")->get();
         }else {
             $data = DB::table('tugas_tambahan as tt')/* ->where("emp_id",$this->sess->emp_id) */
                     ->join("detail_indikator as i","i.detail_id","=","tt.jabatan_tugas")
                     ->selectRaw("nomor_sk,nama_tugas,i.detail_name as jabatan")
                     ->get();
         }
-        return Bootstrap::tableData($data,["class"=>"table table-hover"]);
+
+        if (count($data) > 0) {
+            return Bootstrap::tableData($data,["class"=>"table table-hover"]);
+        }else {
+            return "Data tidak ditemukan";
+        }
     }
 }

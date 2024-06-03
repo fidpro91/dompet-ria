@@ -67,7 +67,8 @@
                   <h6 class="collapsed" data-bs-toggle="collapse" data-bs-target="#accordionStyleTwo" aria-expanded="false" aria-controls="accordionStyleTwo">Sertifikasi<i class="bi bi-chevron-down"></i></h6>
                 </div>
                 <div class="accordion-collapse collapse" id="accordionStyleTwo" aria-labelledby="accordionTwo" data-bs-parent="#accordionStyle1">
-                  <div class="accordion-body" id="listSertifikat">
+                  <div class="accordion-body">
+                    <div class="table-responsive" id="listSertifikat"></div>
                   </div>
                 </div>
               </div>
@@ -77,7 +78,9 @@
                   <h6 class="collapsed" data-bs-toggle="collapse" data-bs-target="#accordionStyleThree" aria-expanded="false" aria-controls="accordionStyleThree">Tugas Tambahan<i class="bi bi-chevron-down"></i></h6>
                 </div>
                 <div class="accordion-collapse collapse" id="accordionStyleThree" aria-labelledby="accordionThree" data-bs-parent="#accordionStyle1">
-                  <div class="accordion-body" id="listTT">
+                  <div class="accordion-body">
+                    <div class="table-responsive" id="listTT">
+                    </div>
                   </div>
                 </div>
               </div>
