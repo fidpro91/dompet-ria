@@ -181,6 +181,7 @@ return [
         ConsoleTVs\Charts\ChartsServiceProvider::class,
         Maatwebsite\Excel\ExcelServiceProvider::class,
         Barryvdh\Debugbar\ServiceProvider::class,
+        Barryvdh\DomPDF\ServiceProvider::class,
     ],
 
     /*
@@ -239,7 +240,7 @@ return [
         'Servant'   => App\Libraries\Servant::class,
         'Excel' => Maatwebsite\Excel\Facades\Excel::class,
         'Debugbar' => Barryvdh\Debugbar\Facade::class,
-        // 'PDF' => niklasravnsborg\LaravelPdf\Facades\Pdf::class
+        'PDFDom' => Barryvdh\DomPDF\Facade\Pdf::class
     ],
 
 ];

@@ -24,4 +24,9 @@ class Diklat extends Model
         'created_at',
         'updated_at'
     ];
+
+    public function detailIndikator()
+    {
+        return $this->belongsTo(Detail_indikator::class, 'indikator_skor', 'detail_id');
+    }
 }

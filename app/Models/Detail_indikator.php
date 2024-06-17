@@ -20,4 +20,9 @@ class Detail_indikator extends Model
         'skor',
         'detail_status'
     ];
+
+    public function indikator()
+    {
+        return $this->belongsTo(Indikator::class, 'indikator_id');
+    }
 }

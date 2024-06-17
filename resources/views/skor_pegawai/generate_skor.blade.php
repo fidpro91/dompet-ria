@@ -86,13 +86,13 @@ Widget::_init(["select2","datepicker"]);
                         'url'   : '{{url("skor_pegawai/generate_skor")}}',
                         'success': function(data) {
                             if (data.success) {
-                                Swal.close();
+                                /* Swal.close();
                                 $("#modal_skor").modal({
                                     backdrop: "static"
-                                });
-                                /* Swal.fire("Sukses!", data.message, "success").then(() => {
-                                    location.href = "{{url('skor_pegawai/hasil_skor')}}";
                                 }); */
+                                Swal.fire("Sukses!", data.message, "success").then(() => {
+                                    location.href = "{{url('skor_pegawai/hasil_skor')}}";
+                                });
                             }else{
                                 Swal.fire("Oopss...!!", data.message, "error");
                             }

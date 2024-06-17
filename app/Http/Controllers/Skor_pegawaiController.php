@@ -111,7 +111,7 @@ class Skor_pegawaiController extends Controller
         return $this->themes($this->folder . '.hasil_skor', null, 'Hasil Perhitungan Skor Individu');
     }
 
-    public function save_skor()
+    /* public function save_skor()
     {
         $skor = Cache::get('skorPegawai');
         DB::beginTransaction();
@@ -165,7 +165,103 @@ class Skor_pegawaiController extends Controller
             ];
         }
         return response()->json($resp);
+    } */
+
+    public function save_skor()
+    {
+        $skor = Cache::get('skorPegawai');
+        
+        // Array untuk menyimpan data skor pegawai dan detail skor pegawai
+        $insertSkorPegawai = [];
+        $insertDetailSkorPegawai = [];
+
+        // Array untuk menyimpan data yang akan dihapus dari tabel Skor_pegawai
+        $deletedEmpIds = [];
+
+        // Memproses data skor untuk disimpan
+        array_map(function ($value) use (&$insertSkorPegawai, &$insertDetailSkorPegawai, &$deletedEmpIds) {
+            $skoring = [
+                'basic_index'     => $value['dataSkor']['basic']['skor'],
+                'capacity_index'  => $value['dataSkor']['capacity']['skor'],
+                'emergency_index' => $value['dataSkor']['emergency']['skor'],
+                'unit_risk_index' => $value['dataSkor']['risk']['skor'],
+                'position_index'  => ($value['dataSkor']['position']['skor'] + $value['dataSkor']['tugas']['skor']),
+                'competency_index'=> $value['dataSkor']['performa']['skor'],
+                'total_skor'      => $value['totalSkor'],
+                'skor_note'       => $value['skor_note'],
+                'bulan_update'    => $value['bulan_update'],
+                'emp_id'          => $value['id'],
+                'created_by'      => Auth::user()->id,
+                'skor_type'       => 1
+            ];
+
+            // Menyiapkan data yang akan dihapus dari Skor_pegawai
+            $deletedEmpIds[] = [
+                "emp_id"        => $skoring["emp_id"],
+                "bulan_update"  => $skoring["bulan_update"]
+            ];
+
+            // Memasukkan data untuk Detail_skor_pegawai ke dalam array
+            foreach ($value['dataSkor'] as $key => $rs) {
+                $insertDetailSkorPegawai[] = [
+                    "emp_id"        => $value['id'],
+                    "kode_skor"     => $key,
+                    "detail_skor"   => $rs['keterangan'],
+                    "skor"          => $rs['skor']
+                ];
+            }
+
+            // Memasukkan data untuk Skor_pegawai ke dalam array
+            $insertSkorPegawai[] = $skoring;
+        }, $skor);
+
+        // Transaksi database dimulai
+        DB::beginTransaction();
+
+        try {
+            // Menghapus data dari Skor_pegawai yang sudah ada
+            foreach ($deletedEmpIds as $deleteEmpId) {
+                Skor_pegawai::where($deleteEmpId)->delete();
+            }
+
+            // Memasukkan data baru ke dalam Skor_pegawai dengan batch insert
+            Skor_pegawai::insert($insertSkorPegawai);
+
+            // Mengambil id terakhir yang dimasukkan ke dalam Skor_pegawai
+            $lastIds = Skor_pegawai::whereIn('emp_id', array_column($skor, 'id'))
+                ->whereIn('bulan_update', array_column($skor, 'bulan_update'))
+                ->pluck('id', 'emp_id');
+
+            // Menyiapkan data untuk diinsert ke dalam Detail_skor_pegawai
+            $insertDetailData = array_map(function ($detailSkor) use ($lastIds) {
+                $detailSkor['skor_id'] = $lastIds[$detailSkor['emp_id']];
+                return $detailSkor;
+            }, $insertDetailSkorPegawai);
+
+            // Memasukkan data ke dalam Detail_skor_pegawai dengan batch insert
+            DB::table('detail_skor_pegawai')->insert($insertDetailData);
+
+            // Commit transaksi jika berhasil
+            DB::commit();
+
+            $resp = [
+                'success' => true,
+                'message' => 'Data Berhasil Disimpan!'
+            ];
+        } catch (\Exception $e) {
+            // Rollback transaksi jika terjadi error
+            DB::rollback();
+
+            $resp = [
+                'success' => false,
+                'message' => 'Data gagal disimpan! <br>'.$e->getMessage()
+            ];
+        }
+
+        // Mengembalikan response JSON
+        return response()->json($resp);
     }
+
 
     public function get_dataTable(Request $request)
     {
@@ -249,7 +345,7 @@ class Skor_pegawaiController extends Controller
         return response()->json($resp);
     }
 
-    public function generate_skor(Request $request)
+    public function generate_skorx(Request $request)
     {
         $data=[];
         Cache::forget('skorPegawai');
@@ -272,20 +368,27 @@ class Skor_pegawaiController extends Controller
                             ->select(["e.*","di.detail_name as pendidikan","di.skor as skor_pendidikan","di.indikator_id","i.bobot","mu.unit_name"])
                             ->get();
             }else{
-                $pegawai =  Employee::from("employee as e")
+                /* $pegawai =  Employee::from("employee as e")
                             ->where("e.emp_active","t")
                             ->join("ms_unit as mu","mu.unit_id","=","e.unit_id_kerja")
                             ->join("detail_indikator as di","di.detail_id","=","e.pendidikan")
                             ->join("indikator as i","i.id","=","di.indikator_id")
                             ->select(["e.*","di.detail_name as pendidikan","di.skor as skor_pendidikan","di.indikator_id","i.bobot","mu.unit_name"])
+                            ->get(); */
+                $pegawai = Employee::where('emp_active', 't')
+                            ->with(['unit', 'pendidikanDetail.indikator'])
                             ->get();
             }
+
             foreach ($pegawai as $key => $pgw) {
+                if (empty($pgw->unit->unit_name)) {
+                    continue;
+                }
                 $data[$key] = [
                     "nip"              => $pgw->emp_no,
                     "id"               => $pgw->emp_id,
                     "is_medis"         => $pgw->is_medis,
-                    "unit_kerja"       => $pgw->unit_name,
+                    "unit_kerja"       => $pgw->unit->unit_name ?? '',
                     "bulan_update"     => $request->bulan_skor,
                     "nama"             => $pgw->emp_name
                 ];
@@ -296,53 +399,70 @@ class Skor_pegawaiController extends Controller
                     "keterangan"    => "BASIC INDEX BERDASARKAN GAJI POKOK"
                 ];
                 $data[$key]['totalSkor'] = $skor;
-                $skor=($pgw->skor_pendidikan*$pgw->bobot);
+
+                /* $skor=($pgw->skor_pendidikan*$pgw->bobot);
                 $data[$key]['totalSkor'] = $data[$key]['totalSkor'] +$skor;
                 $data[$key]['dataSkor']['capacity'] = [
                     "skor"          => $skor,
                     "keterangan"    => "BASIC INDEX PENDIDIKAN - ".$pgw->pendidikan
-                ];
+                ]; */
 
-                $data[$key]['totalSkor'] = $data[$key]['totalSkor'] + $pgw->last_risk_index;
+                if ($pgw->pendidikanDetail) {
+                    $skor = ($pgw->pendidikanDetail->skor * $pgw->pendidikanDetail->indikator->bobot);
+                    $data[$key]['totalSkor'] += $skor;
+                    $data[$key]['dataSkor']['capacity'] = [
+                        "skor"          => $skor,
+                        "keterangan"    => "BASIC INDEX PENDIDIKAN - " . $pgw->pendidikanDetail->detail_name
+                    ];
+                }
+                // $data[$key]['totalSkor'] = $data[$key]['totalSkor'] + $pgw->last_risk_index;
+                $data[$key]['totalSkor'] += $pgw->last_risk_index;
                 $data[$key]['dataSkor']['risk'] = [
                     "skor"          => $pgw->last_risk_index,
-                    "keterangan"    => "RISK INDEX (INFEKSIUS+ADMINISTRASI) - ".$pgw->unit_name
+                    "keterangan"    => "RISK INDEX (INFEKSIUS+ADMINISTRASI) - ".$pgw->unit->unit_name
                 ];
 
-                $data[$key]['totalSkor'] = $data[$key]['totalSkor'] + $pgw->last_emergency_index;
+                $data[$key]['totalSkor'] += $pgw->last_emergency_index;
                 $data[$key]['dataSkor']['emergency'] = [
                     "skor"          => $pgw->last_emergency_index,
-                    "keterangan"    => "RISK INDEX (INFEKSIUS+ADMINISTRASI) - ".$pgw->unit_name
+                    "keterangan"    => "RISK INDEX (INFEKSIUS+ADMINISTRASI) - " . $pgw->unit->unit_name
                 ];
 
                 //get jabatan skor
-                $posisiId = (($pgw->jabatan_struktural ?? $pgw->jabatan_fungsional)??30);
-                $posisi = Detail_indikator::from("detail_indikator as di")
-                        ->where("detail_id",$posisiId)
-                        ->join("indikator as i","i.id","=","di.indikator_id")->first();
+                $posisiId = $pgw->jabatan_struktural ?? $pgw->jabatan_fungsional ?? 30;
+                $posisi = Cache::remember("position_{$posisiId}", 3000, function () use ($posisiId) {
+                    return Detail_indikator::from("detail_indikator as di")
+                        ->where("detail_id", $posisiId)
+                        ->join("indikator as i", "i.id", "=", "di.indikator_id")
+                        ->first();
+                });
+
                 if (!$posisi) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Jabatan pegawai : '.$pgw->emp_name.' tidak terdaftar'
+                        'message' => 'Jabatan pegawai : ' . $pgw->emp_name . ' tidak terdaftar'
                     ]);
                 }
-                $data[$key]['totalSkor'] = $data[$key]['totalSkor'] + $pgw->last_position_index;
+
+                $data[$key]['totalSkor'] += $pgw->last_position_index;
                 $data[$key]['dataSkor']['position'] = [
                     "skor"          => $pgw->last_position_index,
-                    "keterangan"    => "POSITION INDEX - ".$posisi->detail_name
+                    "keterangan"    => "POSITION INDEX - " . $posisi->detail_name
                 ];
                 
             }
             Cache::add('skorPegawai',array_values($data),3000);
-            Cache::remember('skorError', 3000, function () use($data){
-                $emp_id = implode(',',array_column($data, 'id'));
+            $emp_ids = $pegawai->pluck('emp_id')->toArray();
+            Cache::remember('skorError', 3000, function () use ($emp_ids){
+                $emp_id_str = implode(',', $emp_ids);
                 $dataError = DB::select("
                             select e.emp_no,e.emp_name,mu.unit_name from employee e 
                             join ms_unit mu on mu.unit_id = e.unit_id_kerja
-                            where e.emp_active = 't' and e.emp_id not in (".$emp_id.")
+                            where e.emp_active = 't' and e.emp_id not in (".$emp_id_str.")
                         ");
                 return $dataError;
             });
+
             $resp = [
                 'success' => true,
                 'message' => 'Skor Berhasil Digenerate!'
@@ -356,7 +476,180 @@ class Skor_pegawaiController extends Controller
         return response()->json($resp);
     }
 
-    function set_skor($type)
+    public function generate_skor(Request $request)
+    {
+        try {
+            $pegawai = Employee::where('emp_active', 't')
+                ->when($request->unit_id, function ($query, $unit_id) {
+                    return $query->where('unit_id_kerja', $unit_id);
+                })
+                ->when($request->emp_id_gen, function ($query, $emp_id) {
+                    return $query->where('emp_id', $emp_id);
+                })
+                ->with([
+                    'unit',
+                    'pendidikanDetail.indikator',
+                    'tugasTambahan' => function ($query) {
+                        $query->whereDate('tanggal_akhir', '>=', now())
+                            ->with('detailIndikator.indikator');
+                    },
+                    'performaIndex' => function ($query) {
+                        $query->whereDate('expired_date', '>=', now())
+                            ->with(['detailIndikator.indikator','detailPerform']);
+                    },
+                    'diklat' => function ($query) {
+                        $query->whereNotNull('indikator_skor')
+                            ->with('detailIndikator.indikator');
+                    },
+                ])
+                ->get();
+
+            // Proses data skor untuk setiap pegawai
+            $data = $pegawai->map(function ($pgw) use ($request) {
+                if (empty($pgw->unit->unit_name)) {
+                    return null;
+                }
+
+                $totalSkor = 0;
+                $dataSkor = [];
+
+                // Skor Basic Index berdasarkan gaji pokok
+                $basicSkor = floor(($pgw->gaji_pokok / 1000000) * 10) / 10;
+                $dataSkor['basic'] = [
+                    "skor"       => $basicSkor,
+                    "keterangan" => "BASIC INDEX BERDASARKAN GAJI POKOK"
+                ];
+                $totalSkor += $basicSkor;
+
+                // Skor Capacity Index berdasarkan pendidikan
+                if ($pgw->pendidikanDetail) {
+                    $pendidikanSkor = $pgw->pendidikanDetail->skor * $pgw->pendidikanDetail->indikator->bobot;
+                    $dataSkor['capacity'] = [
+                        "skor"       => $pendidikanSkor,
+                        "keterangan" => "BASIC INDEX PENDIDIKAN - " . $pgw->pendidikanDetail->detail_name
+                    ];
+                    $totalSkor += $pendidikanSkor;
+                }else {
+                    $dataSkor['capacity'] = [
+                        "skor"       => 0,
+                        "keterangan" => "BASIC INDEX PENDIDIKAN"
+                    ];
+                }
+
+                // Skor Risk Index (Infeksius + Administrasi)
+                $dataSkor['risk'] = [
+                    "skor"       => $pgw->last_risk_index,
+                    "keterangan" => "RISK INDEX (INFEKSIUS+ADMINISTRASI) - " . $pgw->unit->unit_name
+                ];
+                $totalSkor += $pgw->last_risk_index;
+
+                // Skor Emergency Index
+                $dataSkor['emergency'] = [
+                    "skor"       => $pgw->last_emergency_index,
+                    "keterangan" => "EMERGENCY INDEX - " . $pgw->unit->unit_name
+                ];
+                $totalSkor += $pgw->last_emergency_index;
+
+                // Skor Position Index berdasarkan jabatan
+                $posisiId = $pgw->jabatan_struktural ?? $pgw->jabatan_fungsional ?? 30;
+                $posisi = Cache::remember("position_{$posisiId}", 3000, function () use ($posisiId) {
+                    return Detail_indikator::from("detail_indikator as di")
+                        ->where("detail_id", $posisiId)
+                        ->join("indikator as i", "i.id", "=", "di.indikator_id")
+                        ->first();
+                });
+
+                if (!$posisi) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Jabatan pegawai : ' . $pgw->emp_name . ' tidak terdaftar'
+                    ]);
+                }
+
+                $dataSkor['position'] = [
+                    "skor"       => $pgw->last_position_index,
+                    "keterangan" => "POSITION INDEX - " . $posisi->detail_name
+                ];
+                $totalSkor += $pgw->last_position_index;
+
+                // Skor Diklat & Sertifikat Index
+                $sertifikatSkor = $pgw->diklat->sum(function ($d) {
+                    return $d->detailIndikator->skor * $d->detailIndikator->indikator->bobot;
+                });
+                $sertifikatSkor = min($sertifikatSkor, 0.8);
+                $diklatNote = $pgw->diklat->pluck("judul_pelatihan")->implode(",");
+                $dataSkor['certificate'] = [
+                    "skor"       => $sertifikatSkor,
+                    "keterangan" => ($sertifikatSkor > 0) ? "DIKLAT & SERTIFIKAT INDEX ".$diklatNote : null
+                ];
+                $totalSkor += $sertifikatSkor;
+                
+                // Skor Tugas Tambahan Index
+                $tugasSkor = $pgw->tugasTambahan->sum(function ($tugas) use ($pgw) {
+                    $skor = $tugas->detailIndikator->skor*$tugas->detailIndikator->indikator->bobot;
+                    
+                    return $skor;
+                });
+                if ($pgw->is_medis == 'f') {
+                    $tugasSkor = min($tugasSkor, 3.5);
+                }
+                $tugasNote = $pgw->tugasTambahan->pluck('nama_tugas')->implode(', ');
+                $dataSkor['tugas'] = [
+                    "skor"       => $tugasSkor,
+                    "keterangan" => ($tugasSkor > 0) ? "TUGAS TAMBAHAN INDEX - " . $tugasNote : null
+                ];
+                $totalSkor += $tugasSkor;
+
+                // Skor Performa Index
+                $performaSkor = $pgw->performaIndex->sum(function ($performa) {
+                    return $performa->detailIndikator->skor * $performa->detailIndikator->indikator->bobot;
+                });
+                $performaNote = $pgw->performaIndex->pluck('detailPerform.reff_name')->implode(', ');
+                $dataSkor['performa'] = [
+                    "skor"       => $performaSkor,
+                    "keterangan" => ($performaSkor > 0) ? "PERFORMA INDEX - ".$performaNote : null
+                ];
+                $totalSkor += $performaSkor;
+
+                return [
+                    "nip"         => $pgw->emp_no,
+                    "id"          => $pgw->emp_id,
+                    "is_medis"    => $pgw->is_medis,
+                    "unit_kerja"  => $pgw->unit->unit_name ?? '',
+                    "bulan_update"=> $request->bulan_skor,
+                    "nama"        => $pgw->emp_name,
+                    "dataSkor"    => $dataSkor,
+                    "totalSkor"   => $totalSkor,
+                    "skor_note"   => "Skor pegawai bulan " . $request->bulan_skor . "."
+                ];
+            })->filter()->values()->all();
+
+            // dd($data);
+            // Simpan hasil skor pegawai ke dalam cache
+            Cache::put('skorPegawai', $data, 3000);
+
+            //pegawai tidak dapat skor
+            $emp_ids = implode(',',$pegawai->pluck('emp_id')->toArray());
+            $dataError = DB::select("
+                        select e.emp_no,e.emp_name,mu.unit_name from employee e 
+                        join ms_unit mu on mu.unit_id = e.unit_id_kerja
+                        where e.emp_active = 't' and e.emp_id not in (".$emp_ids.")
+                    ");
+            Cache::put('skorError', $dataError, 3000);
+
+            return response()->json([
+                "success"    => true,
+                "message"    => "Skor Berhasil Digenerate"
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                "success"    => false,
+                "message" => "Terjadi kesalahan: " . $e->getMessage()
+            ]);
+        }
+    }
+
+    /* function set_skor($type)
     {
         $skor = Cache::get('skorPegawai');
         $newSkor=[];
@@ -448,7 +741,117 @@ class Skor_pegawaiController extends Controller
             "code"      => 200,
             "message"   => "OK"
         ]);
-    }
+    } */
+
+    /* public function set_skor($type)
+    {
+        $skor = Cache::get('skorPegawai');
+
+        // Memuat semua tugas tambahan, diklat, dan performa index dengan eager loading
+        $employeeIds = collect($skor)->pluck('id')->toArray();
+        $tugasTambahan = Tugas_tambahan::whereIn('emp_id', $employeeIds)
+            ->whereDate('tanggal_akhir', '>=', now())
+            ->with(['detailIndikator.indikator'])
+            ->get();
+
+        $performaIndex = Performa_index::whereIn('emp_id', $employeeIds)
+            ->whereDate('expired_date', '>=', now())
+            ->with(['detailIndikator.indikator'])
+            ->get();
+
+        $diklat = Diklat::whereIn('peserta_id', $employeeIds)
+            ->with(['detailIndikator.indikator'])
+            ->get();
+
+        // Proses data skor untuk setiap pegawai
+        $newSkor = [];
+        foreach ($skor as $key => $value) {
+            if ($type == 1) {
+                // Proses sertifikat skor
+                $sertifikatSkor = 0;
+                $sertifikatNote = [];
+
+                foreach ($diklat as $d) {
+                    if ($d->peserta_id == $value['id']) {
+                        $sertifikatSkor += ($d->skor * $d->detailIndikator->bobot);
+                        $sertifikatNote[] = $d->judul_pelatihan;
+                    }
+                }
+
+                if ($sertifikatSkor > 0.8) {
+                    $sertifikatSkor = 0.8;
+                }
+
+                $sertifikatNote = implode(',', $sertifikatNote);
+
+                $data['certifycate'] = [
+                    "skor" => $sertifikatSkor,
+                    "keterangan" => ($sertifikatSkor > 0) ? "DIKLAT & SERTIFIKAT INDEX - ($sertifikatNote)" : NULL
+                ];
+
+                $value["totalSkor"] += $sertifikatSkor;
+                $value["dataSkor"] = array_merge($value["dataSkor"], $data);
+            } elseif ($type == 2) {
+                // Proses tugas tambahan skor
+                $tugasSkor = 0;
+                $tugasNote = [];
+
+                foreach ($tugasTambahan as $tugas) {
+                    if ($tugas->emp_id == $value['id']) {
+                        $tugasSkor += ($tugas->skor * $tugas->detailIndikator->bobot);
+                        $tugasNote[] = $tugas->detailIndikator->detail_name . '@' . $tugas->nama_tugas;
+                    }
+                }
+
+                if ($value["is_medis"] == 'f' && $tugasSkor > 3.5) {
+                    $tugasSkor = 3.5;
+                }
+
+                $tugasNote = implode(',', $tugasNote);
+
+                $data['tugas'] = [
+                    "skor" => $tugasSkor,
+                    "keterangan" => ($tugasSkor > 0) ? "TUGAS TAMBAHAN INDEX - ($tugasNote)" : null
+                ];
+
+                $value["totalSkor"] += $tugasSkor;
+                $value["dataSkor"] = array_merge($value["dataSkor"], $data);
+            } elseif ($type == 3) {
+                // Proses performa index skor
+                $performSkor = 0;
+                $performanNote = [];
+
+                foreach ($performaIndex as $performa) {
+                    if ($performa->emp_id == $value['id']) {
+                        $performSkor += ($performa->skor * $performa->detailIndikator->bobot);
+                        $performanNote[] = $performa->detailIndikator->indikator;
+                    }
+                }
+
+                $performanNote = implode(',', $performanNote);
+
+                $data['performa'] = [
+                    "skor" => $performSkor,
+                    "keterangan" => ($performSkor > 0) ? "($performanNote)" : null
+                ];
+
+                $value['skor_note'] = "Skor pegawai bulan " . $value["bulan_update"] . ".";
+                $value["totalSkor"] += $performSkor;
+                $value["dataSkor"] = array_merge($value["dataSkor"], $data);
+            }
+
+            $newSkor[$key] = $value;
+        }
+        dd($newSkor[100]);
+        // Update cache skor
+        Cache::put('skorPegawai', $newSkor, 3000);
+
+        return response()->json([
+            "code" => 200,
+            "message" => "OK"
+        ]);
+    } */
+
 
     private function form_validasi($data)
     {

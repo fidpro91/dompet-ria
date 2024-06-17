@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Charts\RemunChart;
 use App\Exports\PencairanExport;
+use App\Jobs\FinalPencairan;
 use App\Libraries\Servant;
 use App\Models\Employee;
 use App\Models\Jasa_pelayanan;
@@ -20,12 +21,14 @@ use Illuminate\Support\Facades\Validator;
 use DataTables;
 use fidpro\builder\Create;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use stdClass;
 use Maatwebsite\Excel\Facades\Excel;
-use PDF;
+use PDFDom;
+use Barryvdh\Snappy\Facades\SnappyPdf;
 
 class Pencairan_jasa_headerController extends Controller
 {
@@ -475,59 +478,7 @@ class Pencairan_jasa_headerController extends Controller
             $data->update([
                 "is_published" => 1
             ]);
-            $ekseKutif = DB::select("SELECT 'EKSEKUTIF' AS penjamin,
-            SUM(nominal_terima)total
-            FROM jp_byname_medis jm
-            JOIN jasa_pelayanan jp ON jm.jaspel_id = jp.jaspel_id
-            WHERE jp.id_cair = $id AND jm.komponen_id = 9");
-            $percent = $ekseKutif[0]->total/$data->total_nominal*100;
-            $percentase[] = [
-                "penjamin"          => "EKSEKUTIF",
-                "persentase_jasa"   => ($percent),
-                "id_cair"           => $id
-            ];
-            $medisNonEks = DB::select("
-            SELECT mr.reff_name as penjamin,
-            sum(dm.skor/10000) as total_skor
-            FROM point_medis dm
-            JOIN ms_reff mr on mr.reff_code = dm.penjamin
-            JOIN jp_byname_medis jm ON jm.jp_medis_id = dm.jp_medis_id
-            JOIN jasa_pelayanan jp ON jm.jaspel_id = jp.jaspel_id
-            WHERE jp.id_cair = $id AND jm.komponen_id = 7
-            GROUP BY mr.reff_name");
-            $bagianNonEks=$data->total_nominal-$ekseKutif[0]->total;
-            $medisArray = array_map(function ($medisNonEks) {
-                return (array)$medisNonEks;
-            }, $medisNonEks);
-            $totalSkor = array_sum(array_column($medisArray,'total_skor'));
-            foreach ($medisNonEks as $key => $value) {
-                $hitungProporsi = ($value->total_skor/$totalSkor*$bagianNonEks)/$bagianNonEks*(100-$percent);
-                $percentase[] = [
-                    "penjamin"          => $value->penjamin,
-                    "persentase_jasa"   => ($hitungProporsi),
-                    "id_cair"           => $id
-                ];
-            }
-            DB::table('persentase_jasa')->insert($percentase);
-
-            //publish ke pegawai;
-            $employee = Pencairan_jasa::from("pencairan_jasa as pj")
-                        ->join("employee as e","e.emp_id","=","pj.emp_id")
-                        ->where("pj.id_header",$id)
-                        ->whereNotNull("e.phone")
-                        ->get();
-            $customKey = '@RSig2024';
-            foreach ($employee as $key => $value) {
-                $link = Crypt::encryptString($id."-".$value->emp_id,$customKey);
-                $link = "http://localhost:88/slip_remun/download/".$link;
-
-                $message = [
-                    "message"   => "<b>$data->keterangan</b>.<br>Silahkan Klik link dibawah ini untuk mengetahui rincian perolehan jasa pelayanan anda. Link ini bersifat privasi dan tidak boleh dishare. Terima Kasih.<br><br><br>".$link,
-                    "number"    => $value->phone
-                ];
-                Servant::send_wa("POST",$message);
-            }
-
+            FinalPencairan::dispatch($data);
             DB::commit();
             $resp = [
                 'success' => true,
@@ -593,7 +544,7 @@ class Pencairan_jasa_headerController extends Controller
         return $this->themes("pencairan_jasa_header.printout.statistik",compact('chart'),'Statistik Jasa Pelayanan '.$pencairan->keterangan);
 	}
 
-    public function print_pdf($id)
+    /* public function print_pdf($id)
     {
         set_time_limit(0);
         ini_set("memory_limit",-1);
@@ -625,13 +576,53 @@ class Pencairan_jasa_headerController extends Controller
             Cache::put($cacheKey,$data,60);
         }
         // return view("pencairan_jasa_header.printout.print_pencairan",compact('data'));
-        $pdf = PDF::loadview("pencairan_jasa_header.printout.print_pencairan",compact('data'))
+        $pdf = PDFDom::loadview("pencairan_jasa_header.printout.print_pencairan",compact('data'))
                ->setPaper([0, 0, 750, 1500], 'landscape');
         // return $pdf->download('laporan-pegawai.pdf');
         return $pdf->stream();
         
-    }
+    } */
 
+    public function print_pdf($id) {
+        $cacheKey = 'laporan-' . $id;
+        $data = Cache::get($cacheKey);
+        if (!$data) {
+            $data['potongan'] = Kategori_potongan::where("potongan_active", "t")->get();
+            $data['header'] = Pencairan_jasa_header::find($id);
+            $data['detail'] = DB::select("
+                SELECT x.unit_name, x.golongan, x.emp_no, x.emp_name, x.nomor_rekening,
+                       x.total_brutto,
+                       json_arrayagg(
+                           json_object('kategori_id', x.kategori_potongan, 'potongan', x.total_potongan)
+                       ) detail
+                FROM (
+                    SELECT e.ordering_mode, e.emp_no, e.emp_name, e.golongan, pj.nomor_rekening, ph.kategori_potongan, pj.total_brutto, sum(pm.potongan_value) total_potongan,
+                           mu.unit_name
+                    FROM pencairan_jasa pj
+                    JOIN employee e ON e.emp_id = pj.emp_id
+                    JOIN ms_unit mu ON e.unit_id_kerja = mu.unit_id
+                    LEFT JOIN potongan_jasa_medis pm ON pm.pencairan_id = pj.id_cair
+                    LEFT JOIN potongan_penghasilan ph ON ph.id = pm.header_id
+                    WHERE pj.id_header = '$id'
+                    GROUP BY e.ordering_mode, e.emp_no, e.emp_name, e.golongan, pj.nomor_rekening, ph.kategori_potongan, pj.total_brutto, mu.unit_name
+                ) x
+                GROUP BY x.ordering_mode, x.golongan, x.emp_no, x.emp_name, x.nomor_rekening,
+                         x.total_brutto, x.unit_name
+                ORDER BY IFNULL(ordering_mode, '07'), x.unit_name, x.emp_name
+            ");
+            Cache::put($cacheKey, $data, 60);
+        }
+    
+        $options = [
+            'page-width' => '400mm',
+            'page-height' => '650mm',
+            'orientation' => 'landscape'
+        ];
+        $pdf = SnappyPdf::loadView("pencairan_jasa_header.printout.print_pencairan", compact('data'))->setOptions($options);
+    
+        return $pdf->stream('laporan-pegawai.pdf');
+    }
+    
     /* public function file_excel($id)
     {
         set_time_limit(0);

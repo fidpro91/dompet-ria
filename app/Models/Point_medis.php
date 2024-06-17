@@ -27,4 +27,9 @@ class Point_medis extends Model
         'jenis_tagihan',
         'is_copy'
     ];
+
+    public function penjamin()
+    {
+        return $this->belongsTo(Ms_reff::class, 'penjamin', 'reff_code')->where('reffcat_id', 5);
+    }
 }

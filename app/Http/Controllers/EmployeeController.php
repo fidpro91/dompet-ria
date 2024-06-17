@@ -191,7 +191,7 @@ class EmployeeController extends Controller
         return response()->json($resp);
     }
 
-    private function get_unit_skor($request)
+    public function get_unit_skor($request)
     {
         //get unit skor
         $unit = Ms_unit::from("ms_unit as mu")
@@ -223,6 +223,7 @@ class EmployeeController extends Controller
                       ->where("detail_id",$request->jabatan_fungsional)
                       ->join("indikator as i","i.id","=","di.indikator_id")->first();
         }
+        
         $skorPosition = ($posisi->skor*$posisi->bobot);
 
         return [

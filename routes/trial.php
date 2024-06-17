@@ -1,8 +1,10 @@
 <?php
 
 use App\Libraries\Servant;
+use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -155,4 +157,49 @@ Route::get('/tes_package', function () {
         ]
     ])->render("group","pegawai");
     print_r ($hasil); */
+});
+
+Route::get('/employee', function () {
+    $employees = Employee::search('mufid')->get();
+
+    foreach ($employees as $employee) {
+        echo $employee->emp_name;
+    }
+});
+
+Route::get('/pencairan_jasa', function () {
+    $id=22;
+    $ekseKutif = DB::select("
+    SELECT 'EKSEKUTIF' AS penjamin, SUM(jm.nominal_terima) AS total
+    FROM jp_byname_medis jm
+    JOIN jasa_pelayanan jp ON jm.jaspel_id = jp.jaspel_id
+    WHERE jp.id_cair = ? AND jm.komponen_id = 9", [$id]);
+    $percent = $ekseKutif[0]->total/1000000000*100;
+    $percentase[] = [
+        "penjamin"          => "EKSEKUTIF",
+        "persentase_jasa"   => ($percent),
+        "id_cair"           => $id
+    ];
+    $medisNonEks = DB::select("
+    SELECT mr.reff_name AS penjamin, SUM(dm.skor / 10000) AS total_skor
+    FROM point_medis dm
+    JOIN ms_reff mr ON mr.reff_code = dm.penjamin AND mr.reffcat_id = 5
+    JOIN jp_byname_medis jm ON jm.jp_medis_id = dm.jp_medis_id
+    JOIN jasa_pelayanan jp ON jm.jaspel_id = jp.jaspel_id
+    WHERE jp.id_cair = ? AND jm.komponen_id = 7
+    GROUP BY mr.reff_name", [$id]);
+
+    $bagianNonEks=100000000-$ekseKutif[0]->total;
+    $totalSkor = array_sum(array_map(function ($value) {
+        return $value->total_skor;
+    }, $medisNonEks));
+    $percentase = array_merge($percentase, array_map(function ($value) use ($totalSkor, $bagianNonEks, $id, $percent) {
+        $hitungProporsi = ($value->total_skor/$totalSkor*$bagianNonEks)/$bagianNonEks*(100-$percent);
+        return [
+            "penjamin"        => $value->penjamin,
+            "persentase_jasa" => $hitungProporsi,
+            "id_cair"         => $id
+        ];
+    }, $medisNonEks));
+            dd($percentase);
 });

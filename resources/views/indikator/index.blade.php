@@ -50,10 +50,6 @@ use \fidpro\builder\Bootstrap;
                     searchable: false
                 },
                 {
-                    data: 'id',
-                    name: 'id',
-                },
-                {
                     data: 'kode_indikator',
                     name: 'kode_indikator',
                 },

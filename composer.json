@@ -6,8 +6,10 @@
     "license": "MIT",
     "require": {
         "php": "^7.3|^8.0",
+        "algolia/algoliasearch-client-php": "^3.4",
         "barryvdh/laravel-debugbar": "^3.7",
         "barryvdh/laravel-dompdf": "^2.0",
+        "barryvdh/laravel-snappy": "*",
         "biscolab/laravel-recaptcha": "^6.1",
         "consoletvs/charts": "6.*",
         "diglactic/laravel-breadcrumbs": "^8.1",
@@ -15,6 +17,7 @@
         "guzzlehttp/guzzle": "^7.0.1",
         "laravel/framework": "^8.75",
         "laravel/sanctum": "^2.11",
+        "laravel/scout": "^9.8",
         "laravel/tinker": "^2.5",
         "laravelcollective/html": "^6.3",
         "lavary/laravel-menu": "^1.8",
