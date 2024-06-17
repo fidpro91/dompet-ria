@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\EmployeeController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -202,4 +202,8 @@ Route::get('/pencairan_jasa', function () {
         ];
     }, $medisNonEks));
             dd($percentase);
+});
+use App\Jobs\TesJob;
+Route::get('/tes_skor', function () {
+    TesJob::dispatch();
 });

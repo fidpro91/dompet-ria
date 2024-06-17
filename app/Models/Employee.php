@@ -122,6 +122,6 @@ class Employee extends Model
 
     public function diklat()
     {
-        return $this->hasMany(DIklat::class,'peserta_id');
+        return $this->hasMany(Diklat::class,'peserta_id');
     }
 }

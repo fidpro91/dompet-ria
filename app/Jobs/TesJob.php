@@ -2,28 +2,41 @@
 
 namespace App\Jobs;
 
-use App\Models\Employee;
-use App\Http\Controllers\EmployeeController;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Models\Employee;
+use Illuminate\Http\Request;
+use App\Http\Controllers\EmployeeController;
 
-class UpdateSkor implements ShouldQueue
+class TesJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    // public $timeout = 120;
 
+    /**
+     * Create a new job instance.
+     *
+     * @return void
+     */
     public function __construct()
     {
         //
     }
 
+    /**
+     * Execute the job.
+     *
+     * @return void
+     */
     public function handle()
     {
         try {
+            Log::info('UpdateSkor job started');
             $employees = Employee::where("emp_active", "t")->get();
             foreach ($employees as $employee) {
                 $employeeController = new EmployeeController;
@@ -42,6 +55,5 @@ class UpdateSkor implements ShouldQueue
             Log::error('Error in UpdateSkor job: ' . $e->getMessage());
             throw $e;
         }
-        
     }
 }
