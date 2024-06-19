@@ -122,7 +122,7 @@ use fidpro\builder\Bootstrap;
     Bootstrap::tableData($skorPegawai,["class" => "table"])
 !!}
 @if(Session::get('sesLogin')->is_medis == 't' || Session::get('sesLogin')->group_type == 1)
-<h2>JASA PELAYANAN BY PENJAMIN (BRUTTO)</h2>
+<h3>JASA PELAYANAN BY PENJAMIN (BRUTTO)</h3>
 <?php
 $jasa_by_penjamin = array_map('get_object_vars', $jasa_by_penjamin);
 ?>
