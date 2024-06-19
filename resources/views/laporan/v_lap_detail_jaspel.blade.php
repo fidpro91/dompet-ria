@@ -117,8 +117,7 @@ use fidpro\builder\Bootstrap;
         <th class="text-right"><?= convert_currency2($totalBrutto - $totalPotongan) ?></th>
     </tr>
 </table>
-<p></p>
-<h2>DETAIL SKOR INDIVIDU PEGAWAI</h2>
+<h3>DETAIL SKOR INDIVIDU PEGAWAI</h3>
 {!!
     Bootstrap::tableData($skorPegawai,["class" => "table"])
 !!}
@@ -149,7 +148,7 @@ $jasa_by_penjamin = array_map('get_object_vars', $jasa_by_penjamin);
         ],
     ])
 !!}
-<h2>DETAIL POINT PELAYANAN EKSEKUTIF</h2>
+<h3>DETAIL POINT PELAYANAN EKSEKUTIF</h3>
 <?php
     $pelayanan = json_decode(json_encode($pelayanan),true);
     $eksekutif = array_values(array_filter($pelayanan, function ($var){

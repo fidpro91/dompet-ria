@@ -95,7 +95,7 @@ class Detail_tindakan_medisController extends Controller
             ]); */
 
             $button = Create::action("<i class=\"fas fa-trash\"></i>", [
-                "class"     => "btn btn-danger btn-sm",
+                "class"     => "btn btn-danger btn-xs",
                 "onclick"   => "delete_row(this)",
                 "x-token"   => csrf_token(),
                 "data-url"  => route($this->route . ".destroy", $data->tindakan_id),
