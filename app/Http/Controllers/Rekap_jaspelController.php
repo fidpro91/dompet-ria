@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
-use PDF;
+use Barryvdh\Snappy\Facades\SnappyPdf;
 
 class Rekap_jaspelController extends Controller
 {
@@ -53,7 +53,13 @@ class Rekap_jaspelController extends Controller
             // $pdf->save($pdfPath);
             // Buka file PDF di browser
             // return response()->file($pdfPath);
-            return view("laporan.v_lap_detail_jaspel",$dataJasa);
+            $pdf = SnappyPdf::loadView("laporan.v_lap_detail_jaspel",$dataJasa)->setOptions([
+                'encoding'              => 'utf-8',
+                'page-size'             => 'Legal',
+                'enable-local-file-access' => true
+            ]);
+            return $pdf->stream('laporan-pegawai.pdf');
+            // return view("laporan.v_lap_detail_jaspel",$dataJasa);
         }
         /* $pdf->save($pdfPath);
         // Buka file PDF di browser
@@ -112,7 +118,7 @@ class Rekap_jaspelController extends Controller
                             ->selectRaw("
                                 jm.komponen_id,klasifikasi_jasa,sum(pm.skor) as total_skor,
                                 json_arrayagg(
-                                    json_object('id_kunjungan',dm.visit_id,'tindakan', dm.nama_tindakan,'skor', dm.skor_jasa)
+                                    json_object('id_kunjungan',dm.visit_id,'tindakan', dm.nama_tindakan,'skor', dm.skor_jasa,'tarif', dm.tarif_tindakan,'percentase', dm.percentase_jasa)
                                 )detail
                             ")
                             ->groupBy(["dm.klasifikasi_jasa","jm.komponen_id"])

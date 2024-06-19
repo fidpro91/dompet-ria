@@ -20,7 +20,7 @@ use \fidpro\builder\Bootstrap;
                 Bootstrap::table("table-data",[
                     "class" => "table table-hover"
                 ],[
-                    '#','NO','id','kode_indikator','indikator','deskripsi','bobot','status'
+                    '#','NO','kode_indikator','indikator','deskripsi','bobot','status'
                 ])
             }}
         </div>

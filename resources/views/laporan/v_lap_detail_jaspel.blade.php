@@ -31,6 +31,7 @@ use fidpro\builder\Bootstrap;
     }
     .table-long {
         page-break-inside: avoid !important;
+        padding-left: 30px !important;
     }
 </style>
 <table width="100%">
@@ -39,12 +40,12 @@ use fidpro\builder\Bootstrap;
             <table width="100%" style="margin-bottom: 20px;">
                 <tr>
                     <th width="18%">
-                        <img src="{{asset('assets/images/logo.webp')}}" alt="" style="width: 100%;">
+                        <img src="{{public_path('assets/images/logo.png')}}" alt="" style="width: 70%;">
                     </th>
                     <th style="text-align: left; padding:0px">
-                        <b style="font-size: 8pt; margin:0px">RINCIAN PERHITUNGAN JASA PELAYANAN</b><br>
-                        <span style="font-size: 9pt; margin:0px">RUMAH SAKIT UMUM DAERAH IBNU SINA KABUPATEN GRESIK</span> <br>
-                        <i style="font-size: 6pt; margin:0px">Jl. DR. Wahidin Sudiro Husodo No.243B Kabupaten Gresik Jawa Timur (61124)</i>
+                        <b style="font-size: 14pt; margin:0px">RINCIAN PERHITUNGAN JASA PELAYANAN</b><br>
+                        <span style="font-size: 16pt; margin:0px">RUMAH SAKIT UMUM DAERAH IBNU SINA KABUPATEN GRESIK</span> <br>
+                        <i style="font-size: 12pt; margin:0px">Jl. DR. Wahidin Sudiro Husodo No.243B Kabupaten Gresik Jawa Timur (61124)</i>
                     </th>
                 </tr>
             </table>
@@ -117,12 +118,12 @@ use fidpro\builder\Bootstrap;
     </tr>
 </table>
 <p></p>
-<p>DETAIL SKOR INDIVIDU PEGAWAI</p>
+<h2>DETAIL SKOR INDIVIDU PEGAWAI</h2>
 {!!
     Bootstrap::tableData($skorPegawai,["class" => "table"])
 !!}
 @if(Session::get('sesLogin')->is_medis == 't' || Session::get('sesLogin')->group_type == 1)
-<p>JASA PELAYANAN BY PENJAMIN (BRUTTO)</p>
+<h2>JASA PELAYANAN BY PENJAMIN (BRUTTO)</h2>
 <?php
 $jasa_by_penjamin = array_map('get_object_vars', $jasa_by_penjamin);
 ?>
@@ -148,7 +149,7 @@ $jasa_by_penjamin = array_map('get_object_vars', $jasa_by_penjamin);
         ],
     ])
 !!}
-<p>DETAIL POINT PELAYANAN EKSEKUTIF</p>
+<h2>DETAIL POINT PELAYANAN EKSEKUTIF</h2>
 <?php
     $pelayanan = json_decode(json_encode($pelayanan),true);
     $eksekutif = array_values(array_filter($pelayanan, function ($var){
@@ -158,7 +159,38 @@ $jasa_by_penjamin = array_map('get_object_vars', $jasa_by_penjamin);
         return ($var['komponen_id'] == 7);
     }));
 ?>
-<table class="table table-long">
+@foreach ($eksekutif as $key => $value)
+@php $detail = json_decode($value['detail'], true); @endphp
+<div>
+    <h3>{{($key+1)}}. {{$value['klasifikasi_jasa']}}</h3>
+    {!!
+        Bootstrap::tableData($detail,["class" => "table table-long"],[
+            'NO' => [
+                'data'  => 'number'
+            ],
+            'KODE DATA' => [
+                'data'  => 'id_kunjungan'
+            ],
+            'TINDAKAN' => [
+                'data'  => 'tindakan'
+            ],
+            'TARIF' => [
+                'data'  => 'tarif',
+                'custom'    => function($a){
+                    return convert_currency2($a['tarif']);
+                }
+            ],
+            'PERCENTASE JASA' => [
+                'data'  => 'percentase'
+            ],
+            'SKOR'  => [
+                'data'      => 'skor'
+            ],
+        ])
+    !!}
+</div>
+@endforeach
+<!-- <table class="table table-long">
     <thead>
         <tr>
             <th>NO</th>
@@ -202,9 +234,40 @@ $jasa_by_penjamin = array_map('get_object_vars', $jasa_by_penjamin);
             echo $row;
         ?>
     </tbody>
-</table>
-<p>DETAIL POINT PELAYANAN NON EKSEKUTIF</p>
-<table class="table table-long">
+</table> -->
+<h3>DETAIL POINT PELAYANAN NON EKSEKUTIF</h3>
+@foreach ($nonEksekutif as $key => $value)
+@php $detail = json_decode($value['detail'], true); @endphp
+<div>
+    <h3>{{($key+1)}}. {{$value['klasifikasi_jasa']}}</h3>
+    {!!
+        Bootstrap::tableData($detail,["class" => "table table-long"],[
+            'NO' => [
+                'data'  => 'number'
+            ],
+            'KODE DATA' => [
+                'data'  => 'id_kunjungan'
+            ],
+            'TINDAKAN' => [
+                'data'  => 'tindakan'
+            ],
+            'TARIF' => [
+                'data'  => 'tarif',
+                'custom'    => function($a){
+                    return convert_currency2($a['tarif']);
+                }
+            ],
+            'PERCENTASE JASA' => [
+                'data'  => 'percentase'
+            ],
+            'SKOR'  => [
+                'data'      => 'skor'
+            ],
+        ])
+    !!}
+</div>
+@endforeach
+<!-- <table class="table table-long">
     <thead>
         <tr>
             <th>NO</th>
@@ -251,5 +314,5 @@ $jasa_by_penjamin = array_map('get_object_vars', $jasa_by_penjamin);
             echo $row;
         ?>
     </tbody>
-</table>
+</table> -->
 @endif
