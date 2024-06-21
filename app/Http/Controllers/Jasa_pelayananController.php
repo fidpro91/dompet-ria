@@ -674,7 +674,7 @@ class Jasa_pelayananController extends Controller
                 $dataJasa[$key]['detail'] = $details;
                 $dataJasa[$key]['total_jasa'] = $totalJasa;
             }elseif ($value->type_jasa == 3) {
-                $data = Skor_pegawai::from("skor_pegawai as sp")
+                /* $data = Skor_pegawai::from("skor_pegawai as sp")
                         ->join("employee as e","e.emp_id","=","sp.emp_id")
                         ->join("proporsi_jasa_individu as pi","e.emp_id","=","pi.employee_id")
                         ->groupBy(["e.emp_nip","e.emp_name","e.emp_id"])
@@ -704,6 +704,48 @@ class Jasa_pelayananController extends Controller
                         "id_skor"   => $v->id_skor
                     ];
                 }
+                $dataJasa[$key]['total_jasa'] = $totalJasa; */
+                // Mengambil data dan menghitung total skor dalam satu query
+                $data = DB::table('skor_pegawai as sp')
+                ->join('employee as e', 'e.emp_id', '=', 'sp.emp_id')
+                ->join('proporsi_jasa_individu as pi', 'e.emp_id', '=', 'pi.employee_id')
+                ->groupBy('e.emp_nip', 'e.emp_name', 'e.emp_id')
+                ->select([
+                    'e.emp_id',
+                    'e.emp_nip',
+                    'e.emp_name',
+                    DB::raw('SUM(coalesce(sp.skor_koreksi, sp.total_skor)) AS total_skor'),
+                    DB::raw('json_arrayagg(sp.id) AS id_skor')
+                ])
+                ->where([
+                    'prepare_remun_month' => $request->jaspel_bulan,
+                    'pi.jasa_bulan' => $request->jaspel_bulan,
+                    'sp.bulan_update' => $repoDownload->bulan_pelayanan,
+                    'pi.is_used' => 'f',
+                    'pi.komponen_id' => $value->id,
+                    'is_medis' => ''.($value->for_medis ?? 'f').'',
+                ])
+                ->get();
+
+                $totalSkor = $data->sum('total_skor');
+
+                $dataJasa[$key]['total_skor'] = $totalSkor;
+
+                $details = $data->map(function ($item) use ($totalSkor, $jasaAsal) {
+                $jasa = ($item->total_skor / $totalSkor) * $jasaAsal;
+                return [
+                    'emp_id' => $item->emp_id,
+                    'nip' => $item->emp_nip,
+                    'name' => $item->emp_name,
+                    'skor' => $item->total_skor,
+                    'jasa' => $jasa,
+                    'id_skor' => $item->id_skor
+                ];
+                });
+
+                $totalJasa = $details->sum('jasa');
+
+                $dataJasa[$key]['detail'] = $details->toArray();
                 $dataJasa[$key]['total_jasa'] = $totalJasa;
             }
         }
