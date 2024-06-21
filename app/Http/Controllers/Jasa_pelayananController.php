@@ -627,38 +627,51 @@ class Jasa_pelayananController extends Controller
                 }
                 $dataJasa[$key]['total_jasa'] = $totalJasa;
             }elseif ($value->type_jasa == 2) {
-                $data = DB::table("point_medis as pm")
-                        ->join("employee as e","e.emp_id","=","pm.employee_id")
-                        ->join("proporsi_jasa_individu as pi","e.emp_id","=","pi.employee_id")
-                        ->groupBy(["e.emp_no","e.emp_id","e.emp_name"])
-                        ->select(["e.emp_id","e.emp_nip","e.emp_no","e.emp_name",DB::raw('SUM((pm.skor/10000)) AS total_skor'),DB::raw('json_arrayagg(pm.id) AS id_tindakan')])
-                        ->whereRaw("(is_eksekutif = '0' or (is_eksekutif = '1' and jenis_tagihan='2'))")
-                        ->where([
-                            "repo_id"           => $request->repo_id,
-                            "pi.komponen_id"    => $value->id,
-                            "pm.is_usage"       => "f",
-                            "pi.is_used"        => "f",
-                            "pi.jasa_bulan"     => $request->jaspel_bulan
-                        ]);
-                /* $query = str_replace(array('?'), array('\'%s\''), $data->toSql());
-                $query = vsprintf($query, $data->getBindings());
-                print_r($query); */
-                $dataArray=$data->get()->toArray();
-                $totalSkor=array_sum(array_column($dataArray,'total_skor'));
-                $dataJasa[$key]["total_skor"] = $totalSkor;
-                $totalJasa=0;
-                foreach ($data->get() as $x => $v) {
-                    $jasa = $v->total_skor/$totalSkor*$jasaAsal;
-                    $dataJasa[$key]['detail'][$x] = [
-                        "emp_id"    => $v->emp_id,
-                        "nip"       => $v->emp_nip,
-                        "name"      => $v->emp_name,
-                        "skor"      => $v->total_skor,
-                        "jasa"      => $jasa,
-                        "id_tindakan"   => $v->id_tindakan
-                    ];
-                    $totalJasa += $jasa;
-                }
+                $totalSkor = 0;
+                $totalJasa = 0;
+                $details = [];
+                // Menghitung total skor sekaligus mengambil data dengan chunk
+                DB::table('point_medis as pm')
+                ->join('employee as e', 'e.emp_id', '=', 'pm.employee_id')
+                ->join('proporsi_jasa_individu as pi', 'e.emp_id', '=', 'pi.employee_id')
+                ->groupBy('e.emp_no', 'e.emp_id', 'e.emp_name')
+                ->select([
+                    'e.emp_id',
+                    'e.emp_nip',
+                    'e.emp_no',
+                    'e.emp_name',
+                    DB::raw('SUM(pm.skor / 10000) AS total_skor'),
+                    DB::raw('json_arrayagg(pm.id) AS id_tindakan')
+                ])
+                ->whereRaw("(is_eksekutif = '0' OR (is_eksekutif = '1' AND jenis_tagihan = '2'))")
+                ->where([
+                    'repo_id' => $request->repo_id,
+                    'pi.komponen_id' => $value->id,
+                    'pm.is_usage' => 'f',
+                    'pi.is_used' => 'f',
+                    'pi.jasa_bulan' => $request->jaspel_bulan
+                ])
+                ->orderBy('e.emp_id')
+                ->chunk(1000, function ($data) use (&$totalSkor, &$totalJasa, &$details, $jasaAsal) {
+                    $chunkTotalSkor = $data->sum('total_skor');
+                    $totalSkor += $chunkTotalSkor;
+
+                    $data->each(function ($item) use (&$totalJasa, &$details, $chunkTotalSkor, $jasaAsal, &$totalSkor) {
+                        $jasa = ($item->total_skor / $totalSkor) * $jasaAsal;
+                        $totalJasa += $jasa;
+                        $details[] = [
+                            'emp_id' => $item->emp_id,
+                            'nip' => $item->emp_nip,
+                            'name' => $item->emp_name,
+                            'skor' => $item->total_skor,
+                            'jasa' => $jasa,
+                            'id_tindakan' => $item->id_tindakan
+                        ];
+                    });
+                });
+
+                $dataJasa[$key]['total_skor'] = $totalSkor;
+                $dataJasa[$key]['detail'] = $details;
                 $dataJasa[$key]['total_jasa'] = $totalJasa;
             }elseif ($value->type_jasa == 3) {
                 $data = Skor_pegawai::from("skor_pegawai as sp")
@@ -716,10 +729,6 @@ class Jasa_pelayananController extends Controller
                     "pi.is_used"            => "f",
                     "pi.jasa_bulan"         => $request->jaspel_bulan
                 ]);
-        /* $query = str_replace(array('?'), array('\'%s\''), $data->toSql());
-        $query = vsprintf($query, $data->getBindings());
-        print_r($query);
-        die; */
         $dataEksekutif  = [];
         $totalEksekutif=0;
         foreach ($data->get() as $key => $value) {

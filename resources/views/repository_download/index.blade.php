@@ -1,14 +1,49 @@
 <?php
 use \fidpro\builder\Bootstrap;
+use \fidpro\builder\Widget;
+
+Widget::_init(["select2"]);
 ?>
 <div class="card border-0 shadow rounded" id="page_repository_download">
     <div class="card-body">
+        <div class="row">
+            <div class="col-3">
+                {!!
+                    Widget::select2("filter_penjamin",[
+                        "data" => [
+                            "model"     => "Ms_reff",
+                            "filter"    => [
+                                "reffcat_id"  => "5"
+                            ],
+                            "column"    => ["reff_code","reff_name"]
+                        ]
+                    ])->render("group","Penjamin")
+                !!}
+            </div>
+            <div class="col-3">
+                {!!
+                    Widget::datepicker("filter_bulan",[
+                        "format"		=>"mm-yyyy",
+                        "viewMode"		=> "year",
+                        "minViewMode"	=> "year",
+                        "autoclose"		=> true,
+                        "clearBtn"      => true
+                    ],[
+                        "readonly"      => true
+                    ])->render("group","Bulan Pelayanan")
+                !!}
+            </div>
+        </div>
         <div class="table-responsive">
             {{
                 Bootstrap::DataTable("table-data",[
                     "class" => "table table-hover"
                 ],[
                     "url"   => "repository_download/get_dataTable",
+                    "filter"    => [
+                        "penjamin_id"       => '$("#filter_penjamin").val()',
+                        "bulan_pelayanan"   => '$("#filter_bulan").val()'
+                    ],
                     "raw"   => [
                         '#'     => [
                             "data"      => "action", 
@@ -89,4 +124,10 @@ use \fidpro\builder\Bootstrap;
                 }
             })
     }
+
+    $(document).ready(()=>{
+        $("#filter_bulan, #filter_penjamin").on("change",function(){
+            tb_table_data.draw();
+        });
+    })
 </script>

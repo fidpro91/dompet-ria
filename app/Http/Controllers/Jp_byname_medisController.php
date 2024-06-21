@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\EditBynameJaspel;
 use Illuminate\Http\Request;
 use App\Models\Jp_byname_medis;
 use App\Models\Komponen_jasa_sistem;
@@ -199,12 +200,13 @@ class Jp_byname_medisController extends Controller
                 "jaspel_id"     => $jaspel_id,
                 "komponen_id"   => $komponen->id
         ])->get();
-        foreach ($byname as $key => $value) {
+        EditBynameJaspel::dispatch($byname,$totalSkor,$jaspelDetail->nominal);
+        /* foreach ($byname as $key => $value) {
             $nominalTerima = ($value->skor/$totalSkor)*$jaspelDetail->nominal;
             Jp_byname_medis::find($value->jp_medis_id)->update([
                 "nominal_terima"    => $nominalTerima
             ]);
-        }
+        } */
     }
 
     public function update(Request $request, Jp_byname_medis $jp_byname_medis)

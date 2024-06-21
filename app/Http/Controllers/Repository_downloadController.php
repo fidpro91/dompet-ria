@@ -8,6 +8,7 @@ use App\Models\Ms_reff;
 use App\Models\Point_medis;
 use Illuminate\Http\Request;
 use App\Models\Repository_download;
+use App\Models\Skor_pegawai;
 use Illuminate\Support\Facades\Validator;
 use DataTables;
 use fidpro\builder\Create;
@@ -51,6 +52,14 @@ class Repository_downloadController extends Controller
     public function get_dataTable(Request $request)
     {
         $data = Repository_download::with('hasCopy')
+                ->when($request->penjamin_id,function($query,$penjamin){
+                    return $query->whereNotNull('group_penjamin')
+                         ->where('group_penjamin', '!=', '')
+                         ->whereJsonContains('group_penjamin',$penjamin);
+                })
+                ->when($request->bulan_pelayanan,function($query,$bulan){
+                    return $query->where('bulan_pelayanan', $bulan);
+                })
                 ->select([
                     'id',
                     'download_date',
@@ -302,7 +311,14 @@ class Repository_downloadController extends Controller
             'is_usage'  => 'f'
         ])->delete();
 
-        Repository_download::find($id)->update([
+        $repoDownload = Repository_download::find($id);
+
+        Skor_pegawai::where("bulan_update",$repoDownload->bulan_pelayanan)->update([
+            "prepare_remun"         => 'f', 
+            "prepare_remun_month"   => NULL
+        ]);
+        
+        $repoDownload->update([
             "is_used"   => "t"
         ]);
 

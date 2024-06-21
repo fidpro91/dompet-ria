@@ -81,7 +81,10 @@ class Detail_tindakan_medisController extends Controller
 
     public function get_dataTable(Request $request)
     {
-        $data = Detail_tindakan_medis::select(['*']);
+        $data = Detail_tindakan_medis::select(['*'])
+                ->when($request->dokter_id,function($query,$dokter){
+                    return $query->where('id_dokter', $dokter);
+                });
 
         $data->where('repo_id',$request->repo_id);
 
