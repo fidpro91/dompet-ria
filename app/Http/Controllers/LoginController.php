@@ -66,6 +66,8 @@ class LoginController extends Controller
             print_r($dataEmp);
             die; */
             if (!$dataEmp) {
+                Auth::logout();
+                
                 return response()->json([
                     "code"      => 203,
                     "message"   => "Data pengguna belum termapping atau sudah tidak aktif"

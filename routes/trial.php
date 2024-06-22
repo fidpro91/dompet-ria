@@ -167,6 +167,14 @@ Route::get('/employee', function () {
     }
 });
 
+Route::get('/kirim-wa', function () {
+    $message = [
+        "message"   => "<b>xxx</b>.<br>Silahkan Klik link dibawah ini untuk mengetahui rincian perolehan jasa pelayanan anda. Link ini bersifat privasi dan tidak boleh dishare. Terima Kasih.<br><br><br>",
+        "number"    => "6285755555091"
+    ];
+    dd(Servant::send_wa("POST",$message));
+});
+
 Route::get('/pencairan_jasa', function () {
     $id=22;
     $ekseKutif = DB::select("
