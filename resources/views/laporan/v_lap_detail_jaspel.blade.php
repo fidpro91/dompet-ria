@@ -10,6 +10,11 @@ use fidpro\builder\Bootstrap;
     .table th {
         border: 1px solid black;
         font-weight: 100pt;
+        background-color: #f8f8f8;
+    }
+    .table th, .table td {
+        padding: 8px;
+        text-align: left;
     }
     .table td {
         padding: 5px;
@@ -32,6 +37,25 @@ use fidpro\builder\Bootstrap;
     .table-long {
         page-break-inside: avoid !important;
         padding-left: 30px !important;
+    }
+    .row-data {
+        border: 1px solid #ddd;
+        margin: 20px 0;
+    }
+    .row-header {
+        background-color: #f1f1f1;
+        padding: 10px;
+        font-weight: bold;
+        overflow: hidden;
+        margin-bottom: 10px;
+    }
+    .row-body {
+        padding: 10px;
+        padding-left: 30px;
+        overflow: hidden;
+    }
+    .subtotal-row {
+        font-weight: bold;
     }
 </style>
 <table width="100%">
@@ -117,201 +141,109 @@ use fidpro\builder\Bootstrap;
         <th class="text-right"><?= convert_currency2($totalBrutto - $totalPotongan) ?></th>
     </tr>
 </table>
-<h3>DETAIL SKOR INDIVIDU PEGAWAI</h3>
+
+<h3 style="margin-top: 30px; margin-bottom:30px">DETAIL SKOR INDIVIDU PEGAWAI</h3>
+
 {!!
-    Bootstrap::tableData($skorPegawai,["class" => "table"])
-!!}
-@if(Session::get('sesLogin')->is_medis == 't' || Session::get('sesLogin')->group_type == 1)
-<h3>JASA PELAYANAN BY PENJAMIN (BRUTTO)</h3>
-<?php
-$jasa_by_penjamin = array_map('get_object_vars', $jasa_by_penjamin);
-?>
-{!!
-    Bootstrap::tableData($jasa_by_penjamin,["class" => "table"],[
+    Bootstrap::tableData($skorPegawai,["class" => "table"],[
         'NO' => [
             'data'  => 'number'
         ],
-        'PELAYANAN' => [
-            'data'  => 'pelayanan'
+        'BULAN SKOR' => [
+            'data'  => 'bulan'
         ],
-        'NAMA PENJAMIN' => [
-            'data'  => 'nama_penjamin'
+        'SKOR INDIVIDU' => [
+            'data'  => 'skor'
         ],
-        'SKOR JASA'  => [
-            'data'      => 'skor_jasa'
-        ],
-        'JASA TUNAI'  => [
-            'data'      => 'jasa_tunai',
+        'NILAI BRUTTO (Rp)' => [
+            'data'  => 'nilai_brutto',
             'custom'    => function($a){
-                return convert_currency2($a['jasa_tunai']);
+                return convert_currency2($a['nilai_brutto']);
             }
         ],
+        'DETAIL SKORING' => [
+            'data'  => 'detail'
+        ]
     ])
 !!}
-<h3>DETAIL POINT PELAYANAN EKSEKUTIF</h3>
+@if(Session::get('sesLogin')->is_medis == 't' || Session::get('sesLogin')->group_type == 1)
+<h3 style="margin-top: 30px; margin-bottom:30px">DETAIL PEROLEHAN POINT PELAYANAN MEDIS</h3>
 <?php
-    $pelayanan = json_decode(json_encode($pelayanan),true);
-    $eksekutif = array_values(array_filter($pelayanan, function ($var){
-        return ($var['komponen_id'] == 9);
-    }));
-    $nonEksekutif = array_values(array_filter($pelayanan, function ($var){
-        return ($var['komponen_id'] == 7);
-    }));
+    $sheet = "";
+    foreach ($jasa_by_penjamin as $value) {
+        $rinci1 = json_decode($value->details);
+        $sheet2 = "";
+        foreach ($rinci1 as $key => $rs) {
+            $sheet3 = "";
+            $totalPoints = $subTotalBrutto = 0;
+            foreach ($rs->uraian_tindakan as $key1 => $row) {
+                $nilaiBrutto = (function () use($value, $row) {
+                    $nilai = 0;
+                    if (strpos($value->keterangan, "EKSEKUTIF") !== false) {
+                        $nilai = ($row->point*10000);
+                    } else {
+                        $nilai = ($row->point / $value->total_point) * $value->nominal;
+                    }
+                    return $nilai;
+                })();
+                $totalPoints += $row->point;
+                $subTotalBrutto += $nilaiBrutto;
+                $sheet3 .= "<tr>
+                    <td>".($key1 + 1)."</td>
+                    <td>$row->kodedata</td>
+                    <td>$row->tindakan</td>
+                    <td>$row->tarif</td>
+                    <td>$row->percentase</td>
+                    <td>$row->point</td>
+                    <td>".convert_currency2($nilaiBrutto)."</td>
+                </tr>";
+            }
+
+            $sheet3 .= "<tr class=\"subtotal-row\">
+                    <td></td>
+                    <td colspan=\"4\">SUB TOTAL</td>
+                    <td>$totalPoints</td>
+                    <td>".convert_currency2($subTotalBrutto)."</td>
+                </tr>";
+
+            $sheet2 .= "
+            <div class=\"row-data\">
+                <div class=\"row-header\">
+                    ".($key + 1).". $rs->klasifikasi_jasa
+                </div>
+                <div class=\"row-body\">
+                    <table class=\"table\">
+                        <tr>
+                            <th>NO</th>
+                            <th>KODEDATA</th>
+                            <th>NAMA TINDAKAN</th>
+                            <th>TARIF</th>
+                            <th>PERCENTASE JASA</th>
+                            <th>POINT</th>
+                            <th>NILAI BRUTTO</th>
+                        </tr>
+                        $sheet3
+                    </table>
+                </div>
+            </div>
+            ";
+        }
+        echo "<div class=\"row-data\">
+            <div class=\"row-header\">
+                <div style=\"float: left;\">
+                    <p>KETERANGAN BULAN PELAYANAN DAN PENJAMIN : </p>
+                    <p>$value->keterangan</p>
+                    <p>TOTAL NILAI BRUTTO (Rp) : ".convert_currency2($value->nominal)." </p>
+                </div>
+                <div style=\"float: right;\">
+                    <p>TOTAL POINT PELAYANAN : </p>
+                    <p>$value->total_point </p>
+                </div>
+            </div>
+            <div class=\"row-body\">
+                $sheet2
+            </div>
+        </div>";
+    }
 ?>
-@foreach ($eksekutif as $key => $value)
-@php $detail = json_decode($value['detail'], true); @endphp
-<div>
-    <h3>{{($key+1)}}. {{$value['klasifikasi_jasa']}}</h3>
-    {!!
-        Bootstrap::tableData($detail,["class" => "table table-long"],[
-            'NO' => [
-                'data'  => 'number'
-            ],
-            'KODE DATA' => [
-                'data'  => 'id_kunjungan'
-            ],
-            'TINDAKAN' => [
-                'data'  => 'tindakan'
-            ],
-            'TARIF' => [
-                'data'  => 'tarif',
-                'custom'    => function($a){
-                    return convert_currency2($a['tarif']);
-                }
-            ],
-            'PERCENTASE JASA' => [
-                'data'  => 'percentase'
-            ],
-            'SKOR'  => [
-                'data'      => 'skor'
-            ],
-        ])
-    !!}
-</div>
-@endforeach
-<!-- <table class="table table-long">
-    <thead>
-        <tr>
-            <th>NO</th>
-            <th width="70%">KLASIFIKASI</th>
-            <th>TOTAL SKOR</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php
-            $row="";
-            foreach ($eksekutif as $key => $value) {
-                $detail = json_decode($value['detail'],true);
-                $row .= "
-                <tr>
-                    <th>".($key+1)."</th>
-                    <th class=\"text-left\">".$value['klasifikasi_jasa']."</th>
-                    <th class=\"text-right\">".$value['total_skor']."</th>
-                </tr>
-                ";
-                $row .= "
-                <tr>
-                    <th></th>
-                    <th colspan=\"2\">
-                    ".Bootstrap::tableData($detail,["class" => "table table-long"],[
-                        'NO' => [
-                            'data'  => 'number'
-                        ],
-                        'ID KUNJUNGAN' => [
-                            'data'  => 'id_kunjungan'
-                        ],
-                        'TINDAKAN' => [
-                            'data'  => 'tindakan'
-                        ],
-                        'SKOR'  => [
-                            'data'      => 'skor'
-                        ],
-                    ])."
-                    </th>
-                </tr>";
-            }
-            echo $row;
-        ?>
-    </tbody>
-</table> -->
-<h3>DETAIL POINT PELAYANAN NON EKSEKUTIF</h3>
-@foreach ($nonEksekutif as $key => $value)
-@php $detail = json_decode($value['detail'], true); @endphp
-<div>
-    <h3>{{($key+1)}}. {{$value['klasifikasi_jasa']}}</h3>
-    {!!
-        Bootstrap::tableData($detail,["class" => "table table-long"],[
-            'NO' => [
-                'data'  => 'number'
-            ],
-            'KODE DATA' => [
-                'data'  => 'id_kunjungan'
-            ],
-            'TINDAKAN' => [
-                'data'  => 'tindakan'
-            ],
-            'TARIF' => [
-                'data'  => 'tarif',
-                'custom'    => function($a){
-                    return convert_currency2($a['tarif']);
-                }
-            ],
-            'PERCENTASE JASA' => [
-                'data'  => 'percentase'
-            ],
-            'SKOR'  => [
-                'data'      => 'skor'
-            ],
-        ])
-    !!}
-</div>
-@endforeach
-<!-- <table class="table table-long">
-    <thead>
-        <tr>
-            <th>NO</th>
-            <th width="70%">KLASIFIKASI</th>
-            <th>TOTAL SKOR</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php
-            $row="";
-            foreach ($nonEksekutif as $key => $value) {
-                $detail = json_decode($value['detail'],true);
-                $row .= "
-                <tr>
-                    <th>".($key+1)."</th>
-                    <th class=\"text-left\">".$value['klasifikasi_jasa']."</th>
-                    <th class=\"text-right\">".$value['total_skor']."</th>
-                </tr>
-                ";
-                $row .= "
-                <tr>
-                    <th></th>
-                    <th colspan=\"2\">
-                    ".Bootstrap::tableData($detail,["class" => "table table-long"],[
-                        'NO' => [
-                            'data'  => 'number'
-                        ],
-                        'ID KUNJUNGAN' => [
-                            'data'  => 'id_kunjungan'
-                        ],
-                        'TINDAKAN' => [
-                            'data'  => 'tindakan'
-                        ],
-                        'SKOR'  => [
-                            'data'      => 'skor',
-                            'custom'    => function($a){
-                                return ($a['skor']/10000);
-                            }
-                        ],
-                    ])."
-                    </th>
-                </tr>";
-            }
-            echo $row;
-        ?>
-    </tbody>
-</table> -->
 @endif

@@ -101,34 +101,17 @@ class Rekap_jaspelController extends Controller
                             ->leftJoin("skor_pegawai as sp","sp.id","=","js.skor_id")
                             ->leftJoin("detail_skor_pegawai as dp","dp.skor_id","=","sp.id")
                             ->selectRaw("
-                                sp.bulan_update as bulan,jm.skor,GROUP_CONCAT(DISTINCT concat(dp.detail_skor,' (',dp.skor,')') SEPARATOR '<br>')as detail
+                                sp.bulan_update as bulan,jm.skor,jm.nominal_terima as nilai_brutto,GROUP_CONCAT(DISTINCT concat(dp.detail_skor,' (',dp.skor,')') SEPARATOR '<br>')as detail
                             ")
-                            ->groupBy(["sp.bulan_update","jm.skor"])
+                            ->groupBy(["sp.bulan_update","jm.skor","jm.nominal_terima"])
                             ->where([
                                 "jp.id_cair"    => $idHeader->id_cair_header,
                                 "jm.emp_id"     => $emp_id,
                                 "kj.type_jasa"  => 3
                             ])
-                            ->get();
+                            ->get()->toArray();
 
-        $data['pelayanan'] = DB::table("jp_byname_medis as jm")
-                            ->join("jasa_pelayanan as jp","jp.jaspel_id","=","jm.jaspel_id")
-                            ->join("point_medis as pm","pm.jp_medis_id","=","jm.jp_medis_id")
-                            ->join("detail_tindakan_medis as dm","dm.tindakan_id","=","pm.id_tindakan")
-                            ->selectRaw("
-                                jm.komponen_id,klasifikasi_jasa,sum(pm.skor) as total_skor,
-                                json_arrayagg(
-                                    json_object('id_kunjungan',dm.visit_id,'tindakan', dm.nama_tindakan,'skor', dm.skor_jasa,'tarif', dm.tarif_tindakan,'percentase', dm.percentase_jasa)
-                                )detail
-                            ")
-                            ->groupBy(["dm.klasifikasi_jasa","jm.komponen_id"])
-                            ->where([
-                                "jp.id_cair"    => $idHeader->id_cair_header,
-                                "jm.emp_id"     => $emp_id
-                            ])
-                            ->get();
-
-        $data['jasa_by_penjamin'] = DB::select("
+        /* $data['jasa_by_penjamin'] = DB::select("
             SELECT x.nama_komponen as pelayanan,x.nama_penjamin,x.skor_jasa,(x.skor_jasa/x.skor*x.nominal_terima)jasa_tunai FROM (
                 SELECT jm.komponen_id,ks.nama_komponen,concat(mr.reff_name,' BULAN ',rd.bulan_pelayanan) as nama_penjamin,jm.skor,jm.nominal_terima,
                 sum(IF(jm.komponen_id = 9,pm.skor,pm.skor/10000))skor_jasa
@@ -142,7 +125,48 @@ class Rekap_jaspelController extends Controller
                 WHERE jm.emp_id = '$emp_id' AND jp.id_cair = $idHeader->id_cair_header
                 GROUP BY rd.bulan_pelayanan,jm.komponen_id,ks.nama_komponen,mr.reff_name,jm.skor,jm.nominal_terima
                 ORDER BY rd.bulan_pelayanan
-            )x");
+            )x"); */
+        $data['jasa_by_penjamin'] = DB::select("
+                SELECT 
+                    nama_komponen AS keterangan,
+                    skor AS total_point,
+                    nominal_terima AS nominal,
+                    JSON_ARRAYAGG(
+                        JSON_OBJECT(
+                            'klasifikasi_jasa', klasifikasi_jasa,
+                            'uraian_tindakan', group_tindakan
+                        )
+                    ) AS details
+                FROM (
+                    SELECT 
+                        concat(ks.nama_komponen,' (',jp.keterangan,')') nama_komponen,
+                        jm.skor,
+                        jm.nominal_terima,
+                        kj.klasifikasi_jasa,
+                        JSON_ARRAYAGG(
+                            JSON_OBJECT(
+                                'kodedata', dm.visit_id,
+                                'tindakan', dm.nama_tindakan,
+                                'tarif', dm.tarif_tindakan,
+                                'percentase', dm.percentase_jasa,
+                                'point', (dm.skor_jasa/10000)
+                            )
+                        ) AS group_tindakan
+                    FROM 
+                        jp_byname_medis jm
+                        JOIN jasa_pelayanan jp ON jp.jaspel_id = jm.jaspel_id
+                        JOIN point_medis pm ON jm.jp_medis_id = pm.jp_medis_id
+                        JOIN detail_tindakan_medis dm ON pm.id_tindakan = dm.tindakan_id
+                        JOIN klasifikasi_jasa kj ON kj.id_klasifikasi_jasa = dm.id_klasifikasi_jasa
+                        JOIN komponen_jasa_sistem ks ON ks.id = jm.komponen_id
+                    WHERE 
+                        jm.emp_id = '$emp_id' AND jp.id_cair = $idHeader->id_cair_header
+                    GROUP BY 
+                        jp.keterangan, ks.nama_komponen, jm.skor, jm.nominal_terima, kj.klasifikasi_jasa
+                ) AS subquery
+                GROUP BY 
+                    nama_komponen, skor, nominal_terima;
+            ");
 
         return $data;
     }

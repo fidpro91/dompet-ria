@@ -18,6 +18,7 @@
         }
     </style>
     @include('templates.components.javascript')
+    <script src="{{asset('assets/button-loading.js')}}"></script>
 </head>
 
 <body class="menubar-dark">

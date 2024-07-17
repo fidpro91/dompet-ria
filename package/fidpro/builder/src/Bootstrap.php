@@ -76,7 +76,7 @@ class Bootstrap
             $tbody .= "<tr>\n";
             if ($column) {
                 if (is_object($val)) {
-                    $val = $val->toArray();
+                    $val = get_object_vars($val);
                 }
                 foreach ($column as $row) {
                     if ($row['data'] == 'number') {
