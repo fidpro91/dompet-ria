@@ -192,7 +192,7 @@ use fidpro\builder\Bootstrap;
                     <td>".($key1 + 1)."</td>
                     <td>$row->kodedata</td>
                     <td>$row->tindakan</td>
-                    <td>$row->tarif</td>
+                    <td>".convert_currency2($row->tarif)."</td>
                     <td>$row->percentase</td>
                     <td>$row->point</td>
                     <td>".convert_currency2($nilaiBrutto)."</td>
