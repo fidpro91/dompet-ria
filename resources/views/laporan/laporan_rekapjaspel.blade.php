@@ -27,7 +27,7 @@ Widget::_init(["datepicker","select2"]);
                         "value"         => date('m-Y')
                     ])->render("group","Bulan Pembagian Jaspel")
                 !!}
-                @if(Session::get('sesLogin')->group_type == 1)
+                @if(in_array(Session::get('sesLogin')->group_type, [1, 8]))
                 {!! 
                     Widget::select2("emp_id",[
                         "data" => [

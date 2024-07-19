@@ -166,7 +166,7 @@ use fidpro\builder\Bootstrap;
         ]
     ])
 !!}
-@if(Session::get('sesLogin')->is_medis == 't' || Session::get('sesLogin')->group_type == 1)
+@if($profil->is_medis == 't')
 <h3 style="margin-top: 30px; margin-bottom:30px">DETAIL PEROLEHAN POINT PELAYANAN MEDIS</h3>
 <?php
     $sheet = "";
