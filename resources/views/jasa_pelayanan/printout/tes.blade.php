@@ -1,5 +1,5 @@
 <h1 align="center">
-    <b>LAPORAN REKAPITULASI  <?=$data['header'][0]->keterangan?><br>
+    <b>LAPORAN REKAPITULASI  <?=str_replace('&','Dan',$data['header'][0]->keterangan)?><br>
     RSUD IBNU SINA KABUPATEN GRESIK</b><br>
     <small>Bulan <?=get_namaBulan($data['header'][0]->jaspel_bulan)?> Tahun <?=$data['header'][0]->jaspel_tahun?></small>
 </h1>

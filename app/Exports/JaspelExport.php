@@ -43,7 +43,6 @@ class JaspelExport implements FromView
         )x
         GROUP BY x.nama_komponen,x.kode_komponen
         ORDER BY x.kode_komponen");
-
         return view('jasa_pelayanan.printout.tes', [
             'data' => $data
         ]);
