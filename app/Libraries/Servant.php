@@ -4,7 +4,9 @@ namespace App\Libraries;
 use App\Models\Log_messager;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
- 
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+
 class Servant
 {
     public static $apiKeyWa = '8OUgqrwhsyUlCbz4GEPTVyBDTpHUNb08';
@@ -88,5 +90,76 @@ class Servant
             "response"  => json_decode($result,true)
         ];
         return $resp;
+    }
+
+    public static function sendMessage()
+    {
+        $client = new Client();
+        $url = 'https://chat-service.qontak.com/oauth/token'; // Ganti dengan URL API yang benar
+        
+        $data = [
+            "to_number" => "+6285755555091",
+            "to_name" => "Ichwan R",
+            "message_template_id" => "1e011475-6318-42ff-8fb1-0797f61ccec6",
+            "channel_integration_id" => "141d140b-813e-4df5-99a3-557e0322d831",
+            "language" => [
+                "code" => "id"
+            ],
+            "parameters" => [
+                "body" => [
+                    [
+                        "key" => "1",
+                        "value" => "12345",
+                        "value_text" => "12345"
+                    ]
+                ],
+                "buttons" => [
+                    [
+                        "index" => "0",
+                        "type" => "url",
+                        "value" => "12345"
+                    ]
+                ]
+            ]
+        ];
+
+        //auth
+        $auth = [
+            "username"          => "rsudibnusina.mediamarketing@gmail.com",
+            "password"          => "@Marketing_09",
+            "grant_type"        => "password",
+            "client_id"         => "RRrn6uIxalR_QaHFlcKOqbjHMG63elEdPTair9B9YdY",
+            "client_secret"     => "Sa8IGIh_HpVK1ZLAF0iFf7jU760osaUNV659pBIZR00"
+        ];
+
+        $response = $client->request('POST', $url, [
+            'headers' => [
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ],
+            'json' => $auth
+        ]);
+        $body = $response->getBody();
+        $content = json_decode($body);
+        $token = $content->access_token;
+
+        try {
+            $url = "https://chat-service.qontak.com/api/open/v1/broadcasts/whatsapp/direct";
+            $response = $client->request('POST', $url, [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $token, // Ganti dengan Bearer token yang benar
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ],
+                'json' => $data
+            ]);
+
+            $body = $response->getBody();
+            $content = json_decode($body, true);
+            dd($content);
+            return $content;
+        } catch (RequestException $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Libraries\Qontak;
 use App\Libraries\Servant;
 use App\Models\Log_messager;
 use Illuminate\Http\Request;
@@ -124,19 +125,8 @@ class LoginController extends Controller
                        ->where("us.email",$data['email'])->first();
             Session::put('sesLogin',$dataEmp);
 
-            $otpCode = rand(100000, 999999);
-            $message = [
-                "message"   => "Kode OTP anda : $otpCode",
-                "number"    => $dataEmp->phone
-            ];
-            $otp = Servant::send_wa("POST",$message);
-            Log_messager::create([
-                'param'             => $otp["param"],
-                'kode_otp'          => $otpCode,
-                'phone_number'      => $dataEmp->phone,
-                'message_status'    => 2,
-                'message_type'      => 1,
-            ]);
+            Qontak::sendOTP($dataEmp->phone,$dataEmp->emp_name);
+            
             $resp = [
                 "code"      => 200,
                 "message"   => "ok",
