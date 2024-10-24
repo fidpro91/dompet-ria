@@ -116,6 +116,7 @@ class Proporsi_jasa_individuController extends Controller
                     'is_used'   =>  'f'
                 ];
             }
+            $input = array_map("unserialize", array_unique(array_map("serialize", $input)));
             DB::table("proporsi_jasa_individu")->insert($input);
             DB::commit();
             $resp = [
