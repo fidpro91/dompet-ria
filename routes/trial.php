@@ -175,6 +175,8 @@ Route::get('/kirim-wa', function () {
     return Qontak::sendOTP($nomor,$name);
 });
 
+Route::get('/prestige',"Api\PrestigeController@get_rekap_presensi_absen");
+
 Route::get('/pencairan_jasa', function () {
     $id=22;
     $ekseKutif = DB::select("
@@ -211,6 +213,7 @@ Route::get('/pencairan_jasa', function () {
     }, $medisNonEks));
             dd($percentase);
 });
+
 use App\Jobs\TesJob;
 Route::get('/tes_skor', function () {
     TesJob::dispatch();
