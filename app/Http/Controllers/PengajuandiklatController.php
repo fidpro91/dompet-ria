@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Libraries\Qontak;
 use App\Libraries\Servant;
 use Illuminate\Http\Request;
 use App\Models\Diklat;
@@ -26,7 +27,7 @@ class PengajuandiklatController extends Controller
 
     public function find(Request $request)
     {
-        $request["phone"]   = '62'.$request->phone;
+        $request["phone"]   = '+62'.$request->phone;
         $employee = Employee::from("employee as e")
                     ->join("ms_unit as mu","mu.unit_id","=","e.unit_id_kerja")
                     ->where([
@@ -71,12 +72,7 @@ class PengajuandiklatController extends Controller
 
     public function send_otp(Request $request)
     {
-        $request["phone"]   = '62'.$request->phone;
-        $otpCode = rand(100000, 999999);
-        $message = [
-            "message"   => "Kode OTP anda : $otpCode",
-            "number"    => $request->phone
-        ];
+        $request["phone"]   = '+62'.$request->phone;
         $logMessager = Log_messager::where([
             "phone_number"  => $request->phone,
             "message_type"  =>  1 
@@ -89,26 +85,11 @@ class PengajuandiklatController extends Controller
             ]);
         }
 
-        $otp = Servant::send_wa("POST",$message);
-        if ($otp["response"]["status"] != false) {
-            $resp = [
-                "code"      => 200,
-                "message"   => "Kode OTP berhasil dikirim, silahkankan cek whatsapp anda"
-            ];
-            //insert log_messager
-            Log_messager::create([
-                'param'             => $otp["param"],
-                'kode_otp'          => $otpCode,
-                'phone_number'      => $request->phone,
-                'message_status'    => 2,
-                'message_type'      => 1,
-            ]);
-        }else{
-            $resp = [
-                "code"      => 201,
-                "message"   => $otp["response"]["errors"]
-            ];
-        }
+        Qontak::sendOTP($request->phone,"Karyawan");
+        $resp = [
+            "code"      => 200,
+            "message"   => "Kode OTP berhasil dikirim, silahkankan cek whatsapp anda"
+        ];
         return response()->json($resp);
     }
 

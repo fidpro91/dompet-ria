@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EmployeeController;
+use App\Libraries\Qontak;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -168,11 +170,9 @@ Route::get('/employee', function () {
 });
 
 Route::get('/kirim-wa', function () {
-    $message = [
-        "message"   => "<b>xxx</b>.<br>Silahkan Klik link dibawah ini untuk mengetahui rincian perolehan jasa pelayanan anda. Link ini bersifat privasi dan tidak boleh dishare. Terima Kasih.<br><br><br>",
-        "number"    => "6285755555091"
-    ];
-    dd(Servant::send_wa("POST",$message));
+    $nomor = "+6285755555091";
+    $name = "Mufid";
+    return Qontak::sendOTP($nomor,$name);
 });
 
 Route::get('/pencairan_jasa', function () {
