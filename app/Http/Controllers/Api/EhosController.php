@@ -132,13 +132,6 @@ class EhosController extends Controller
     public function get_tindakan_medis_piutang($data=null){
         $where = "";
         $where .= " and (v.visit_end_date between '".$data['tanggalawal']." 00:00:00' and '".$data['tanggalakhir']." 23:59:59')";
-
-        /* if ($data->dokter) {
-            $where .= " AND e.kode_remun = '$data->dokter'";
-        }
-        if ($data->polivip=='t') {
-            $where .= " AND mu.is_vip = 't'";
-        } */
         $surety = $data['surety_id'];
         if (is_array($surety)) {
             $surety = implode(',',$surety);

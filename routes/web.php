@@ -265,3 +265,13 @@ Route::group(['middleware' => ['userUpload']], function (){
 });
             Route::get('potongan_jasa_medis/get_dataTable','Potongan_jasa_medisController@get_dataTable');
             Route::resource('potongan_jasa_medis', Potongan_jasa_medisController::class);
+            Route::get('table_rekap_absen/get_dataTable','table_rekap_absenController@get_dataTable');
+            Route::resource('table_rekap_absen', table_rekap_absenController::class);
+            Route::get('table_rekap_absen/get_dataTable','Table_rekap_absenController@get_dataTable');
+            Route::resource('table_rekap_absen', Table_rekap_absenController::class);
+            Route::get('table_rekap_absen/get_dataTable','Table_rekap_absenController@get_dataTable');
+            Route::resource('table_rekap_absen', Table_rekap_absenController::class);
+            Route::get('table_rekap_absen/get_dataTable','Table_rekap_absenController@get_dataTable');
+            Route::resource('table_rekap_absen', Table_rekap_absenController::class);
+            Route::get('table_rekap_absen/get_dataTable','Table_rekap_absenController@get_dataTable');
+            Route::resource('table_rekap_absen', Table_rekap_absenController::class);
