@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Table_rekap_absen extends Model
 {
@@ -18,4 +19,8 @@ class Table_rekap_absen extends Model
         'persentase_kehadiran',
         'keterangan',
     ];
+
+    public function employee() {
+      return $this->hasOne(Employee::class,"emp_no","nip");
+    }
 }

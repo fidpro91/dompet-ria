@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Api;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\Log_messager;
+use App\Models\Performa_index;
+use App\Models\Range_det_indikator;
 use App\Models\Table_rekap_absen;
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 
@@ -54,7 +57,7 @@ class PrestigeController extends Controller
             "tahun"             => "2024",
             "uker"              => "011",
             "satker"            => "042",
-            "bulan"             => "09",
+            "bulan"             => "10",
             "nip"               => ""
         ];
 
@@ -80,7 +83,11 @@ class PrestigeController extends Controller
             ];
             Table_rekap_absen::create($data);
         }
-        return $content;
+        $resp = [
+            "code"      => 200,
+            "message"   => "OK"
+        ];
+        return response()->json($resp);
     }
 
     public function get_absensi_pegawai(){
@@ -130,6 +137,43 @@ class PrestigeController extends Controller
         $body = $response->getBody();
         $content = json_decode($body);
         return $content;
+    }
+
+    public function insert_kedisiplinan(){
+        $data = Table_rekap_absen::where([
+            "bulan_update"  => "10",
+            "tahun_update"  => "2024",
+        ])->where("persentase_kehadiran",">","0")
+        ->get();
+
+        $input=[];
+        foreach ($data as $key => $value) {
+            //select grade
+            $grade = Range_det_indikator::where(function($query) use($value){
+                        $query->where("batas_bawah", "<=", intval($value->persentase_kehadiran))
+                              ->where("batas_atas", ">=", intval($value->persentase_kehadiran));
+                     })->first();
+            if ($grade && $value->employee) {
+                if ($value->employee->emp_active == 't') {
+                    $input[] = [
+                        'tanggal_perform'   => Carbon::now(),
+                        'emp_id'            => $value->employee->emp_id,
+                        'perform_id'        => 12,
+                        'perform_skor'      => $grade->det_indikator_id,
+                        'perform_deskripsi' => $grade->detil_indikator->detail_deskripsi,
+                        'expired_date'      => Carbon::now(),
+                        "created_at"        => Carbon::now(),
+                        'updated_at'        => Carbon::now()
+                    ];
+                }
+            }
+        }
+        Performa_index::insert($input);
+        $resp = [
+            "code"      => 200,
+            "message"   => "OK"
+        ];
+        return response()->json($resp);
     }
 
 }
