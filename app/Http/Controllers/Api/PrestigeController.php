@@ -11,6 +11,7 @@ use App\Models\Table_rekap_absen;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
+use Illuminate\Http\Request;
 
 class PrestigeController extends Controller
 {
@@ -49,15 +50,15 @@ class PrestigeController extends Controller
         return self::$token->access_token;
     }
 
-    public function get_rekap_presensi_absen(){
+    public function get_rekap_presensi_absen(Request $request){
         $url = env('PRESTIGE_URL').'api/list_rekap_absen';
         $client = new Client();
         $token = self::get_valid_token();
         $auth = [
-            "tahun"             => "2024",
+            "tahun"             => $request->tahun_update,
             "uker"              => "011",
             "satker"            => "042",
-            "bulan"             => "10",
+            "bulan"             => $request->bulan_update,
             "nip"               => ""
         ];
 
@@ -73,6 +74,10 @@ class PrestigeController extends Controller
 
         //insert into table rekap absensi
         $content = json_decode($body);
+        Table_rekap_absen::where([
+            "bulan_update"  => $request->bulan_update,
+            "tahun_update"  => $request->tahun_update
+        ])->delete();
         foreach ($content as $key => $value) {
             $data = [
                 'nip'                   => $value->nip,

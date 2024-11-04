@@ -175,7 +175,8 @@ Route::get('/kirim-wa', function () {
     return Qontak::sendOTP($nomor,$name);
 });
 
-Route::get('/prestige',"Api\PrestigeController@insert_kedisiplinan");
+Route::get('/prestige/rekap_absen',"Api\PrestigeController@get_rekap_presensi_absen");
+Route::get('/prestige/insert_kedisiplinan',"Api\PrestigeController@insert_kedisiplinan");
 
 Route::get('/pencairan_jasa', function () {
     $id=22;
