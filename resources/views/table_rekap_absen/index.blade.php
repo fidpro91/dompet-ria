@@ -6,8 +6,22 @@ use \fidpro\builder\Bootstrap;
 <div class="card border-0 shadow rounded" id="page_table_rekap_absen">
     <div class="card-header">
         {!!
-            Form::button("Tambah",[
+            Form::button("Tambah Manual",[
                 "class" => "btn btn-primary add-form",
+                "data-target" => "page_table_rekap_absen",
+                "data-url" => route("table_rekap_absen.create")
+            ])
+        !!}
+        {!!
+            Form::button("Get Data Prestige",[
+                "class" => "btn btn-purple",
+                "data-target" => "page_table_rekap_absen",
+                "data-url" => route("table_rekap_absen.create")
+            ])
+        !!}
+        {!!
+            Form::button("Insert Kedisiplinan",[
+                "class" => "btn btn-warning",
                 "data-target" => "page_table_rekap_absen",
                 "data-url" => route("table_rekap_absen.create")
             ])
