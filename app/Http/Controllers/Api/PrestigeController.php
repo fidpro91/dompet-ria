@@ -58,8 +58,8 @@ class PrestigeController extends Controller
         list($bulan,$tahun) = explode('-',$request->bulan_update);
         $auth = [
             "tahun"             => $tahun,
-            "uker"              => "011",
-            "satker"            => "042",
+            "uker"              => config("dompet.prestige.uker"),
+            "satker"            => config("dompet.prestige.satker"),
             "bulan"             => $bulan,
             "nip"               => ""
         ];
@@ -128,8 +128,8 @@ class PrestigeController extends Controller
             "tahun"             => "2024",
             "bulan"             => "08",
             "jenis"             => "all",
-            "uker"              => "011",
-            "satker"            => "042",
+            "uker"              => config("dompet.prestige.uker"),
+            "satker"            => config("dompet.prestige.satker"),
             "nip"               => "43776514"
         ];
 
