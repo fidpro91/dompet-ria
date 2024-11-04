@@ -54,11 +54,13 @@ class PrestigeController extends Controller
         $url = env('PRESTIGE_URL').'api/list_rekap_absen';
         $client = new Client();
         $token = self::get_valid_token();
+
+        list($bulan,$tahun) = explode('-',$request->bulan_update);
         $auth = [
-            "tahun"             => $request->tahun_update,
+            "tahun"             => $tahun,
             "uker"              => "011",
             "satker"            => "042",
-            "bulan"             => $request->bulan_update,
+            "bulan"             => $bulan,
             "nip"               => ""
         ];
 
