@@ -30,27 +30,42 @@ Widget::_init(["datepicker"]);
         })
     })
     function update_skor(){
-        $.ajax({
-        url: '{{ url("api/prestige/get_rekap_presensi_absen") }}', 
-        type: 'POST', 
-        dataType: 'json', 
-        contentType: 'application/json', 
-        data: JSON.stringify({
-            bulan_update: $("#bulan_update").val() 
-        }),
-        success: function(data) {
-            if (data.code == 200) {
-                Swal.fire("Sukses!", data.message, "success").then(() => {
-                    location.reload();
-                });
-            } else {
-                Swal.fire("Oopss...!!", data.message, "error"); 
+        Swal.fire({
+            title: 'Ambil Data Absen ?',           
+            type: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes'
+        }).then((result) => { 
+            if(result){
+                $.ajax({
+                     'beforeSend': function() {
+                            showLoading();
+                        },
+                        url: '{{ url("api/prestige/get_rekap_presensi_absen") }}', 
+                        type: 'POST', 
+                        dataType: 'json', 
+                        contentType: 'application/json', 
+                        data: JSON.stringify({
+                            bulan_update: $("#bulan_update").val() 
+                        }),
+                        success: function(data) {
+                            if (data.code == 200) {
+                                Swal.fire("Sukses!", data.message, "success").then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire("Oopss...!!", data.message, "error"); 
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            Swal.fire("Error!", "Terjadi kesalahan saat memproses permintaan.", "error");
+                        }
+                    });
             }
-        },
-        error: function(xhr, status, error) {
-            Swal.fire("Error!", "Terjadi kesalahan saat memproses permintaan.", "error");
-        }
-    });
+        });
+       
 
     }
 </script>
