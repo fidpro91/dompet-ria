@@ -2,6 +2,9 @@
 @section('content')
 <?php
 use \fidpro\builder\Bootstrap;
+use fidpro\builder\Widget;
+Widget::_init(["datepicker"]);
+
 ?>
 <div class="card border-0 shadow rounded" id="page_table_rekap_absen">
     <div class="card-header">
@@ -15,7 +18,8 @@ use \fidpro\builder\Bootstrap;
         {!!
             Form::button("Get Data Prestige",[
                 "class" => "btn btn-purple",
-                "data-target" => "page_table_rekap_absen",
+                "data-target" => "page_table_rekap_absen", 
+                "id" => "btn-prestige",               
                 "data-url" => route("table_rekap_absen.create")
             ])
         !!}
@@ -53,4 +57,23 @@ use \fidpro\builder\Bootstrap;
         </div>
     </div>
 </div>
+{{
+    Bootstrap::modal('modal_bridging', [
+        "title" => 'Update SKOR By Bridging',
+        "size" => "modal-lg",
+        "body" => [
+            "content"   => function(){
+                return view('table_rekap_absen.modal_bridging');
+            }
+        ]
+    ])
+}}
+
+<script>
+      $(document).ready(()=>{
+            $("#btn-prestige").click(()=>{
+            $("#modal_bridging").modal("show");
+        })
+    })
+</script>
 @endsection
