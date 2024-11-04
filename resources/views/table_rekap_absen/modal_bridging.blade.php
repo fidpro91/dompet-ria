@@ -7,7 +7,7 @@ Widget::_init(["datepicker"]);
     <div class="card-body">
        
         <div class="row">
-            <div class="col-sm-3">
+            <div class="col-sm-12">
                 {!! 
                     Widget::datepicker("bulan_update",[
                         "format"		=>"mm-yyyy",
@@ -19,10 +19,13 @@ Widget::_init(["datepicker"]);
                         "value"         => date('m-Y')
                     ])->render()
                 !!}
-            </div>
+            </div>            
+        </div>    
+
+    </div>
+    <div class="card-header text-center">
             <button class="btn btn-info" id="load-data">Tampilkan</button>
         </div>
-    </div>
 <script>
  $(document).ready(()=>{
     $("#load-data").click(()=>{

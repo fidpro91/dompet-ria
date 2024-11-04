@@ -62,7 +62,7 @@ Widget::_init(["datepicker"]);
                             "data" => "action", 
                             "name" => "action", 
                             "orderable" => "false", 
-                            "searchable" => "false"
+                            "searchable" => "false"                            
                         ],
                         'no'    => [
                             "data" => "DT_RowIndex",
@@ -70,6 +70,9 @@ Widget::_init(["datepicker"]);
                             "searchable" => "false"
                         ],
                         'nip','nama_pegawai','bulan_update','tahun_update','persentase_kehadiran','keterangan'
+                    ],
+                    "dataTable" => [
+                        "order" => "[[3,'ASC']]"
                     ]
                 ])
             }}
@@ -79,7 +82,7 @@ Widget::_init(["datepicker"]);
 {{
     Bootstrap::modal('modal_bridging', [
         "title" => 'Update SKOR By Bridging',
-        "size" => "modal-lg",
+        "size" => "modal-md",
         "body" => [
             "content"   => function(){
                 return view('table_rekap_absen.modal_bridging');
