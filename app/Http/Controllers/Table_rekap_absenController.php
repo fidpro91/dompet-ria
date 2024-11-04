@@ -40,6 +40,7 @@ class Table_rekap_absenController extends Controller
 
     public function get_dataTable(Request $request)
     {
+        List($bulan, $tahun) = explode('-', $request->bulan_prestige);
         $data = Table_rekap_absen::select(
             [
                 'id',
@@ -53,7 +54,8 @@ class Table_rekap_absenController extends Controller
                 'updated_at'
             ]
         );
-
+        $data->where("bulan_update",$bulan);
+        $data->where("tahun_update",$tahun);
         $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
             /* $button = Create::action("<i class=\"fas fa-edit\"></i>", [
                 "class"     => "btn btn-primary btn-xs",
@@ -164,5 +166,9 @@ class Table_rekap_absenController extends Controller
             'success' => true,
             'message' => 'Data Berhasil Dihapus!'
         ]);
+    }
+
+    public function prestige_update(Request $request){
+        dd($request->all());
     }
 }

@@ -275,3 +275,4 @@ Route::group(['middleware' => ['userUpload']], function (){
             Route::resource('table_rekap_absen', Table_rekap_absenController::class);
             Route::get('table_rekap_absen/get_dataTable','Table_rekap_absenController@get_dataTable');
             Route::resource('table_rekap_absen', Table_rekap_absenController::class);
+           
