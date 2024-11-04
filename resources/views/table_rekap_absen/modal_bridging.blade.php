@@ -31,21 +31,26 @@ Widget::_init(["datepicker"]);
     })
     function update_skor(){
         $.ajax({
-                    'data': {
-                        bulan_update: $("#bulan_update").val();
-                    },                   
-                    'dataType': 'json',
-                    'url'        : '{{url("api/prestige/get_rekap_presensi_absen")}}',
-                    'type'       : 'post',
-                    'success': function(data) {
-                        if (data.code == 200) {
-                            Swal.fire("Sukses!", data.message, "success").then(() => {
-                                location.reload();
-                            });
-                        } else {
-                            Swal.fire("Oopss...!!", data.message, "error");
-                        }
-                    }
+        url: '{{ url("api/prestige/get_rekap_presensi_absen") }}', 
+        type: 'POST', 
+        dataType: 'json', 
+        contentType: 'application/json', 
+        data: JSON.stringify({
+            bulan_update: $("#bulan_update").val() 
+        }),
+        success: function(data) {
+            if (data.code == 200) {
+                Swal.fire("Sukses!", data.message, "success").then(() => {
+                    location.reload();
                 });
+            } else {
+                Swal.fire("Oopss...!!", data.message, "error"); 
+            }
+        },
+        error: function(xhr, status, error) {
+            Swal.fire("Error!", "Terjadi kesalahan saat memproses permintaan.", "error");
+        }
+    });
+
     }
 </script>

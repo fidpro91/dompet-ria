@@ -165,4 +165,8 @@ class Table_rekap_absenController extends Controller
             'message' => 'Data Berhasil Dihapus!'
         ]);
     }
+
+    public function prestige_update(Request $request){
+        dd($request->all());
+    }
 }
