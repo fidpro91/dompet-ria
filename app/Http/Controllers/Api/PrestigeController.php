@@ -77,8 +77,8 @@ class PrestigeController extends Controller
         //insert into table rekap absensi
         $content = json_decode($body);
         Table_rekap_absen::where([
-            "bulan_update"  => $request->bulan_update,
-            "tahun_update"  => $request->tahun_update
+            "bulan_update"  => $bulan,
+            "tahun_update"  => $tahun
         ])->delete();
         foreach ($content as $key => $value) {
             $data = [
