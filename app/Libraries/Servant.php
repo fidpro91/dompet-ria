@@ -37,7 +37,8 @@ class Servant
                         "menu_status"	    => 't',
                         "ga.group_id"       => Auth::user()->group_id
                     ])
-                    ->join("group_access as ga","ga.menu_id","=","m.menu_id");
+                    ->join("group_access as ga","ga.menu_id","=","m.menu_id")
+                    ->orderBy("menu_code");
         $menux='';
         foreach ($datam->get() as $key => $value) {
             if ( DB::table('ms_menu')->where(["menu_parent_id"	=> $value->menu_id])->count() > 0) {

@@ -44,6 +44,7 @@ class Table_rekap_absenController extends Controller
             [
                 'id',
                 'nip',
+                'nama_pegawai',
                 'bulan_update',
                 'tahun_update',
                 'persentase_kehadiran',
@@ -54,15 +55,15 @@ class Table_rekap_absenController extends Controller
         );
 
         $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
-            $button = Create::action("<i class=\"fas fa-edit\"></i>", [
+            /* $button = Create::action("<i class=\"fas fa-edit\"></i>", [
                 "class"     => "btn btn-primary btn-xs",
                 "onclick"   => "set_edit(this)",
                 "data-url"  => route($this->route . ".edit", $data->id),
                 "ajax-url"  => route($this->route . '.update', $data->id),
                 "data-target"  => "page_table_rekap_absen"
-            ]);
+            ]); */
 
-            $button .= Create::action("<i class=\"fas fa-trash\"></i>", [
+            $button = Create::action("<i class=\"fas fa-trash\"></i>", [
                 "class"     => "btn btn-danger btn-xs",
                 "onclick"   => "delete_row(this)",
                 "x-token"   => csrf_token(),

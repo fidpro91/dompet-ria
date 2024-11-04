@@ -32,7 +32,7 @@ use \fidpro\builder\Bootstrap;
                             "orderable" => "false", 
                             "searchable" => "false"
                         ],
-                        'id','nip','bulan_update','tahun_update','persentase_kehadiran','keterangan','created_at','updated_at'
+                        'nip','nama_pegawai','bulan_update','tahun_update','persentase_kehadiran','keterangan'
                     ]
                 ])
             }}
