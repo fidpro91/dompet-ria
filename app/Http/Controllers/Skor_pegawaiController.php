@@ -170,7 +170,6 @@ class Skor_pegawaiController extends Controller
     public function save_skor()
     {
         $skor = Cache::get('skorPegawai');
-        
         // Array untuk menyimpan data skor pegawai dan detail skor pegawai
         $insertSkorPegawai = [];
         $insertDetailSkorPegawai = [];
@@ -182,7 +181,7 @@ class Skor_pegawaiController extends Controller
         array_map(function ($value) use (&$insertSkorPegawai, &$insertDetailSkorPegawai, &$deletedEmpIds) {
             $skoring = [
                 'basic_index'     => $value['dataSkor']['basic']['skor'],
-                'capacity_index'  => $value['dataSkor']['capacity']['skor'],
+                'capacity_index'  => ($value['dataSkor']['capacity']['skor'] + $value['dataSkor']['certificate']['skor']),
                 'emergency_index' => $value['dataSkor']['emergency']['skor'],
                 'unit_risk_index' => $value['dataSkor']['risk']['skor'],
                 'position_index'  => ($value['dataSkor']['position']['skor'] + $value['dataSkor']['tugas']['skor']),
