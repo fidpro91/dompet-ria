@@ -1,7 +1,7 @@
 <?php
 use fidpro\builder\Bootstrap;
 use fidpro\builder\Widget;
-Widget::_init(["datepicker"]);
+Widget::_init(["select2","datepicker"]);
 ?>
 
     <div class="card-body">
@@ -19,7 +19,21 @@ Widget::_init(["datepicker"]);
                         "value"         => date('m-Y')
                     ])->render()
                 !!}
-            </div>            
+            </div>    
+            <div class="col-sm-12">
+            {!!
+                Widget::select2("emp_nip",[
+                    "data" => [
+                        "model" => "Employee",
+                        "filter" => ["emp_active" => "t"],
+                        "column" => ["emp_nip","emp_name"]
+                    ],                    
+                    "extra" => [
+                        "required"  => true
+                    ]
+                ])->render("group","List Pegawai")
+            !!}
+            </div>           
         </div>    
 
     </div>
@@ -29,7 +43,7 @@ Widget::_init(["datepicker"]);
 <script>
  $(document).ready(()=>{
     $("#load-data").click(()=>{
-        update_skor();
+        update_skor();       
         })
     })
     function update_skor(){
@@ -51,7 +65,9 @@ Widget::_init(["datepicker"]);
                         dataType: 'json', 
                         contentType: 'application/json', 
                         data: JSON.stringify({
-                            bulan_update: $("#bulan_update").val() 
+                            bulan_update: $("#bulan_update").val(),
+                            nip : $("#emp_nip").val()
+                           
                         }),
                         success: function(data) {
                             if (data.code == 200) {
