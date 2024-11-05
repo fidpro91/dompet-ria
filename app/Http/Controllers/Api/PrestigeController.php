@@ -170,7 +170,7 @@ class PrestigeController extends Controller
                         'perform_id'        => 12,
                         'perform_skor'      => $grade->det_indikator_id,
                         'perform_deskripsi' => $grade->detil_indikator->detail_deskripsi,
-                        'expired_date'      => Carbon::now()->endOfMonth()->toDateString(),
+                        'expired_date'      => Carbon::create($tahun,$bulan)->endOfMonth()->toDateString(),
                         "created_at"        => Carbon::now(),
                         'updated_at'        => Carbon::now()
                     ];

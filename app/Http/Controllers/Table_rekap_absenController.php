@@ -56,15 +56,7 @@ class Table_rekap_absenController extends Controller
         );
         $data->where("bulan_update",$bulan);
         $data->where("tahun_update",$tahun);
-        $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
-            /* $button = Create::action("<i class=\"fas fa-edit\"></i>", [
-                "class"     => "btn btn-primary btn-xs",
-                "onclick"   => "set_edit(this)",
-                "data-url"  => route($this->route . ".edit", $data->id),
-                "ajax-url"  => route($this->route . '.update', $data->id),
-                "data-target"  => "page_table_rekap_absen"
-            ]); */
-
+        $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {           
             $button = Create::action("<i class=\"fas fa-trash\"></i>", [
                 "class"     => "btn btn-danger btn-xs",
                 "onclick"   => "delete_row(this)",
@@ -72,6 +64,9 @@ class Table_rekap_absenController extends Controller
                 "data-url"  => route($this->route . ".destroy", $data->id),
             ]);
             return $button;
+        })
+        ->editColumn('nama_pegawai', function ($data) {
+            return trim($data->nama_pegawai);
         })->rawColumns(['action']);
         return $datatables->make(true);
     }

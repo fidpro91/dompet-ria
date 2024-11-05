@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EmployeeController;
 use App\Libraries\Qontak;
+use Carbon\Carbon;
 
 /*
 |--------------------------------------------------------------------------
@@ -61,6 +62,7 @@ Route::get('slip_remun/{filepdf}', function ($filepdf) {
 })->where('filepdf', '.*');
 
 Route::get('/tes_package', function () {
+    dd(Carbon::create(2024, 02)->endOfMonth()->toDateString());
     $customKey = '@RSig2024';
     $link = Crypt::encryptString("1|35",$customKey);
     $link = "http://localhost:88/slip_remun/download/".$link;

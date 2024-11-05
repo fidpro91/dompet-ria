@@ -20,3 +20,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::post('prestige/get_rekap_presensi_absen','PrestigeController@get_rekap_presensi_absen');
+Route::post('prestige/insert_kedisiplinan','PrestigeController@insert_kedisiplinan');
