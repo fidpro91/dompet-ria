@@ -2,15 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Models\Log_messager;
 use App\Models\Performa_index;
 use App\Models\Range_det_indikator;
 use App\Models\Table_rekap_absen;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
 use Illuminate\Http\Request;
 
 class PrestigeController extends Controller
@@ -61,7 +58,7 @@ class PrestigeController extends Controller
             "uker"              => config("dompet.prestige.uker"),
             "satker"            => config("dompet.prestige.satker"),
             "bulan"             => $bulan,
-            "nip"               => ""
+            "nip"               => ($request->nip ?? "")
         ];
 
         $response = $client->request('POST', $url, [
@@ -146,11 +143,16 @@ class PrestigeController extends Controller
         return $content;
     }
 
-    public function insert_kedisiplinan(){
+    public function insert_kedisiplinan(Request $request){
+
+        list($bulan,$tahun) = explode('-',$request->bulan_update);
+
         $data = Table_rekap_absen::where([
-            "bulan_update"  => "10",
-            "tahun_update"  => "2024",
-        ])->where("persentase_kehadiran",">","0")
+            "bulan_update"  => $bulan,
+            "tahun_update"  => $tahun,
+        ])
+        ->when($request->nip, fn($query) => $query->where("nip", $request->nip))
+        ->where("persentase_kehadiran",">","0")
         ->get();
 
         $input=[];
@@ -175,11 +177,18 @@ class PrestigeController extends Controller
                 }
             }
         }
-        Performa_index::insert($input);
-        $resp = [
-            "code"      => 200,
-            "message"   => "OK"
-        ];
+        if ($input) {
+            Performa_index::insert($input);
+            $resp = [
+                "code"      => 200,
+                "message"   => "OK"
+            ];
+        }else {
+            $resp = [
+                "code"      => 202,
+                "message"   => "Data absensi tidak ditemukan"
+            ];
+        }
         return response()->json($resp);
     }
 
