@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Employee;
 use App\Models\Performa_index;
 use App\Models\Range_det_indikator;
 use App\Models\Table_rekap_absen;
@@ -178,6 +179,11 @@ class PrestigeController extends Controller
             }
         }
         if ($input) {
+            Performa_index::whereMonth("expired_date",$request->bulan_update)
+            ->when($request->nip, function ($query) use ($request) {
+                $employee = Employee::where("emp_no", $request->nip)->first();
+                $query->where("emp_id", $employee->emp_id);
+            })->delete();
             Performa_index::insert($input);
             $resp = [
                 "code"      => 200,
