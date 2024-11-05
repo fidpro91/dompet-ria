@@ -38,7 +38,7 @@ class HitungJaspel implements ShouldQueue
     {
         $komponen = Komponen_jasa_sistem::where("komponen_active","t")->get();
 
-        $jaspel = app("Jasa_pelayananController");
+        $jaspel = app(\App\Http\Controllers\Jasa_pelayananController::class);
         foreach ($komponen as $key => $value) {
             $jaspel->simpan_per_proporsi($this->jaspelId,$value->id);
         }
