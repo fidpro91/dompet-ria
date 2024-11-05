@@ -150,16 +150,10 @@ class EhosController extends Controller
         
         $ehos = DB::connection("ehos");
 		$result = $ehos->select("
-        select x.kode_remun,x.namapelaksana,x.klasifikasi_jasa,COALESCE(x.tarifnormal,0)tarif,
+        select x.kode_remun,x.namapelaksana,x.klasifikasi_jasa,COALESCE(NULLIF(x.tarifcomponen,0),x.tarifnormal)tarif,
         x.billing_qty,x.*,
-        CASE WHEN x.tarifcomponen > 0 then x.tarifcomponen
-            else
-            coalesce(x.percentase_eksekutif*x.tarifnormal*x.billing_qty,0)
-		end as skor_eksekutif,
-        CASE WHEN x.tarifcomponen > 0 then x.tarifcomponen
-            else
-            coalesce(x.percentase_non_eksekutif*x.tarifnormal*x.billing_qty,0)
-		end as skor_noneksekutif
+		(coalesce((x.percentase_eksekutif*COALESCE((COALESCE(NULLIF(x.tarifcomponen,0),x.tarifnormal)*x.billing_qty),0)),0))skor_eksekutif,
+        (coalesce((x.percentase_non_eksekutif*COALESCE((COALESCE(NULLIF(x.tarifcomponen,0),x.tarifnormal)*x.billing_qty),0)),0))skor_noneksekutif
             from (
                 SELECT e.kode_remun,concat(e.employee_ft,e.employee_name,e.employee_bt)namapelaksana,x.* FROM (
                     SELECT distinct
@@ -168,14 +162,13 @@ class EhosController extends Controller
                     v.visit_end_date,p.px_norm,p.px_name,mu.unit_id,mu.unit_name,bc.billing_id as billingcomp,
                     coalesce(COALESCE(bc.par_id,b.par_id),s.par_id) AS pelaksana,b.delegasi,
                     mb.bill_id,mb.bill_name,
-                    (b.billing_price * COALESCE(mc.comp_percent,0))tarifcomponen,b.billing_id,b.billing_price,
+                    (COALESCE(bc.billcomp_value,0)+COALESCE(bc.cito_value,0))tarifcomponen,b.billing_id,b.billing_price,
                     (b.billing_price+COALESCE(b.tarifcito_value,0))tarifnormal,b.billing_qty,b.tarifcito_value,
                     v.surety_id,
                     sur.surety_name,
                     'piutang' AS status_bayar,kj.* 
                     FROM yanmed.billing b
                     LEFT JOIN yanmed.billcomp bc ON b.billing_id = bc.billing_id  AND bc.par_type in (1,2)
-                    LEFT JOIN yanmed.ms_componen mc on bc.comp_id = mc.comp_id
                     JOIN yanmed.services s ON s.srv_id = b.srv_id
                     JOIN yanmed.visit v ON s.visit_id = v.visit_id
                     JOIN yanmed.ms_surety sur ON sur.surety_id = v.surety_id

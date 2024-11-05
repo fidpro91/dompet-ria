@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EmployeeController;
+use App\Jobs\HitungJaspel;
 use App\Libraries\Qontak;
 use Carbon\Carbon;
 
@@ -219,5 +220,5 @@ Route::get('/pencairan_jasa', function () {
 
 use App\Jobs\TesJob;
 Route::get('/tes_skor', function () {
-    TesJob::dispatch();
+    HitungJaspel::dispatch(210,82);
 });
