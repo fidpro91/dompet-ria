@@ -35,7 +35,7 @@ class Table_rekap_absenController extends Controller
     ];
     public function index()
     {
-        return $this->themes($this->folder . '.index', null, $this);
+        return $this->themes($this->folder . '.tab_rekap_absen', null, $this);
     }
 
     public function get_dataTable(Request $request)

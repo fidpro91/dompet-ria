@@ -1,5 +1,4 @@
-@extends('templates.layout')
-@section('content')
+
 <?php
 use \fidpro\builder\Bootstrap;
 use fidpro\builder\Widget;
@@ -29,6 +28,7 @@ Widget::_init(["datepicker"]);
                     Form::button("Insert Kedisiplinan",[
                         "class" => "btn btn-warning",
                         "data-target" => "page_table_rekap_absen",
+                        "id" => "btn-disiplin",
                         "data-url" => route("table_rekap_absen.create")
                     ])
                 !!} 
@@ -91,10 +91,26 @@ Widget::_init(["datepicker"]);
     ])
 }}
 
+{{
+    Bootstrap::modal('modal_kedisiplinan', [
+        "title" => 'Update Kedisiplinan Pegawai',
+        "size" => "modal-md",
+        "body" => [
+            "content"   => function(){
+                return view('table_rekap_absen.modal_kedisiplinan');
+            }
+        ]
+    ])
+}}
+
 <script>
       $(document).ready(()=>{
             $("#btn-prestige").click(()=>{
             $("#modal_bridging").modal("show");
+           
+        })
+        $("#btn-disiplin").click(()=>{
+            $("#modal_kedisiplinan").modal("show");
            
         })
         $("#filter_bulan").change(()=>{
@@ -102,4 +118,4 @@ Widget::_init(["datepicker"]);
         });
     })
 </script>
-@endsection
+

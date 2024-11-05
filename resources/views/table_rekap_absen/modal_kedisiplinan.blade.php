@@ -9,7 +9,7 @@ Widget::_init(["select2","datepicker"]);
         <div class="row">
             <div class="col-sm-12">
                 {!! 
-                    Widget::datepicker("bulan_update",[
+                    Widget::datepicker("filter-bulan",[
                         "format"		=>"mm-yyyy",
                         "viewMode"		=> "year",
                         "minViewMode"	=> "year",
@@ -22,7 +22,7 @@ Widget::_init(["select2","datepicker"]);
             </div>    
             <div class="col-sm-12">
             {!!
-                Widget::select2("emp_no",[
+                Widget::select2("nip",[
                     "data" => [
                         "model" => "Employee",
                         "filter" => ["emp_active" => "t"],
@@ -38,17 +38,17 @@ Widget::_init(["select2","datepicker"]);
 
     </div>
     <div class="card-header text-center">
-            <button class="btn btn-info" id="load-data">Tampilkan</button>
+            <button class="btn btn-info" id="get-disiplin">Tampilkan</button>
         </div>
 <script>
  $(document).ready(()=>{
-    $("#load-data").click(()=>{
-       update_skor();      
+    $("#get-disiplin").click(()=>{
+        update_disiplin();    
         })
     })
-    function update_skor(){
+    function update_disiplin(){
         Swal.fire({
-            title: 'Ambil Data Absen ?',           
+            title: 'Ambil Data Kedisiplinan ?',           
             type: 'question',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
@@ -60,13 +60,13 @@ Widget::_init(["select2","datepicker"]);
                      'beforeSend': function() {
                             showLoading();
                         },
-                        url: '{{ url("api/prestige/get_rekap_presensi_absen") }}', 
+                        url: '{{ url("api/prestige/insert_kedisiplinan") }}', 
                         type: 'POST', 
                         dataType: 'json', 
                         contentType: 'application/json', 
                         data: JSON.stringify({
-                            bulan_update: $("#bulan_update").val(),
-                            nip : $("#emp_no").val()
+                            bulan_update: $("#filter-bulan").val(),
+                            nip : $("#nip").val()
                            
                         }),
                         success: function(data) {
