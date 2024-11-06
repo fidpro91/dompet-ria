@@ -180,6 +180,7 @@ Route::get('/kirim-wa', function () {
 
 Route::get('/prestige/rekap_absen',"Api\PrestigeController@get_rekap_presensi_absen");
 Route::get('/prestige/insert_kedisiplinan',"Api\PrestigeController@insert_kedisiplinan");
+Route::get('/prestige/rekap_ijin',"Api\PrestigeController@get_ijin_pegawai");
 
 Route::get('/pencairan_jasa', function () {
     $id=22;

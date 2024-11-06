@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\Performa_index;
 use App\Models\Range_det_indikator;
+use App\Models\Rekap_ijin;
 use App\Models\Table_rekap_absen;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
@@ -124,11 +125,10 @@ class PrestigeController extends Controller
         $token = self::get_valid_token();
         $auth = [
             "tahun"             => "2024",
-            "bulan"             => "08",
             "jenis"             => "all",
             "uker"              => config("dompet.prestige.uker"),
             "satker"            => config("dompet.prestige.satker"),
-            "nip"               => "43776514"
+            "nip"               => ""
         ];
 
         $response = $client->request('POST', $url, [
@@ -140,8 +140,37 @@ class PrestigeController extends Controller
             'json' => $auth
         ]);
         $body = $response->getBody();
-        $content = json_decode($body);
-        return $content;
+        if (json_last_error() === JSON_ERROR_NONE) {
+            $content = json_decode($body);
+            //insert table rekap ijin
+            $input=[];
+            foreach ($content as $key => $value) {
+                $input[] = [
+                    'nip'              => $value->nip,
+                    'nama_pegawai'     => $value->nama,
+                    'jenis_ijin'       => $value->jenis,
+                    'tipe_ijin'        => $value->tipe_ijin,
+                    'tgl_mulai'        => $value->mulai,
+                    'tgl_selesai'      => $value->selesai,
+                    'lama_ijin'        => $value->tot_hari,
+                    'keterangan'       => $value->keterangan,
+                    'created_at'       => Carbon::now(),
+                    'updated_at'       => Carbon::now()
+                ];
+            }
+            
+            Rekap_ijin::insert($input);
+            $resp = [
+                "code"      => 200,
+                "message"   => "OK"
+            ];
+        }else {
+            $resp = [
+                "code"      => 202,
+                "message"   => "Error koneksi dengan prestige"
+            ];
+        }
+        return response()->json($resp);
     }
 
     public function insert_kedisiplinan(Request $request){
