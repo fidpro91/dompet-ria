@@ -608,8 +608,8 @@ class Jasa_pelayananController extends Controller
                         ->join("employee as e","e.emp_id","=","pi.employee_id")
                         ->where([
                             "pi.komponen_id"       => $value->id,
-                            "pi.jasa_bulan"     => $request->jaspel_bulan,
-                            "pi.is_used"        => 'f',
+                            "pi.jasa_bulan"        => $request->jaspel_bulan,
+                            "pi.is_used"           => 'f',
                         ]);
                 $penerima = $data->count();
                 $dataJasa[$key]["total_skor"] = $penerima;
@@ -718,12 +718,12 @@ class Jasa_pelayananController extends Controller
                     DB::raw('json_arrayagg(sp.id) AS id_skor')
                 ])
                 ->where([
-                    'prepare_remun_month' => $request->jaspel_bulan,
-                    'pi.jasa_bulan' => $request->jaspel_bulan,
-                    'sp.bulan_update' => $repoDownload->bulan_pelayanan,
-                    'pi.is_used' => 'f',
-                    'pi.komponen_id' => $value->id,
-                    'is_medis' => ''.($value->for_medis ?? 'f').'',
+                    'prepare_remun_month'   => $request->jaspel_bulan,
+                    'pi.jasa_bulan'         => $request->jaspel_bulan,
+                    'sp.bulan_update'       => $repoDownload->bulan_pelayanan,
+                    'pi.is_used'            => 'f',
+                    'pi.komponen_id'        => $value->id,
+                    'is_medis'              => ''.($value->for_medis ?? 'f').'',
                 ])
                 ->get();
 
