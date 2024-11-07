@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\JaspelExport;
+use App\Jobs\HitungJaspel;
 use App\Libraries\Servant;
 use App\Models\Detail_tindakan_medis;
 use App\Models\Employee;
@@ -306,7 +307,7 @@ class Jasa_pelayananController extends Controller
             'nominal_pendapatan'    =>  $input['nominal_pendapatan'],
             'percentase_jaspel'     =>  $input['percentase_jaspel'],
             'nominal_jaspel'        =>  $input['nominal_pembagian'],
-            "repo_id"               => $input["repo_id"]
+            "repo_id"               =>  $input["repo_id"]
         ])->first();
         if ($saved) {
             return response()->json([
@@ -410,6 +411,7 @@ class Jasa_pelayananController extends Controller
             ]);
 
             DB::commit();
+            HitungJaspel::dispatch($jaspelId,$input["repo_id"]);
             $resp = [
                 'success'   => true,
                 'message'   => 'Data Berhasil Disimpan!',

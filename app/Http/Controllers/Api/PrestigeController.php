@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Models\Log_messager;
+use App\Models\Employee;
 use App\Models\Performa_index;
 use App\Models\Range_det_indikator;
+use App\Models\Rekap_ijin;
 use App\Models\Table_rekap_absen;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
 use Illuminate\Http\Request;
 
 class PrestigeController extends Controller
@@ -61,7 +60,7 @@ class PrestigeController extends Controller
             "uker"              => config("dompet.prestige.uker"),
             "satker"            => config("dompet.prestige.satker"),
             "bulan"             => $bulan,
-            "nip"               => ""
+            "nip"               => ($request->nip ?? "")
         ];
 
         $response = $client->request('POST', $url, [
@@ -126,11 +125,10 @@ class PrestigeController extends Controller
         $token = self::get_valid_token();
         $auth = [
             "tahun"             => "2024",
-            "bulan"             => "08",
             "jenis"             => "all",
             "uker"              => config("dompet.prestige.uker"),
             "satker"            => config("dompet.prestige.satker"),
-            "nip"               => "43776514"
+            "nip"               => ""
         ];
 
         $response = $client->request('POST', $url, [
@@ -142,15 +140,49 @@ class PrestigeController extends Controller
             'json' => $auth
         ]);
         $body = $response->getBody();
-        $content = json_decode($body);
-        return $content;
+        if (json_last_error() === JSON_ERROR_NONE) {
+            $content = json_decode($body);
+            //insert table rekap ijin
+            $input=[];
+            foreach ($content as $key => $value) {
+                $input[] = [
+                    'nip'              => $value->nip,
+                    'nama_pegawai'     => $value->nama,
+                    'jenis_ijin'       => $value->jenis,
+                    'tipe_ijin'        => $value->tipe_ijin,
+                    'tgl_mulai'        => $value->mulai,
+                    'tgl_selesai'      => $value->selesai,
+                    'lama_ijin'        => $value->tot_hari,
+                    'keterangan'       => $value->keterangan,
+                    'created_at'       => Carbon::now(),
+                    'updated_at'       => Carbon::now()
+                ];
+            }
+            
+            Rekap_ijin::insert($input);
+            $resp = [
+                "code"      => 200,
+                "message"   => "OK"
+            ];
+        }else {
+            $resp = [
+                "code"      => 202,
+                "message"   => "Error koneksi dengan prestige"
+            ];
+        }
+        return response()->json($resp);
     }
 
-    public function insert_kedisiplinan(){
+    public function insert_kedisiplinan(Request $request){
+
+        list($bulan,$tahun) = explode('-',$request->bulan_update);
+
         $data = Table_rekap_absen::where([
-            "bulan_update"  => "10",
-            "tahun_update"  => "2024",
-        ])->where("persentase_kehadiran",">","0")
+            "bulan_update"  => $bulan,
+            "tahun_update"  => $tahun,
+        ])
+        ->when($request->nip, fn($query) => $query->where("nip", $request->nip))
+        ->where("persentase_kehadiran",">","0")
         ->get();
 
         $input=[];
@@ -168,18 +200,30 @@ class PrestigeController extends Controller
                         'perform_id'        => 12,
                         'perform_skor'      => $grade->det_indikator_id,
                         'perform_deskripsi' => $grade->detil_indikator->detail_deskripsi,
-                        'expired_date'      => Carbon::now()->endOfMonth()->toDateString(),
+                        'expired_date'      => Carbon::create($tahun,$bulan)->endOfMonth()->toDateString(),
                         "created_at"        => Carbon::now(),
                         'updated_at'        => Carbon::now()
                     ];
                 }
             }
         }
-        Performa_index::insert($input);
-        $resp = [
-            "code"      => 200,
-            "message"   => "OK"
-        ];
+        if ($input) {
+            Performa_index::whereMonth("expired_date",$request->bulan_update)
+            ->when($request->nip, function ($query) use ($request) {
+                $employee = Employee::where("emp_no", $request->nip)->first();
+                $query->where("emp_id", $employee->emp_id);
+            })->delete();
+            Performa_index::insert($input);
+            $resp = [
+                "code"      => 200,
+                "message"   => "OK"
+            ];
+        }else {
+            $resp = [
+                "code"      => 202,
+                "message"   => "Data absensi tidak ditemukan"
+            ];
+        }
         return response()->json($resp);
     }
 

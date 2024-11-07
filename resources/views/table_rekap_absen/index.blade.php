@@ -1,5 +1,4 @@
-@extends('templates.layout')
-@section('content')
+
 <?php
 use \fidpro\builder\Bootstrap;
 use fidpro\builder\Widget;
@@ -29,6 +28,7 @@ Widget::_init(["datepicker"]);
                     Form::button("Insert Kedisiplinan",[
                         "class" => "btn btn-warning",
                         "data-target" => "page_table_rekap_absen",
+                        "id" => "btn-disiplin",
                         "data-url" => route("table_rekap_absen.create")
                     ])
                 !!} 
@@ -62,7 +62,7 @@ Widget::_init(["datepicker"]);
                             "data" => "action", 
                             "name" => "action", 
                             "orderable" => "false", 
-                            "searchable" => "false"
+                            "searchable" => "false"                            
                         ],
                         'no'    => [
                             "data" => "DT_RowIndex",
@@ -70,6 +70,9 @@ Widget::_init(["datepicker"]);
                             "searchable" => "false"
                         ],
                         'nip','nama_pegawai','bulan_update','tahun_update','persentase_kehadiran','keterangan'
+                    ],
+                    "dataTable" => [
+                        "order" => "[[3,'ASC']]"
                     ]
                 ])
             }}
@@ -79,10 +82,22 @@ Widget::_init(["datepicker"]);
 {{
     Bootstrap::modal('modal_bridging', [
         "title" => 'Update SKOR By Bridging',
-        "size" => "modal-lg",
+        "size" => "modal-md",
         "body" => [
             "content"   => function(){
                 return view('table_rekap_absen.modal_bridging');
+            }
+        ]
+    ])
+}}
+
+{{
+    Bootstrap::modal('modal_kedisiplinan', [
+        "title" => 'Update Kedisiplinan Pegawai',
+        "size" => "modal-md",
+        "body" => [
+            "content"   => function(){
+                return view('table_rekap_absen.modal_kedisiplinan');
             }
         ]
     ])
@@ -94,9 +109,13 @@ Widget::_init(["datepicker"]);
             $("#modal_bridging").modal("show");
            
         })
+        $("#btn-disiplin").click(()=>{
+            $("#modal_kedisiplinan").modal("show");
+           
+        })
         $("#filter_bulan").change(()=>{
                 tb_table_prestige.draw();
         });
     })
 </script>
-@endsection
+

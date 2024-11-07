@@ -3,22 +3,26 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Table_rekap_absen;
+use App\Models\Rekap_ijin;
 use Illuminate\Support\Facades\Validator;
 use DataTables;
 use fidpro\builder\Create;
 
-class Table_rekap_absenController extends Controller
+class Rekap_ijinController extends Controller
 {
-    public $model   = "Table_rekap_absen";
-    public $folder  = "table_rekap_absen";
-    public $route   = "table_rekap_absen";
+    public $model   = "Rekap_ijin";
+    public $folder  = "rekap_ijin";
+    public $route   = "rekap_ijin";
 
     public $param = [
-        'nip'   =>  '',
-        'bulan_update'   =>  '',
-        'tahun_update'   =>  '',
-        'persentase_kehadiran'   =>  '',
+        'id'   =>  'required',
+        'nip'   =>  'required',
+        'nama_pegawai'   =>  'required',
+        'jenis_ijin'   =>  '',
+        'tipe_ijin'   =>  '',
+        'tgl_mulai'   =>  '',
+        'tgl_selesai'   =>  '',
+        'lama_ijin'   =>  '',
         'keterangan'   =>  '',
         'created_at'   =>  '',
         'updated_at'   =>  ''
@@ -26,55 +30,63 @@ class Table_rekap_absenController extends Controller
     public $defaultValue = [
         'id'   =>  '',
         'nip'   =>  '',
-        'bulan_update'   =>  '',
-        'tahun_update'   =>  '',
-        'persentase_kehadiran'   =>  '',
+        'nama_pegawai'   =>  '',
+        'jenis_ijin'   =>  '',
+        'tipe_ijin'   =>  '',
+        'tgl_mulai'   =>  '',
+        'tgl_selesai'   =>  '',
+        'lama_ijin'   =>  '',
         'keterangan'   =>  '',
         'created_at'   =>  '',
         'updated_at'   =>  ''
     ];
     public function index()
     {
-        return $this->themes($this->folder . '.tab_rekap_absen', null, $this);
+        return $this->themes($this->folder . '.index', null, $this);
     }
 
     public function get_dataTable(Request $request)
     {
-        List($bulan, $tahun) = explode('-', $request->bulan_prestige);
-        $data = Table_rekap_absen::select(
+        $data = Rekap_ijin::select(
             [
                 'id',
                 'nip',
                 'nama_pegawai',
-                'bulan_update',
-                'tahun_update',
-                'persentase_kehadiran',
+                'jenis_ijin',
+                'tipe_ijin',
+                'tgl_mulai',
+                'tgl_selesai',
+                'lama_ijin',
                 'keterangan',
                 'created_at',
                 'updated_at'
             ]
         );
-        $data->where("bulan_update",$bulan);
-        $data->where("tahun_update",$tahun);
-        $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {           
-            $button = Create::action("<i class=\"fas fa-trash\"></i>", [
+
+        $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
+            $button = Create::action("<i class=\"fas fa-edit\"></i>", [
+                "class"     => "btn btn-primary btn-xs",
+                "onclick"   => "set_edit(this)",
+                "data-url"  => route($this->route . ".edit", $data->id),
+                "ajax-url"  => route($this->route . '.update', $data->id),
+                "data-target"  => "page_rekap_ijin"
+            ]);
+
+            $button .= Create::action("<i class=\"fas fa-trash\"></i>", [
                 "class"     => "btn btn-danger btn-xs",
                 "onclick"   => "delete_row(this)",
                 "x-token"   => csrf_token(),
                 "data-url"  => route($this->route . ".destroy", $data->id),
             ]);
             return $button;
-        })
-        ->editColumn('nama_pegawai', function ($data) {
-            return trim($data->nama_pegawai);
         })->rawColumns(['action']);
         return $datatables->make(true);
     }
 
     public function create()
     {
-        $table_rekap_absen = (object)$this->defaultValue;
-        return view($this->folder . '.form', compact('table_rekap_absen'));
+        $rekap_ijin = (object)$this->defaultValue;
+        return view($this->folder . '.form', compact('rekap_ijin'));
     }
 
     public function store(Request $request)
@@ -87,7 +99,7 @@ class Table_rekap_absenController extends Controller
             ]);
         }
         try {
-            Table_rekap_absen::create($valid['data']);
+            Rekap_ijin::create($valid['data']);
             $resp = [
                 'success' => true,
                 'message' => 'Data Berhasil Disimpan!'
@@ -124,11 +136,11 @@ class Table_rekap_absenController extends Controller
         ];
     }
 
-    public function edit(Table_rekap_absen $table_rekap_absen)
+    public function edit(Rekap_ijin $rekap_ijin)
     {
-        return view($this->folder . '.form', compact('table_rekap_absen'));
+        return view($this->folder . '.form', compact('rekap_ijin'));
     }
-    public function update(Request $request, Table_rekap_absen $table_rekap_absen)
+    public function update(Request $request, Rekap_ijin $rekap_ijin)
     {
         $valid = $this->form_validasi($request->all());
         if ($valid['code'] != 200) {
@@ -138,7 +150,7 @@ class Table_rekap_absenController extends Controller
             ]);
         }
         try {
-            $data = Table_rekap_absen::findOrFail($table_rekap_absen->id);
+            $data = Rekap_ijin::findOrFail($rekap_ijin->id);
             $data->update($valid['data']);
             $resp = [
                 'success' => true,
@@ -155,15 +167,11 @@ class Table_rekap_absenController extends Controller
 
     public function destroy($id)
     {
-        $data = Table_rekap_absen::findOrFail($id);
+        $data = Rekap_ijin::findOrFail($id);
         $data->delete();
         return response()->json([
             'success' => true,
             'message' => 'Data Berhasil Dihapus!'
         ]);
-    }
-
-    public function prestige_update(Request $request){
-        dd($request->all());
     }
 }

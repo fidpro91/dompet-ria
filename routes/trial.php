@@ -7,7 +7,9 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EmployeeController;
+use App\Jobs\HitungJaspel;
 use App\Libraries\Qontak;
+use Carbon\Carbon;
 
 /*
 |--------------------------------------------------------------------------
@@ -61,6 +63,7 @@ Route::get('slip_remun/{filepdf}', function ($filepdf) {
 })->where('filepdf', '.*');
 
 Route::get('/tes_package', function () {
+    dd(Carbon::create(2024, 02)->endOfMonth()->toDateString());
     $customKey = '@RSig2024';
     $link = Crypt::encryptString("1|35",$customKey);
     $link = "http://localhost:88/slip_remun/download/".$link;
@@ -177,6 +180,7 @@ Route::get('/kirim-wa', function () {
 
 Route::get('/prestige/rekap_absen',"Api\PrestigeController@get_rekap_presensi_absen");
 Route::get('/prestige/insert_kedisiplinan',"Api\PrestigeController@insert_kedisiplinan");
+Route::get('/prestige/rekap_ijin',"Api\PrestigeController@get_ijin_pegawai");
 
 Route::get('/pencairan_jasa', function () {
     $id=22;
@@ -217,5 +221,5 @@ Route::get('/pencairan_jasa', function () {
 
 use App\Jobs\TesJob;
 Route::get('/tes_skor', function () {
-    TesJob::dispatch();
+    HitungJaspel::dispatch(210,82);
 });

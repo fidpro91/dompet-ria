@@ -161,3 +161,7 @@ Breadcrumbs::for("ms_classification", function (BreadcrumbTrail $trail) {
                 $trail->parent("home");
                 $trail->push("table_rekap_absen", route("table_rekap_absen.index"));
             });
+            Breadcrumbs::for("rekap_ijin", function (BreadcrumbTrail $trail) {
+                $trail->parent("home");
+                $trail->push("rekap_ijin", route("rekap_ijin.index"));
+            });

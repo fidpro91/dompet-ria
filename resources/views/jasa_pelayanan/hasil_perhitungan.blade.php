@@ -168,8 +168,9 @@ $allJasa=Cache::get("cacheJasaMerger");
                         'success': function(data) {
                             if (data.success) {
                                 Swal.fire("Sukses!", data.message, "success").then(() => {
-                                    jaspelId = data.response.jaspel_id;
-                                    sessionStorage.setItem('jaspelId', data.response.jaspel_id);
+                                    //jaspelId = data.response.jaspel_id;
+                                    //sessionStorage.setItem('jaspelId', data.response.jaspel_id);
+                                    location.href = '{{route("jasa_pelayanan.index")}}';
                                 });
                             }else{
                                 Swal.fire("Oopss...!!", data.message, "error");
