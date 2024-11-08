@@ -63,6 +63,8 @@ class Rekap_ijinController extends Controller
             ]
         );
 
+        $data->whereRaw("DATE_FORMAT(tgl_mulai, '%Y') = ?", [$request->tahun_update]);
+
         $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
             $button = Create::action("<i class=\"fas fa-edit\"></i>", [
                 "class"     => "btn btn-primary btn-xs",
