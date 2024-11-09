@@ -74,6 +74,9 @@ Widget::_init(["datepicker","daterangepicker"]);
                             "searchable" => "false"
                         ],
                         'nip','nama_pegawai','jenis_ijin','tipe_ijin','tgl_mulai','tgl_selesai','lama_ijin','keterangan'
+                    ],
+                    "dataTable" => [
+                        "order" => "[[3,'ASC']]"
                     ]
                 ])
             }}

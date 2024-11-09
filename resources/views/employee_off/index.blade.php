@@ -73,6 +73,9 @@ Widget::_init(["datepicker","daterangepicker"]);
                             ]
                         ],
                         'emp_no','emp_name','bulan_skor','periode','persentase_skor','keterangan'
+                    ],
+                    "dataTable" => [
+                        "order" => "[[3,'ASC']]"
                     ]
                 ])
             }}

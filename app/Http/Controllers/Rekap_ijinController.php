@@ -8,7 +8,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use DataTables;
 use fidpro\builder\Create;
-use Carbon\Carbon;
+
 
 class Rekap_ijinController extends Controller
 {
