@@ -10,13 +10,7 @@ Widget::_init(["datepicker","daterangepicker"]);
     <div class="card-header">
         <div class="row">
             <div class="col-md-8">
-            {!!
-                    Form::button("Tambah Manual",[
-                        "class" => "btn btn-primary add-form",
-                        "data-target" => "page_rekap_ijin",
-                        "data-url" => route("rekap_ijin.create")
-                    ])
-            !!}
+           
                 {!!
                     Form::button("Generate ijin Prestige",[
                         "class" => "btn btn-purple",                        

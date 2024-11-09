@@ -4,11 +4,13 @@
 use \fidpro\builder\Bootstrap;
 use \fidpro\builder\Widget;
 
-Widget::_init(["datepicker"]);
+Widget::_init(["datepicker","daterangepicker"]);
 ?>
 <div class="card border-0 shadow rounded" id="page_employee_off">
     <div class="card-header">
-        {!!
+        <div class="row">
+            <div class="col-md-9">
+            {!!
             Form::button("Tambah",[
                 "class" => "btn btn-primary add-form",
                 "data-target" => "page_employee_off",
@@ -21,14 +23,39 @@ Widget::_init(["datepicker"]);
                 "onclick"   => "update_skor()" 
             ])
         !!}
+            </div>
+            <div class="col-sm-3">
+                    {!! 
+                        Widget::datepicker("bulan_skor",[
+                            "format"		=>"mm-yyyy",
+                            "viewMode"		=> "months",
+                            "minViewMode"	=> "months",
+                            "autoclose"		=> true
+                        ],[
+                            "readonly"      => true,
+                            "value"         => date('m-Y')
+                        ])->render()
+                    !!}
+                </div> 
+        </div>
+       
     </div>
     <div class="card-body">
+    <div class="row">
+           
+            <div class="col-md-3">
+            {!! Widget::daterangePicker("periode_pegawai")->render("group","Periode Hari") !!}
+            </div>
+    </div>
         <div class="table-responsive">
             {{
                 Bootstrap::DataTable("table-data",[
                     "class" => "table table-hover"
                 ],[
                     "url"   => "employee_off/get_dataTable",
+                    "filter" => ["month_filter" => "$('#bulan_skor').val()",
+                                 "period" => "$('#periode_pegawai').val()"
+                                 ],
                     "raw"   => [
                         '#'     => [
                             "data" => "action", 
@@ -53,6 +80,12 @@ Widget::_init(["datepicker"]);
     </div>
 </div>
 <script>
+    $(document).ready(()=>{
+       
+        $("#bulan_skor,#periode_pegawai").change(()=>{
+            tb_table_data.draw();
+        });
+    })
     function update_skor() {
         Swal.fire({
             title: 'Masukkan Bulan Skor Pegawai',
