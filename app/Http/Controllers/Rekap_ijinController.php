@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Rekap_ijin;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use DataTables;
 use fidpro\builder\Create;
@@ -142,6 +143,7 @@ class Rekap_ijinController extends Controller
     {
         return view($this->folder . '.form', compact('rekap_ijin'));
     }
+
     public function update(Request $request, Rekap_ijin $rekap_ijin)
     {
         $valid = $this->form_validasi($request->all());
@@ -175,5 +177,110 @@ class Rekap_ijinController extends Controller
             'success' => true,
             'message' => 'Data Berhasil Dihapus!'
         ]);
+    }
+
+    public function calculateLeaveDays($startDate, $endDate)
+    {
+        $start  = Carbon::parse($startDate);
+        $end    = Carbon::parse($endDate);
+        $data = Rekap_ijin::where(function ($query) use ($start, $end) {
+                    $query->whereBetween('tgl_mulai', [$start, $end])
+                          ->orWhereBetween('tgl_selesai', [$start, $end])
+                          ->orWhere(function ($query) use ($start, $end) {
+                            $query->where('tgl_mulai', '<=', $start)
+                                    ->where('tgl_selesai', '>=', $end);
+                        });
+                })
+                ->where("lama_ijin",">=","6")
+                ->with('employee:emp_no,emp_id')
+                ->get();
+        if ($data) {
+            $dataResp=[];
+            foreach ($data as $key => $value) {
+                if ($value->employee->emp_id) {
+                    $start  = Carbon::parse($value->tgl_mulai);
+                    $end    = Carbon::parse($value->tgl_selesai);
+                    // Menentukan apakah cuti dalam bulan yang sama atau lintas bulan
+                    $leaveRatio = $this->calculateCrossMonthLeaveRatio($start, $end,$value->lama_ijin);
+    
+                    $dataResp[] = [
+                        "nip"               => $value->nip,
+                        "emp_id"            => $value->employee->emp_id,
+                        "nama_pegawai"      => $value->nama_pegawai,
+                        "alasan_cuti"       => $value->jenis_ijin.' - ('.$value->tipe_ijin.')',
+                        "tgl_mulai"         => $value->tgl_mulai,
+                        "tgl_selesai"       => $value->tgl_selesai,
+                        "lama_cuti"         => $value->lama_ijin,
+                        "persentase_skor"   => round($leaveRatio["persentase"], 2),
+                        "bulan_potonganSkor"    => $leaveRatio["bulan"]
+                    ];
+                }
+
+            }
+            $resp = [
+                "code"      => 200,
+                "message"   => "OK",
+                "data"      => $dataResp
+            ];
+        }else {
+            $resp = [
+                "code"      => 202,
+                "message"   => "Data pegawai tidak ditemukan"
+            ];
+        }
+
+        return response()->json($resp);
+    }
+
+    private function getMonthlyActiveWorkDays($date)
+    {
+        $firstDayOfMonth = $date->copy()->startOfMonth();
+        $lastDayOfMonth = $date->copy()->endOfMonth();
+        $totalActiveDays = 0;
+
+        // Iterasi setiap hari dalam bulan untuk menghitung hari kerja aktif
+        while ($firstDayOfMonth <= $lastDayOfMonth) {
+            if ($firstDayOfMonth->isWeekday() || $firstDayOfMonth->dayOfWeek === Carbon::SATURDAY) {
+                $totalActiveDays++;
+            }
+            $firstDayOfMonth->addDay();
+        }
+
+        return $totalActiveDays;
+    }
+
+    private function calculateCrossMonthLeaveRatio($start, $end,$totalLeaveDays)
+    {
+        if ($start->format('Y-m') === $end->format('Y-m')) {
+            $totalLeaveDays = $start->diffInDays($end) + 1;
+            $activeWorkDays = $this->getMonthlyActiveWorkDays($start);
+            $bulanTerbanyak = $start->format('m-Y');
+        }else{
+            // Hitung hari cuti di bulan pertama dan bulan kedua
+            $endOfFirstMonth = $start->copy()->endOfMonth();
+            $leaveDaysInFirstMonth = $start->diffInDays($endOfFirstMonth) + 1;
+    
+            $startOfSecondMonth = $end->copy()->startOfMonth();
+            $leaveDaysInSecondMonth = $startOfSecondMonth->diffInDays($end) + 1;
+            // Bandingkan hari cuti di bulan pertama dan bulan kedua
+            if ($leaveDaysInFirstMonth >= $leaveDaysInSecondMonth) {
+                $activeWorkDays = $this->getMonthlyActiveWorkDays($start);
+                $bulanTerbanyak = $start->format('m-Y');
+            } else {
+                $activeWorkDays = $this->getMonthlyActiveWorkDays($end);
+                $bulanTerbanyak = $end->format('m-Y');
+            }
+        }
+        
+        if ($totalLeaveDays >= $activeWorkDays) {
+            $persentasePotongan = 1;
+        }else{
+            $persentasePotongan = $totalLeaveDays / $activeWorkDays;
+        }
+        
+        return [
+            "persentase"    => ((1 - $persentasePotongan) * 100),
+            "bulan"         => $bulanTerbanyak
+        ];
     }
 }

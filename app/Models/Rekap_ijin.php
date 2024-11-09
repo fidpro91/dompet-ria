@@ -22,4 +22,8 @@ class Rekap_ijin extends Model
         'lama_ijin',
         'keterangan'
     ];
+
+    public function employee() {
+        return $this->hasOne(Employee::class,"emp_no","nip");
+    }
 }

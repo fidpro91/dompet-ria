@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Maatwebsite\Excel\Facades\Excel;
 use PDF;
+use Barryvdh\Snappy\Facades\SnappyPdf;
 
 class Jasa_pelayananController extends Controller
 {
@@ -196,10 +197,10 @@ class Jasa_pelayananController extends Controller
         )x
         GROUP BY x.nama_komponen,x.kode_komponen
         ORDER BY x.kode_komponen");
-        return view("jasa_pelayanan.printout.print_jaspel",compact('data'));
-        // $pdf = PDF::loadview("jasa_pelayanan.printout.print_jaspel",compact('data'));
-        // return $pdf->download('laporan-pegawai.pdf');
-        // return $pdf->stream();
+        // return view("jasa_pelayanan.printout.print_jaspel",compact('data'));
+
+        $pdf = SnappyPdf::loadView("jasa_pelayanan.printout.print_jaspel", compact('data'));
+        return $pdf->stream('laporan jasa pelayanan.pdf');
         
     }
 
@@ -216,7 +217,10 @@ class Jasa_pelayananController extends Controller
             GROUP BY e.emp_no,e.emp_name,mu.unit_name
         ");
         $data['header']  = Komponen_jasa_sistem::whereIn('id',[3,4,5])->get();
-        return view("jasa_pelayanan.printout.print_struktural",compact('data'));
+        // return view("jasa_pelayanan.printout.print_struktural",compact('data'));
+        $pdf = SnappyPdf::loadView("jasa_pelayanan.printout.print_struktural", compact('data')) 
+               ->setOrientation('landscape');
+        return $pdf->inline('laporan jasa pelayanan.pdf');
         
     }
 
@@ -234,7 +238,11 @@ class Jasa_pelayananController extends Controller
             ORDER BY e.emp_name
         ");
         $header = Komponen_jasa_sistem::whereIn('id',[7,8,9])->get();
-        return view("jasa_pelayanan.printout.print_medis",compact('data','header'));
+        // return view("jasa_pelayanan.printout.print_medis",compact('data','header'));
+        $pdf = SnappyPdf::loadView("jasa_pelayanan.printout.print_medis", compact('data','header')) 
+        ->setOrientation('landscape');
+
+        return $pdf->inline('laporan jasa pelayanan.pdf');
         
     }
 
