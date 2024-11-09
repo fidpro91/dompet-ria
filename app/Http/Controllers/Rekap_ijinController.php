@@ -7,6 +7,7 @@ use App\Models\Rekap_ijin;
 use Illuminate\Support\Facades\Validator;
 use DataTables;
 use fidpro\builder\Create;
+use Carbon\Carbon;
 
 class Rekap_ijinController extends Controller
 {
@@ -47,6 +48,11 @@ class Rekap_ijinController extends Controller
 
     public function get_dataTable(Request $request)
     {
+        
+        list($tgl1, $tgl2) = explode(' - ', $request->periode_awal);        
+        $startDate = Carbon::createFromFormat('m/d/Y', $tgl1)->format('Y-m-d');
+        $endDate = Carbon::createFromFormat('m/d/Y', $tgl2)->format('Y-m-d');
+        
         $data = Rekap_ijin::select(
             [
                 'id',
@@ -64,23 +70,17 @@ class Rekap_ijinController extends Controller
         );
 
         $data->whereRaw("DATE_FORMAT(tgl_mulai, '%Y') = ?", [$request->tahun_update]);
+        $data->whereRaw("tgl_mulai BETWEEN ? AND ?", [$startDate, $endDate]);
+        if($request->lama !=null ){
+            if ($request->lama == '1') {               
+                $data->whereRaw("lama_ijin <= ?", [3]);
+            } else {                
+                $data->whereRaw("lama_ijin > ?", [3]);
+            }
+        }
 
         $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
-            $button = Create::action("<i class=\"fas fa-edit\"></i>", [
-                "class"     => "btn btn-primary btn-xs",
-                "onclick"   => "set_edit(this)",
-                "data-url"  => route($this->route . ".edit", $data->id),
-                "ajax-url"  => route($this->route . '.update', $data->id),
-                "data-target"  => "page_rekap_ijin"
-            ]);
-
-            $button .= Create::action("<i class=\"fas fa-trash\"></i>", [
-                "class"     => "btn btn-danger btn-xs",
-                "onclick"   => "delete_row(this)",
-                "x-token"   => csrf_token(),
-                "data-url"  => route($this->route . ".destroy", $data->id),
-            ]);
-            return $button;
+            
         })->rawColumns(['action']);
         return $datatables->make(true);
     }
