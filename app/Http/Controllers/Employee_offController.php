@@ -8,6 +8,7 @@ use App\Models\Skor_pegawai;
 use Illuminate\Support\Facades\Validator;
 use DataTables;
 use fidpro\builder\Create;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -33,8 +34,10 @@ class Employee_offController extends Controller
 
     public function get_dataTable(Request $request)
     {
+        list($tgl1, $tgl2) = explode(' - ', $request->period);    
         $data = Employee_off::join("employee","employee.emp_id","=","employee_off.emp_id")
                 ->join("ms_unit","ms_unit.unit_id","=","employee.unit_id_kerja")
+                ->where("bulan_skor", [$request->month_filter])               
                 ->get([
                     'id',
                     'emp_no',
@@ -45,7 +48,25 @@ class Employee_offController extends Controller
                     'persentase_skor',
                     'keterangan'
                 ]);
-
+                
+                $data = $data->map(function ($item) use ($tgl1, $tgl2) {
+                    $dates = explode(' - ', $item->periode);                
+                    if (count($dates) == 2) {
+                        $item->start_date = $dates[0];
+                        $item->end_date = $dates[1];
+                        $startDate = Carbon::createFromFormat('m/d/Y', $item->start_date);
+                        $endDate = Carbon::createFromFormat('m/d/Y', $item->end_date);
+                        if ($startDate->between(Carbon::createFromFormat('m/d/Y', $tgl1), Carbon::createFromFormat('m/d/Y', $tgl2)) &&
+                            $endDate->between(Carbon::createFromFormat('m/d/Y', $tgl1), Carbon::createFromFormat('m/d/Y', $tgl2))) {
+                           
+                            return $item;
+                        }
+                    }
+                    return null;
+                });
+                $data = $data->filter(function ($item) {
+                    return !is_null($item); 
+                });
         $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
             $button = Create::action("<i class=\"fas fa-edit\"></i>", [
                 "class"     => "btn btn-primary btn-xs",

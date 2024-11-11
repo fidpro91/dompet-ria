@@ -10,13 +10,7 @@ Widget::_init(["datepicker","daterangepicker"]);
     <div class="card-header">
         <div class="row">
             <div class="col-md-8">
-            {!!
-                    Form::button("Tambah Manual",[
-                        "class" => "btn btn-primary add-form",
-                        "data-target" => "page_rekap_ijin",
-                        "data-url" => route("rekap_ijin.create")
-                    ])
-            !!}
+           
                 {!!
                     Form::button("Generate ijin Prestige",[
                         "class" => "btn btn-purple",                        
@@ -80,6 +74,9 @@ Widget::_init(["datepicker","daterangepicker"]);
                             "searchable" => "false"
                         ],
                         'nip','nama_pegawai','jenis_ijin','tipe_ijin','tgl_mulai','tgl_selesai','lama_ijin','keterangan'
+                    ],
+                    "dataTable" => [
+                        "order" => "[[3,'ASC']]"
                     ]
                 ])
             }}
