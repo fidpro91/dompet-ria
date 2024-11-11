@@ -12,13 +12,13 @@ Widget::_init(["datepicker","daterangepicker"]);
         <div class="col-md-4">
         {!! 
                     Widget::datepicker("bulan_potongan_skor",[
-                        "format"		=>"yyyy",
-                        "viewMode"		=> "years",
-                        "minViewMode"	=> "years",
+                        "format"		=>"mm-yyyy",
+                        "viewMode"		=> "months",
+                        "minViewMode"	=> "months",
                         "autoclose"		=> true
                     ],[
                         "readonly"      => true,
-                        "value"         => date('Y')
+                        "value"         => date('m-Y')
                     ])->render("group","Bulan Potongan Skor")
                 !!}
         </div>
@@ -78,6 +78,7 @@ Widget::_init(["datepicker","daterangepicker"]);
                 let tanggalArray = periode.split(" - ");
                 let tgl1 = convertDateFormat(tanggalArray[0]); 
                 let tgl2 = convertDateFormat(tanggalArray[1]);
+               
                 $.ajax({
                      'beforeSend': function() {
                             showLoading();
@@ -88,10 +89,13 @@ Widget::_init(["datepicker","daterangepicker"]);
                         contentType: 'application/json', 
                         data: JSON.stringify({
                             tgl_mulai  : tgl1,
-                            tgl_akhir : tgl2
+                            tgl_akhir : tgl2,
+                            bulan_skor : $('#bulan_potongan_skor').val()
                            
-                        }),                       
+                        }),    
+                                        
                         success: function(data) {
+                            
                             if (data.code == 200) {
                                 Swal.fire("Sukses!", data.message, "success").then(() => {
                                     list_pegawai(data.data);
@@ -130,7 +134,7 @@ Widget::_init(["datepicker","daterangepicker"]);
             pegawaiList.append(row);
         });
     } else {
-        pegawaiList.append("<tr><td colspan='4'>Tidak ada data pegawai ditemukan</td></tr>");
+        pegawaiList.append("<tr class='text-center'><td colspan='10'>Tidak ada data pegawai ditemukan</td></tr>");
     }
 
     $('#selectAll').on('click', function() {
