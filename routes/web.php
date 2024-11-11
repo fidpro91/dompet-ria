@@ -258,6 +258,7 @@ Route::group(['middleware' => ['auth','admin']], function (){
     
     Route::get('rekap_ijin/get_dataTable','Rekap_ijinController@get_dataTable');
     Route::post('rekap_ijin/potongan_insentif',"Rekap_ijinController@calculateLeaveDays");
+    Route::post('rekap_ijin/add_potongan_skor',"Rekap_ijinController@insertPotonganSkor");
     Route::resource('rekap_ijin', Rekap_ijinController::class);
 });
 

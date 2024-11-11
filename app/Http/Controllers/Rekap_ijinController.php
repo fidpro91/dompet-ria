@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Employee_off;
 use Illuminate\Http\Request;
 use App\Models\Rekap_ijin;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use DataTables;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class Rekap_ijinController extends Controller
 {
@@ -222,6 +225,8 @@ class Rekap_ijinController extends Controller
                     return $value['bulan_potonganSkor'] == $request->bulan_skor;
                 }));
             }
+
+            Cache::put("potonganSkor",$dataResp);
             $resp = [
                 "code"      => 200,
                 "message"   => "OK",
@@ -293,11 +298,37 @@ class Rekap_ijinController extends Controller
     {
         $idIjin = $request->id_ijin;
         if (count($idIjin) <= 0) {
-            # code...
+            return response()->json([
+                "code"      => "204",
+                "message"   => "Id ijin tidak terdaftar. Pastikan mengisi checkbox pada tabel ijin pegawai"
+            ]);
         }
+        $potonganSkor = Cache::get('potonganSkor');
+        $potonganSkor = array_filter($potonganSkor, function($item) use ($idIjin) {
+            return in_array($item['id'], $idIjin);
+        });
 
-        foreach ($idIjin as $key => $value) {
-            
+        $employeeOff=[];
+        foreach ($potonganSkor as $key => $value) {
+            $employeeOff[] = [
+                'emp_id'        => $value["id"],
+                'bulan_skor'    => $value["bulan_potonganSkor"],
+                'keterangan'    => $value["alasan_cuti"],
+                'user_act'      => Auth::id(),
+                'periode'           => Carbon::parse($value["tgl_mulai"])->format("m/d/Y")." - ".Carbon::parse($value["tgl_selesai"])->format("m/d/Y"),
+                'persentase_skor'   => $value["persentase_skor"],
+                'created_at'        => Carbon::now(),
+                'updated_at'        => Carbon::now()
+            ];
         }
+        
+        Employee_off::insert($employeeOff);
+        $resp = [
+            "code"          => 200,
+            "message"       => "Potongan skor berhasil ditambahkan"
+        ];
+
+        return response()->json($resp);
+
     }
 }
