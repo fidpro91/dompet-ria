@@ -7,8 +7,7 @@ Widget::_init(["datepicker","daterangepicker"]);
 <div class="row align-items-center">
         <div class="col-md-4">
             {!! Widget::daterangePicker("periode")->render("group","Periode Hari") !!}
-        </div>
-       
+        </div>       
         <div class="col-md-4">
         {!! 
                     Widget::datepicker("bulan_potongan_skor",[
@@ -30,6 +29,9 @@ Widget::_init(["datepicker","daterangepicker"]);
 
     <table id="pegawaiTable" class="table">
     <thead>
+    <div class="col-md-3">
+            <button class="btn btn-danger" id="btn-get">Insert</button>
+        </div> 
         <tr>
             <th>No</th> 
             <th><input type="checkbox" id="selectAll" /></th> 
@@ -40,10 +42,10 @@ Widget::_init(["datepicker","daterangepicker"]);
             <th>Tgl Akhir</th> 
             <th>Persentase Skor</th> 
             <th>Bulan Potongan Skor</th>   
-        </tr>
+        </tr>       
     </thead>
     <tbody id="pegawaiList">
-       
+  
     </tbody>
 </table>
 </div>
