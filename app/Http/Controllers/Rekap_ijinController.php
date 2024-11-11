@@ -283,9 +283,4 @@ class Rekap_ijinController extends Controller
         ];
     }
 
-    public function tampilkan_data_rekap($tglMulai,$tglSampai){
-        $data = Rekap_ijin::whereBetween('tgl_mulai', [$tglMulai, $tglSampai])->get();
-        return response()->json($data);
-
-    }
 }
