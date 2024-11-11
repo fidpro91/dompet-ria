@@ -7,7 +7,6 @@ use App\Models\Rekap_ijin;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use DataTables;
-use fidpro\builder\Create;
 
 class Rekap_ijinController extends Controller
 {
@@ -41,6 +40,7 @@ class Rekap_ijinController extends Controller
         'created_at'   =>  '',
         'updated_at'   =>  ''
     ];
+    
     public function index()
     {
         return $this->themes($this->folder . '.index', null, $this);
@@ -178,10 +178,10 @@ class Rekap_ijinController extends Controller
         ]);
     }
 
-    public function calculateLeaveDays($startDate, $endDate)
+    public function calculateLeaveDays(Request $request)
     {
-        $start  = Carbon::parse($startDate);
-        $end    = Carbon::parse($endDate);
+        $start  = Carbon::parse($request->tgl_mulai);
+        $end    = Carbon::parse($request->tgl_akhir);
         $data = Rekap_ijin::where(function ($query) use ($start, $end) {
                     $query->whereBetween('tgl_mulai', [$start, $end])
                           ->orWhereBetween('tgl_selesai', [$start, $end])
