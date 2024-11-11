@@ -12,9 +12,21 @@ class Authenticate extends Middleware
      * @param  \Illuminate\Http\Request  $request
      * @return string|null
      */
+    protected function unauthenticated($request, array $guards)
+    {
+        // Jika request adalah AJAX dan session habis
+        if ($request->ajax()) {
+            abort(response()->json(['error' => 'Sesi telah habis. Silakan login kembali.'], 401));
+        }
+
+        // Jika bukan AJAX, redirect ke halaman login
+        parent::unauthenticated($request, $guards);
+    }
+
     protected function redirectTo($request)
     {
-        if (! $request->expectsJson()) {
+        // Redirect ke halaman login jika request bukan JSON
+        if (!$request->expectsJson()) {
             return route('login');
         }
     }

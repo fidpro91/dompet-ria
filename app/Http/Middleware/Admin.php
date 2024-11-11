@@ -23,6 +23,10 @@ class Admin
                 return $next($request);
             }
         }
+        
+        if ($request->ajax()) {
+            return response()->json(['error' => 'Session expired'], 401);
+        }
         return redirect('/');
     }
 }
