@@ -218,9 +218,9 @@ class Rekap_ijinController extends Controller
 
             }
             if ($request->bulan_skor) {
-                $dataResp = array_filter($dataResp, function($value) use ($request) {
+                $dataResp = array_values(array_filter($dataResp, function($value) use ($request) {
                     return $value['bulan_potonganSkor'] == $request->bulan_skor;
-                });
+                }));
             }
             $resp = [
                 "code"      => 200,
@@ -287,5 +287,17 @@ class Rekap_ijinController extends Controller
             "persentase"    => ((1 - $persentasePotongan) * 100),
             "bulan"         => $bulanTerbanyak
         ];
+    }
+
+    public function insertPotonganSkor(Request $request)
+    {
+        $idIjin = $request->id_ijin;
+        if (count($idIjin) <= 0) {
+            # code...
+        }
+
+        foreach ($idIjin as $key => $value) {
+            
+        }
     }
 }
