@@ -8,7 +8,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use DataTables;
 use fidpro\builder\Create;
-use Carbon\Carbon;
 
 class Rekap_ijinController extends Controller
 {
@@ -207,7 +206,7 @@ class Rekap_ijinController extends Controller
                         "nip"               => $value->nip,
                         "emp_id"            => $value->employee->emp_id,
                         "nama_pegawai"      => $value->nama_pegawai,
-                        "alasan_cuti"       => $value->jenis_ijin.' - ('.$value->tipe_ijin.')',
+                        "alasan_cuti"       => $value->jenis_ijin.' - ('.$value->keterangan.')',
                         "tgl_mulai"         => $value->tgl_mulai,
                         "tgl_selesai"       => $value->tgl_selesai,
                         "lama_cuti"         => $value->lama_ijin,
@@ -271,7 +270,7 @@ class Rekap_ijinController extends Controller
                 $bulanTerbanyak = $end->format('m-Y');
             }
         }
-        
+
         if ($totalLeaveDays >= $activeWorkDays) {
             $persentasePotongan = 1;
         }else{
