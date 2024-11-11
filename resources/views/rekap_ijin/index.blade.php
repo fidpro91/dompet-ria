@@ -18,7 +18,7 @@ Widget::_init(["datepicker","daterangepicker"]);
                     ])
                 !!}
                 {!!
-                    Form::button("iNSERT KE JASPEL",[
+                    Form::button("Insert ke Pegawai off",[
                         "class" => "btn btn-warning",                        
                         "id" => "btn-insert"
                     ])

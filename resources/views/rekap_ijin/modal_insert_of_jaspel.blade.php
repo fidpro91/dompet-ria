@@ -60,7 +60,11 @@ Widget::_init(["datepicker","daterangepicker"]);
     $("#btn-submit").click(()=>{
         get_data_rekap();
         })
+    $("#btn-get").click(()=>{
+        insert_to();
     })
+    })
+   
     function convertDateFormat(dateString) {
     let dateParts = dateString.split("/"); 
     return `${dateParts[2]}-${dateParts[0]}-${dateParts[1]}`;
@@ -117,38 +121,88 @@ Widget::_init(["datepicker","daterangepicker"]);
     function list_pegawai(data){
         let pegawaiList = $("#pegawaiList");
         pegawaiList.empty();
-        if (data.length > 0) {
-        // Menambahkan baris ke dalam tabel untuk setiap pegawai
-        data.forEach((pegawai, index) => {
-            let row = `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td><input type="checkbox" class="pegawaiCheckbox" data-id="${pegawai.emp_id}" /></td>
-                    <td>${pegawai.nama_pegawai}</td>
-                    <td>${pegawai.alasan_cuti}</td>
-                    <td>${pegawai.lama_cuti}</td>
-                    <td>${pegawai.tgl_mulai}</td>
-                    <td>${pegawai.tgl_selesai}</td>
-                    <td>${pegawai.persentase_skor}</td>
-                    <td>${pegawai.bulan_potonganSkor}</td>
-                </tr>
-            `;
-            pegawaiList.append(row);
+                if (data.length > 0) {
+                // Menambahkan baris ke dalam tabel untuk setiap pegawai
+                data.forEach((pegawai, index) => {
+                    let row = `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td><input type="checkbox" class="pegawaiCheckbox" data-id="${pegawai.id}" /></td>
+                            <td>${pegawai.nama_pegawai}</td>
+                            <td>${pegawai.alasan_cuti}</td>
+                            <td>${pegawai.lama_cuti}</td>
+                            <td>${pegawai.tgl_mulai}</td>
+                            <td>${pegawai.tgl_selesai}</td>
+                            <td>${pegawai.persentase_skor}</td>
+                            <td>${pegawai.bulan_potonganSkor}</td>
+                        </tr>
+                    `;
+                    pegawaiList.append(row);
+                });
+            } else {
+                pegawaiList.append("<tr class='text-center'><td colspan='10'>Tidak ada data pegawai ditemukan</td></tr>");
+            }  
+
+       
+    }
+        $('#selectAll').on('click', function() {
+            let isChecked = $(this).prop('checked');
+            $('.pegawaiCheckbox').prop('checked', isChecked);
         });
-    } else {
-        pegawaiList.append("<tr class='text-center'><td colspan='10'>Tidak ada data pegawai ditemukan</td></tr>");
-    }
+        $('.pegawaiCheckbox').on('change', function() {
+            let isChecked = $(this).prop('checked');
+            if (!isChecked) {
+                $('#selectAll').prop('checked', false); 
+            }
+        });   
+        function insert_to() {
+            let selectedIds = [];
+            $('.pegawaiCheckbox:checked').each(function() {
+                selectedIds.push($(this).data('id')); 
+            });           
+                    Swal.fire({
+                    title: 'Insert ke Pegawai of Jaspel ?',  
+                    type: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes'
+                    }).then((result) => { 
+                        if(result){
+                           if(selectedIds.length > 0){
+                            $.ajax({
+                                'beforeSend': function() {
+                                        showLoading();
+                                    },
+                                    url: '{{ url("rekap_ijin/add_potongan_skor") }}', 
+                                    type: 'POST', 
+                                    dataType: 'json', 
+                                    contentType: 'application/json', 
+                                    data: JSON.stringify({
+                                        id_ijin  : selectedIds                                    
+                                    }),    
+                                                    
+                                    success: function(data) {                                        
+                                        if (data.code == 200) {
+                                            Swal.fire("Sukses!", data.message, "success").then(() => {
+                                                location.reload();
+                                            });
+                                        } else {
+                                            Swal.fire("Oopss...!!", data.message, "error"); 
+                                        }
+                                    },
+                                    error: function(xhr, status, error) {
+                                        Swal.fire("Error!", "Terjadi kesalahan saat memproses permintaan.", "error");
+                                    }
+                                });
 
-    $('#selectAll').on('click', function() {
-        let isChecked = $(this).prop('checked');
-        $('.pegawaiCheckbox').prop('checked', isChecked);
-    });
-    $('.pegawaiCheckbox').on('change', function() {
-        let isChecked = $(this).prop('checked');
-        if (!isChecked) {
-            $('#selectAll').prop('checked', false); 
+                           }else{
+                            Swal.fire("Error!", "Pilih pegawai terlebih dahulu", "error");
+                           }
+                           
+                        }
+                    });
+
+           
         }
-    });
-
-    }
 </script>
