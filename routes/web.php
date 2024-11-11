@@ -257,6 +257,7 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::resource('table_rekap_absen', Table_rekap_absenController::class);
     
     Route::get('rekap_ijin/get_dataTable','Rekap_ijinController@get_dataTable');
+    Route::get('rekap_ijin/tampilkan_data_rekap/{tglAwal?}/{tglSampai?}','Rekap_ijinController@tampilkan_data_rekap');
     Route::resource('rekap_ijin', Rekap_ijinController::class);
 });
 
