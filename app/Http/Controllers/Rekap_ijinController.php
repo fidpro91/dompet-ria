@@ -203,6 +203,7 @@ class Rekap_ijinController extends Controller
                     $leaveRatio = $this->calculateCrossMonthLeaveRatio($start, $end,$value->lama_ijin);
     
                     $dataResp[] = [
+                        "id"                => $value->id,
                         "nip"               => $value->nip,
                         "emp_id"            => $value->employee->emp_id,
                         "nama_pegawai"      => $value->nama_pegawai,
@@ -215,6 +216,11 @@ class Rekap_ijinController extends Controller
                     ];
                 }
 
+            }
+            if ($request->bulan_skor) {
+                $dataResp = array_filter($dataResp, function($value) use ($request) {
+                    return $value['bulan_potonganSkor'] == $request->bulan_skor;
+                });
             }
             $resp = [
                 "code"      => 200,
