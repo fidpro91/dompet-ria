@@ -58,11 +58,11 @@ Widget::_init(["datepicker","daterangepicker"]);
                             showLoading();
                         },
                         url: '{{ url("rekap_ijin/tampilkan_data_rekap") }}'+'/'+tglAwal+'/'+tglAkhir, 
-                        type: 'GET', 
+                        type: 'POST', 
                         dataType: 'json', 
                         contentType: 'application/json',                        
                         success: function(data) {
-                            list_pegawai(data);
+                           
                         },
                         error: function(xhr, status, error) {
                             Swal.fire("Error!", "Terjadi kesalahan saat memproses permintaan.", "error");
