@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Employee_off;
 use Illuminate\Http\Request;
 use App\Models\Rekap_ijin;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use DataTables;
-use fidpro\builder\Create;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class Rekap_ijinController extends Controller
 {
@@ -40,6 +43,7 @@ class Rekap_ijinController extends Controller
         'created_at'   =>  '',
         'updated_at'   =>  ''
     ];
+    
     public function index()
     {
         return $this->themes($this->folder . '.index', null, $this);
@@ -47,6 +51,11 @@ class Rekap_ijinController extends Controller
 
     public function get_dataTable(Request $request)
     {
+        
+        list($tgl1, $tgl2) = explode(' - ', $request->periode_awal);        
+        $startDate = Carbon::createFromFormat('m/d/Y', $tgl1)->format('Y-m-d');
+        $endDate = Carbon::createFromFormat('m/d/Y', $tgl2)->format('Y-m-d');
+        
         $data = Rekap_ijin::select(
             [
                 'id',
@@ -63,22 +72,18 @@ class Rekap_ijinController extends Controller
             ]
         );
 
-        $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
-            $button = Create::action("<i class=\"fas fa-edit\"></i>", [
-                "class"     => "btn btn-primary btn-xs",
-                "onclick"   => "set_edit(this)",
-                "data-url"  => route($this->route . ".edit", $data->id),
-                "ajax-url"  => route($this->route . '.update', $data->id),
-                "data-target"  => "page_rekap_ijin"
-            ]);
+        $data->whereRaw("DATE_FORMAT(tgl_mulai, '%Y') = ?", [$request->tahun_update]);
+        $data->whereRaw("tgl_mulai BETWEEN ? AND ?", [$startDate, $endDate]);
+        if($request->lama !=null ){
+            if ($request->lama == '1') {               
+                $data->whereRaw("lama_ijin <= ?", [3]);
+            } else {                
+                $data->whereRaw("lama_ijin > ?", [3]);
+            }
+        }
 
-            $button .= Create::action("<i class=\"fas fa-trash\"></i>", [
-                "class"     => "btn btn-danger btn-xs",
-                "onclick"   => "delete_row(this)",
-                "x-token"   => csrf_token(),
-                "data-url"  => route($this->route . ".destroy", $data->id),
-            ]);
-            return $button;
+        $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
+            
         })->rawColumns(['action']);
         return $datatables->make(true);
     }
@@ -140,6 +145,7 @@ class Rekap_ijinController extends Controller
     {
         return view($this->folder . '.form', compact('rekap_ijin'));
     }
+
     public function update(Request $request, Rekap_ijin $rekap_ijin)
     {
         $valid = $this->form_validasi($request->all());
@@ -173,5 +179,156 @@ class Rekap_ijinController extends Controller
             'success' => true,
             'message' => 'Data Berhasil Dihapus!'
         ]);
+    }
+
+    public function calculateLeaveDays(Request $request)
+    {
+        $start  = Carbon::parse($request->tgl_mulai);
+        $end    = Carbon::parse($request->tgl_akhir);
+        $data = Rekap_ijin::where(function ($query) use ($start, $end) {
+                    $query->whereBetween('tgl_mulai', [$start, $end])
+                          ->orWhereBetween('tgl_selesai', [$start, $end])
+                          ->orWhere(function ($query) use ($start, $end) {
+                            $query->where('tgl_mulai', '<=', $start)
+                                    ->where('tgl_selesai', '>=', $end);
+                        });
+                })
+                ->where("lama_ijin",">=","6")
+                ->with('employee:emp_no,emp_id')
+                ->get();
+        if ($data) {
+            $dataResp=[];
+            foreach ($data as $key => $value) {
+                if ($value->employee->emp_id) {
+                    $start  = Carbon::parse($value->tgl_mulai);
+                    $end    = Carbon::parse($value->tgl_selesai);
+                    // Menentukan apakah cuti dalam bulan yang sama atau lintas bulan
+                    $leaveRatio = $this->calculateCrossMonthLeaveRatio($start, $end,$value->lama_ijin);
+    
+                    $dataResp[] = [
+                        "id"                => $value->id,
+                        "nip"               => $value->nip,
+                        "emp_id"            => $value->employee->emp_id,
+                        "nama_pegawai"      => $value->nama_pegawai,
+                        "alasan_cuti"       => $value->jenis_ijin.' - ('.$value->keterangan.')',
+                        "tgl_mulai"         => $value->tgl_mulai,
+                        "tgl_selesai"       => $value->tgl_selesai,
+                        "lama_cuti"         => $value->lama_ijin,
+                        "persentase_skor"   => round($leaveRatio["persentase"], 2),
+                        "bulan_potonganSkor"    => $leaveRatio["bulan"]
+                    ];
+                }
+
+            }
+            if ($request->bulan_skor) {
+                $dataResp = array_values(array_filter($dataResp, function($value) use ($request) {
+                    return $value['bulan_potonganSkor'] == $request->bulan_skor;
+                }));
+            }
+
+            Cache::put("potonganSkor",$dataResp);
+            $resp = [
+                "code"      => 200,
+                "message"   => "OK",
+                "data"      => $dataResp
+            ];
+        }else {
+            $resp = [
+                "code"      => 202,
+                "message"   => "Data pegawai tidak ditemukan"
+            ];
+        }
+
+        return response()->json($resp);
+    }
+
+    private function getMonthlyActiveWorkDays($date)
+    {
+        $firstDayOfMonth = $date->copy()->startOfMonth();
+        $lastDayOfMonth = $date->copy()->endOfMonth();
+        $totalActiveDays = 0;
+
+        // Iterasi setiap hari dalam bulan untuk menghitung hari kerja aktif
+        while ($firstDayOfMonth <= $lastDayOfMonth) {
+            if ($firstDayOfMonth->isWeekday() || $firstDayOfMonth->dayOfWeek === Carbon::SATURDAY) {
+                $totalActiveDays++;
+            }
+            $firstDayOfMonth->addDay();
+        }
+
+        return $totalActiveDays;
+    }
+
+    private function calculateCrossMonthLeaveRatio($start, $end,$totalLeaveDays)
+    {
+        if ($start->format('Y-m') === $end->format('Y-m')) {
+            $totalLeaveDays = $start->diffInDays($end) + 1;
+            $activeWorkDays = $this->getMonthlyActiveWorkDays($start);
+            $bulanTerbanyak = $start->format('m-Y');
+        }else{
+            // Hitung hari cuti di bulan pertama dan bulan kedua
+            $endOfFirstMonth = $start->copy()->endOfMonth();
+            $leaveDaysInFirstMonth = $start->diffInDays($endOfFirstMonth) + 1;
+    
+            $startOfSecondMonth = $end->copy()->startOfMonth();
+            $leaveDaysInSecondMonth = $startOfSecondMonth->diffInDays($end) + 1;
+            // Bandingkan hari cuti di bulan pertama dan bulan kedua
+            if ($leaveDaysInFirstMonth >= $leaveDaysInSecondMonth) {
+                $activeWorkDays = $this->getMonthlyActiveWorkDays($start);
+                $bulanTerbanyak = $start->format('m-Y');
+            } else {
+                $activeWorkDays = $this->getMonthlyActiveWorkDays($end);
+                $bulanTerbanyak = $end->format('m-Y');
+            }
+        }
+
+        if ($totalLeaveDays >= $activeWorkDays) {
+            $persentasePotongan = 1;
+        }else{
+            $persentasePotongan = $totalLeaveDays / $activeWorkDays;
+        }
+        
+        return [
+            "persentase"    => ((1 - $persentasePotongan) * 100),
+            "bulan"         => $bulanTerbanyak
+        ];
+    }
+
+    public function insertPotonganSkor(Request $request)
+    {
+        $idIjin = $request->id_ijin;
+        if (count($idIjin) <= 0) {
+            return response()->json([
+                "code"      => "204",
+                "message"   => "Id ijin tidak terdaftar. Pastikan mengisi checkbox pada tabel ijin pegawai"
+            ]);
+        }
+        $potonganSkor = Cache::get('potonganSkor');
+        $potonganSkor = array_filter($potonganSkor, function($item) use ($idIjin) {
+            return in_array($item['id'], $idIjin);
+        });
+
+        $employeeOff=[];
+        foreach ($potonganSkor as $key => $value) {
+            $employeeOff[] = [
+                'emp_id'        => $value["id"],
+                'bulan_skor'    => $value["bulan_potonganSkor"],
+                'keterangan'    => $value["alasan_cuti"],
+                'user_act'      => Auth::id(),
+                'periode'           => Carbon::parse($value["tgl_mulai"])->format("m/d/Y")." - ".Carbon::parse($value["tgl_selesai"])->format("m/d/Y"),
+                'persentase_skor'   => $value["persentase_skor"],
+                'created_at'        => Carbon::now(),
+                'updated_at'        => Carbon::now()
+            ];
+        }
+        
+        Employee_off::insert($employeeOff);
+        $resp = [
+            "code"          => 200,
+            "message"       => "Potongan skor berhasil ditambahkan"
+        ];
+
+        return response()->json($resp);
+
     }
 }

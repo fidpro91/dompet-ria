@@ -16,8 +16,8 @@ use \fidpro\builder\Bootstrap;
                         }
                     ],
                     "Perizinan/Cuti Pegawai"  => [
-                        "href"      => "",
-                        "url"       => ""
+                        "href"      => "rekap_ijin",
+                        "url"       => route("rekap_ijin.index")
                     ]
                 ]
             ]);

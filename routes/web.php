@@ -250,6 +250,16 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::get('detail_skor_pegawai/get_dataTable','Detail_skor_pegawaiController@get_dataTable');
     Route::resource('detail_skor_pegawai', Detail_skor_pegawaiController::class);
 
+    Route::get('potongan_jasa_medis/get_dataTable','Potongan_jasa_medisController@get_dataTable');
+    Route::resource('potongan_jasa_medis', Potongan_jasa_medisController::class);
+    
+    Route::get('table_rekap_absen/get_dataTable','Table_rekap_absenController@get_dataTable');
+    Route::resource('table_rekap_absen', Table_rekap_absenController::class);
+    
+    Route::get('rekap_ijin/get_dataTable','Rekap_ijinController@get_dataTable');
+    Route::post('rekap_ijin/potongan_insentif',"Rekap_ijinController@calculateLeaveDays");
+    Route::post('rekap_ijin/add_potongan_skor',"Rekap_ijinController@insertPotonganSkor");
+    Route::resource('rekap_ijin', Rekap_ijinController::class);
 });
 
 
@@ -263,18 +273,3 @@ Route::group(['middleware' => ['userUpload']], function (){
     Route::get('pengajuan_diklat/finish','PengajuandiklatController@finish');
     Route::post('pengajuan_diklat/validasi_capcha','PengajuandiklatController@validasi_capcha');
 });
-            Route::get('potongan_jasa_medis/get_dataTable','Potongan_jasa_medisController@get_dataTable');
-            Route::resource('potongan_jasa_medis', Potongan_jasa_medisController::class);
-            Route::get('table_rekap_absen/get_dataTable','table_rekap_absenController@get_dataTable');
-            Route::resource('table_rekap_absen', table_rekap_absenController::class);
-            Route::get('table_rekap_absen/get_dataTable','Table_rekap_absenController@get_dataTable');
-            Route::resource('table_rekap_absen', Table_rekap_absenController::class);
-            Route::get('table_rekap_absen/get_dataTable','Table_rekap_absenController@get_dataTable');
-            Route::resource('table_rekap_absen', Table_rekap_absenController::class);
-            Route::get('table_rekap_absen/get_dataTable','Table_rekap_absenController@get_dataTable');
-            Route::resource('table_rekap_absen', Table_rekap_absenController::class);
-            Route::get('table_rekap_absen/get_dataTable','Table_rekap_absenController@get_dataTable');
-            Route::resource('table_rekap_absen', Table_rekap_absenController::class);
-           
-            Route::get('rekap_ijin/get_dataTable','Rekap_ijinController@get_dataTable');
-            Route::resource('rekap_ijin', Rekap_ijinController::class);

@@ -128,7 +128,7 @@ body {
                 });
                 $row .= "
                     <tr>
-                        <th colspan='5' style='text-align:center'>$value->nama_komponen</th>
+                        <th colspan='7' style='text-align:center; padding:10px; background-color: #c7c5bf; font-size:14pt;'>$value->nama_komponen</th>
                     </tr>
                     <tr>
                         <th>NO</th>

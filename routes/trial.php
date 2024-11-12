@@ -182,6 +182,8 @@ Route::get('/prestige/rekap_absen',"Api\PrestigeController@get_rekap_presensi_ab
 Route::get('/prestige/insert_kedisiplinan',"Api\PrestigeController@insert_kedisiplinan");
 Route::get('/prestige/rekap_ijin',"Api\PrestigeController@get_ijin_pegawai");
 
+Route::post('rekap_ijin/potongan_insentif',"Rekap_ijinController@calculateLeaveDays");
+
 Route::get('/pencairan_jasa', function () {
     $id=22;
     $ekseKutif = DB::select("
