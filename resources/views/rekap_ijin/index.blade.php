@@ -17,6 +17,12 @@ Widget::_init(["datepicker","daterangepicker"]);
                         "id" => "btn-rekapIjin"
                     ])
                 !!}
+                {!!
+                    Form::button("Insert ke Pegawai off",[
+                        "class" => "btn btn-warning",                        
+                        "id" => "btn-insert"
+                    ])
+                !!}
             </div>
             <div class="col-sm-4">
                     {!! 
@@ -94,12 +100,25 @@ Widget::_init(["datepicker","daterangepicker"]);
         ]
     ])
 }}
+{{
+    Bootstrap::modal('modal_insert', [
+        "title" => 'Form Insert Ke Pegawai of Jaspel',
+        "size" => "modal-xl",
+        "body" => [
+            "content"   => function(){
+                return view('rekap_ijin.modal_insert_of_jaspel');
+            }
+        ]
+    ])
+}}
 
 <script>
 $(document).ready(()=>{
             $("#btn-rekapIjin").click(()=>{
-            $("#modal_rekapIjin").modal("show");
-           
+            $("#modal_rekapIjin").modal("show");           
+        })
+        $("#btn-insert").click(()=>{
+            $("#modal_insert").modal("show");           
         })
 
         $("#tahun_filter,#periode_awal,#lama_izin").change(()=>{
