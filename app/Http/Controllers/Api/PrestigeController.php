@@ -142,6 +142,7 @@ class PrestigeController extends Controller
         $body = $response->getBody();
         if (json_last_error() === JSON_ERROR_NONE) {
             $content = json_decode($body);
+            
             //insert table rekap ijin
             $input=[];
             foreach ($content as $key => $value) {
@@ -159,7 +160,11 @@ class PrestigeController extends Controller
                 ];
             }
             
-            Rekap_ijin::insert($input);
+            Rekap_ijin::upsert($input,[
+                'nip','nama_pegawai','jenis_ijin','tipe_ijin','tgl_mulai','tgl_selesai','lama_ijin','keterangan'
+            ],[
+                'nip','nama_pegawai','jenis_ijin','tipe_ijin','tgl_mulai','tgl_selesai','lama_ijin','keterangan'
+            ]);
             $resp = [
                 "code"      => 200,
                 "message"   => "OK"
