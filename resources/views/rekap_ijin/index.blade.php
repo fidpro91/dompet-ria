@@ -41,11 +41,7 @@ Widget::_init(["datepicker","daterangepicker"]);
     </div>
     
     <div class="card-body">
-        <div class="row">
-            <div class="col-md-3">
-            {!! Widget::daterangePicker("periode_awal")->render("group","Periode Hari") !!}
-            </div>
-            <div class="form-group mt-4 row col-md-6">
+            <div class="form-group col-md-6">
                 <label for="lama_izin" class="col-md-3 col-form-label">Lama Izin</label>
                 <div class="col-md-9">
                     <select class="form-control" id="lama_izin">
@@ -54,8 +50,6 @@ Widget::_init(["datepicker","daterangepicker"]);
                         <option value="2">LEBIH DARI 3 HARI</option>
                     </select>
                 </div>
-            </div>
-           
         </div>
         <div class="table-responsive">
             {{
@@ -121,7 +115,7 @@ $(document).ready(()=>{
             $("#modal_insert").modal("show");           
         })
 
-        $("#tahun_filter,#periode_awal,#lama_izin").change(()=>{
+        $("#lama_izin").change(()=>{
             tb_table_rekap_izin.draw();
         });
     })

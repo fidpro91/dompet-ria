@@ -52,10 +52,6 @@ class Rekap_ijinController extends Controller
     public function get_dataTable(Request $request)
     {
         
-        list($tgl1, $tgl2) = explode(' - ', $request->periode_awal);        
-        $startDate = Carbon::createFromFormat('m/d/Y', $tgl1)->format('Y-m-d');
-        $endDate = Carbon::createFromFormat('m/d/Y', $tgl2)->format('Y-m-d');
-        
         $data = Rekap_ijin::select(
             [
                 'id',
@@ -71,9 +67,6 @@ class Rekap_ijinController extends Controller
                 'updated_at'
             ]
         );
-
-        $data->whereRaw("DATE_FORMAT(tgl_mulai, '%Y') = ?", [$request->tahun_update]);
-        $data->whereRaw("tgl_mulai BETWEEN ? AND ?", [$startDate, $endDate]);
         if($request->lama !=null ){
             if ($request->lama == '1') {               
                 $data->whereRaw("lama_ijin <= ?", [3]);

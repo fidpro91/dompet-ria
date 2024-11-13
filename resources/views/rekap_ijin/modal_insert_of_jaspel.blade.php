@@ -23,31 +23,33 @@ Widget::_init(["datepicker","daterangepicker"]);
         </div>
         <div class="d-flex">
             <button class="btn btn-info" id="btn-submit">Tampilkan</button>
-            
+        </div>
+        <div class="d-flex">
+                    <button class="btn btn-danger" id="btn-get">Insert</button>
         </div>
     </div>
 
-    <table id="pegawaiTable" class="table">
-    <thead>
-    <div class="col-md-3">
-            <button class="btn btn-danger" id="btn-get">Insert</button>
-        </div> 
-        <tr>
-            <th>No</th> 
-            <th><input type="checkbox" id="selectAll" /></th> 
-            <th>Nama Pegawai</th>
-            <th>Alasan Cuti</th>     
-            <th>Lama Izin</th>   
-            <th>Tgl Mulai</th>  
-            <th>Tgl Akhir</th> 
-            <th>Persentase Skor</th> 
-            <th>Bulan Potongan Skor</th>   
-        </tr>       
-    </thead>
-    <tbody id="pegawaiList">
   
-    </tbody>
-</table>
+        
+        <table id="pegawaiTable" class="table">
+        <thead>   
+                  
+            <tr>
+                <th>No</th> 
+                <th><input type="checkbox" id="selectAll" /></th> 
+                <th>Nama Pegawai</th>
+                <th>Alasan Cuti</th>     
+                <th>Lama Izin</th>   
+                <th>Tgl Mulai</th>  
+                <th>Tgl Akhir</th> 
+                <th>Persentase Skor</th> 
+                <th>Bulan Potongan Skor</th>   
+            </tr>       
+        </thead>
+        <tbody id="pegawaiList">    
+        </tbody>
+    </table>
+   
 </div>
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <script>
@@ -70,21 +72,11 @@ Widget::_init(["datepicker","daterangepicker"]);
     return `${dateParts[2]}-${dateParts[0]}-${dateParts[1]}`;
     }
 
-    function get_data_rekap(){
-        Swal.fire({
-            title: 'Tampilkan Data Rekap Izin ?',  
-            type: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes'
-        }).then((result) => { 
-            if(result){
+    function get_data_rekap(){        
                 let periode = $("#periode").val();
                 let tanggalArray = periode.split(" - ");
                 let tgl1 = convertDateFormat(tanggalArray[0]); 
                 let tgl2 = convertDateFormat(tanggalArray[1]);
-               
                 $.ajax({
                      'beforeSend': function() {
                             showLoading();
@@ -96,8 +88,7 @@ Widget::_init(["datepicker","daterangepicker"]);
                         data: JSON.stringify({
                             tgl_mulai  : tgl1,
                             tgl_akhir : tgl2,
-                            bulan_skor : $('#bulan_potongan_skor').val()
-                           
+                            bulan_skor : $('#bulan_potongan_skor').val()                           
                         }),    
                                         
                         success: function(data) {
@@ -114,8 +105,7 @@ Widget::_init(["datepicker","daterangepicker"]);
                             Swal.fire("Error!", "Terjadi kesalahan saat memproses permintaan.", "error");
                         }
                     });
-            }
-        });
+
     }
 
     function list_pegawai(data){
