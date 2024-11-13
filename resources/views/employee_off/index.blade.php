@@ -42,9 +42,22 @@ Widget::_init(["datepicker","daterangepicker"]);
     </div>
     <div class="card-body">
     <div class="row">
-           
+    <?php
+        $firstDay = date('Y-m-d', strtotime('first day of this month'));
+        $lastDay = date('Y-m-d', strtotime('last day of this month'));
+        $defaultRange = $firstDay . ' sampai ' . $lastDay;
+        ?>
+        <div class="col-md-1">
+            </div>
             <div class="col-md-3">
-            {!! Widget::daterangePicker("periode_pegawai")->render("group","Periode Hari") !!}
+                 <div class="input-group">
+                    <input id="periode_pegawai" class="form-control" type="text" name="periode_pegawai" placeholder="Periode Hari" value="<?= $defaultRange ?>">
+                    <div class="input-group-append">
+                        <span class="input-group-text">
+                            <span class="ti-calendar"></span>
+                        </span>
+                    </div>
+                 </div>
             </div>
     </div>
         <div class="table-responsive">
@@ -83,12 +96,25 @@ Widget::_init(["datepicker","daterangepicker"]);
     </div>
 </div>
 <script>
-    $(document).ready(()=>{
-       
+    $(document).ready(()=>{    
+        var firstDay = moment().startOf('month').format('YYYY-MM-DD');
+        var lastDay = moment().endOf('month').format('YYYY-MM-DD');
+        $('#periode_pegawai').daterangepicker({
+            startDate: firstDay,  
+            endDate: lastDay,     
+            locale: {
+                format: 'YYYY-MM-DD',  
+                separator: ' sampai '      
+            },
+            showDropdowns: true  
+        });
         $("#bulan_skor,#periode_pegawai").change(()=>{
             tb_table_data.draw();
         });
+       
     })
+
+       
     function update_skor() {
         Swal.fire({
             title: 'Masukkan Bulan Skor Pegawai',
