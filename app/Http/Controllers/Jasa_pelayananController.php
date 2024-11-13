@@ -80,6 +80,8 @@ class Jasa_pelayananController extends Controller
 
     public function get_dataTable(Request $request)
     {
+
+        list($bulan,$tahun)=explode('-',$request->bulan);
         $data = Jasa_pelayanan::select([
             'jaspel_id',
             'tanggal_jaspel',
@@ -106,6 +108,10 @@ class Jasa_pelayananController extends Controller
         if ($request->id_cair) {
             $data->where("id_cair",$request->id_cair);
         }
+        $data->where("jaspel_bulan",$bulan);
+        $data->where("jaspel_tahun",$tahun);
+
+        
 
         $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
             /* $button = Create::link("<i class=\"far fa-file-pdf\"></i>", [
