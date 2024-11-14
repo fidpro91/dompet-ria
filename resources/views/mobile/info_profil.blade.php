@@ -3,11 +3,12 @@
 <div class="container">
     <div class="card user-info-card mb-3">
         <div class="card-body d-flex align-items-center">
-            <div class="user-profile me-3"><img src="{{asset('storage/uploads/photo_pegawai/'.Session::get('sesLogin')->photo)}}" alt="">
-            </div>
-            <div class="user-info">
-                <div class="d-flex align-items-center">
-                    <h5 class="mb-1">{{Session::get('sesLogin')->emp_name}}</h5>
+            <div class="row">
+                <div class="col-2">
+                  <img src="{{asset('storage/uploads/photo_pegawai/'.Session::get('sesLogin')->photo)}}" alt="" class="thumb-img img-fluid">
+                </div>
+                <div class="col-9">
+                  <h3 class="mt-2">{{Session::get('sesLogin')->emp_name}}</h3>
                 </div>
             </div>
         </div>
@@ -67,7 +68,8 @@
                   <h6 class="collapsed" data-bs-toggle="collapse" data-bs-target="#accordionStyleTwo" aria-expanded="false" aria-controls="accordionStyleTwo">Sertifikasi<i class="bi bi-chevron-down"></i></h6>
                 </div>
                 <div class="accordion-collapse collapse" id="accordionStyleTwo" aria-labelledby="accordionTwo" data-bs-parent="#accordionStyle1">
-                  <div class="accordion-body" id="listSertifikat">
+                  <div class="accordion-body">
+                    <div class="table-responsive" id="listSertifikat"></div>
                   </div>
                 </div>
               </div>
@@ -77,7 +79,9 @@
                   <h6 class="collapsed" data-bs-toggle="collapse" data-bs-target="#accordionStyleThree" aria-expanded="false" aria-controls="accordionStyleThree">Tugas Tambahan<i class="bi bi-chevron-down"></i></h6>
                 </div>
                 <div class="accordion-collapse collapse" id="accordionStyleThree" aria-labelledby="accordionThree" data-bs-parent="#accordionStyle1">
-                  <div class="accordion-body" id="listTT">
+                  <div class="accordion-body">
+                    <div class="table-responsive" id="listTT">
+                    </div>
                   </div>
                 </div>
               </div>

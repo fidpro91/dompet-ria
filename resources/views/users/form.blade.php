@@ -28,7 +28,8 @@ Widget::_init(["select2"]);
                 "model"     => "Employee",
                 "filter"    => ["emp_active" => "t"],
                 "column"    => ["emp_id","emp_name"]
-            ]
+            ],
+            "selected" => $users->emp_id
         ])->render("group","Nama Pegawai")
     !!}
     {!! 

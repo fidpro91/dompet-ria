@@ -1,5 +1,5 @@
 <h1 align="center">
-    <b>LAPORAN REKAPITULASI  <?=$data['header'][0]->keterangan?><br>
+    <b>LAPORAN REKAPITULASI  <?=str_replace('&','Dan',$data['header'][0]->keterangan)?><br>
     RSUD IBNU SINA KABUPATEN GRESIK</b><br>
     <small>Bulan <?=get_namaBulan($data['header'][0]->jaspel_bulan)?> Tahun <?=$data['header'][0]->jaspel_tahun?></small>
 </h1>
@@ -48,6 +48,7 @@
     <tr>
         <th>NO</th>
         <th>NIP</th>
+        <th>NO REK</th>
         <th>NAMA</th>
         <th>SKOR</th>
         <th>NOMINAL</th>
@@ -57,6 +58,7 @@
     @php ($totalRow += $v->nominal);
     <tr>
         <td>{{($x+1)}}</td>
+        <td>{{$v->nomor_rekening}}</td>
         <td>{{$v->nip}}</td>
         <td>{{$v->nama}}</td>
         <td>{{$v->skor}}</td>

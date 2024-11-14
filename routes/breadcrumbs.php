@@ -145,3 +145,23 @@ Breadcrumbs::for("ms_classification", function (BreadcrumbTrail $trail) {
                 $trail->parent("home");
                 $trail->push("activity_log", route("activity_log.index"));
             });
+            Breadcrumbs::for("potongan_penghasilan", function (BreadcrumbTrail $trail) {
+                $trail->parent("home");
+                $trail->push("potongan_penghasilan", route("potongan_penghasilan.index"));
+            });
+            Breadcrumbs::for("komplain_skor", function (BreadcrumbTrail $trail) {
+                $trail->parent("home");
+                $trail->push("komplain_skor", route("komplain_skor.index"));
+            });
+            Breadcrumbs::for("detail_skor_pegawai", function (BreadcrumbTrail $trail) {
+                $trail->parent("home");
+                $trail->push("detail_skor_pegawai", route("detail_skor_pegawai.index"));
+            });
+            Breadcrumbs::for("table_rekap_absen", function (BreadcrumbTrail $trail) {
+                $trail->parent("home");
+                $trail->push("table_rekap_absen", route("table_rekap_absen.index"));
+            });
+            Breadcrumbs::for("rekap_ijin", function (BreadcrumbTrail $trail) {
+                $trail->parent("home");
+                $trail->push("rekap_ijin", route("rekap_ijin.index"));
+            });

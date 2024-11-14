@@ -11,8 +11,9 @@ Widget::_init(["select2","datepicker"]);
         {!!
             Widget::select2("jasa_pelayanan",[
                 "data" => [
-                    "model"     => "Jasa_pelayanan",
-                    "column"    => ["jaspel_id","no_jasa"]
+                    "model"     => "Proporsi_jasa_individu",
+                    "custom"    => "get_jaspel",
+                    "column"    => ["id_jaspel","no_jaspel"]
                 ],
                 "extra" => [
                     "required"  => true

@@ -41,7 +41,7 @@ class LaporanController extends Controller
             )detail
             FROM detail_skor_pegawai ds
             JOIN skor_pegawai sp ON ds.skor_id = sp.id
-            JOIN employee as e on ds.emp_id = e.emp_id
+            JOIN employee as e on ds.emp_id = e.emp_id AND sp.emp_id = e.emp_id
             JOIN ms_unit mu ON e.unit_id_kerja = mu.unit_id
             where 0=0 $where
             GROUP BY e.emp_no,emp_name,mu.unit_name,ordering_mode,sp.total_skor

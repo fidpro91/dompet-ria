@@ -89,11 +89,15 @@
     <div class="col-md-6">
         <div class="card border-0 shadow rounded">
             <div class="card-body">
+                @if(!empty($chart['last_remun']))
                 {!! $chart['last_remun']->container() !!}
+                @endif
             </div>
         </div>
     </div>
 </div>
 {!! $chart['statistik']->script() !!}
-{!! $chart['last_remun']->script() !!}
+@if(!empty($chart['last_remun']))
+    {!! $chart['last_remun']->script() !!}
+@endif
 @endsection

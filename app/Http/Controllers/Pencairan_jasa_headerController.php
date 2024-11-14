@@ -2,22 +2,33 @@
 
 namespace App\Http\Controllers;
 
+use App\Charts\RemunChart;
+use App\Exports\PencairanExport;
+use App\Jobs\FinalPencairan;
 use App\Libraries\Servant;
+use App\Models\Employee;
 use App\Models\Jasa_pelayanan;
 use App\Models\Kategori_potongan;
 use App\Models\Klasifikasi_pajak_penghasilan;
+use App\Models\Pencairan_jasa;
 use Illuminate\Http\Request;
 use App\Models\Pencairan_jasa_header;
 use App\Models\Potongan_jasa_individu;
+use App\Models\Potongan_jasa_medis;
+use App\Models\Potongan_penghasilan;
 use App\Models\Potongan_statis;
 use Illuminate\Support\Facades\Validator;
 use DataTables;
 use fidpro\builder\Create;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use stdClass;
 use Maatwebsite\Excel\Facades\Excel;
-use PDF;
+use PDFDom;
+use Barryvdh\Snappy\Facades\SnappyPdf;
 
 class Pencairan_jasa_headerController extends Controller
 {
@@ -75,10 +86,17 @@ class Pencairan_jasa_headerController extends Controller
                 "class"     => "btn btn-success btn-xs",
                 "href"      => url("$this->route/excel/$data->id_cair_header"),
             ]);
+
+            $button .= Create::link("<i class=\" fas fa-chart-bar\"></i>", [
+                "class"     => "btn btn-purple btn-xs",
+                "href"      => url("$this->route/statistik/$data->id_cair_header"),
+            ]);
+
             if ($data->is_published == 0) {
                 $button .= Create::link("<i class=\"fas fa-glasses\"></i>", [
                     "class"     => "btn btn-warning btn-xs",
-                    "href"      => url("$this->route/kroscek/$data->id_cair_header"),
+                    "href"      => url("potongan_penghasilan/index/$data->id_cair_header"),
+                    // "href"      => url("$this->route/kroscek/$data->id_cair_header"),
                     "target"    => "_blank"
                 ]);
                 $button .= Create::action("<i class=\"fas fa-trash\"></i>", [
@@ -137,16 +155,17 @@ class Pencairan_jasa_headerController extends Controller
                 $id=DB::table("pencairan_jasa")->insertGetId($input);
 
                 //hitung pajak & potongan by golongan
-                $this->hitung_potongan_golongan($value,$id);
+                /* $this->hitung_potongan_golongan($value,$id);
                 if ($value->emp_status == 2) {
                     $this->hitung_pajak_blud($value,$id);
                 }
+
                 $this->hitung_potongan_individu($value,$id);
                 DB::table("pencairan_jasa")->where("id_cair",$id)->update([
                     "total_potongan"	=> $this->totalPotongan,
 					"total_netto"		=> ($value->total_terima-$this->totalPotongan)
                 ]);
-                $this->totalPotongan = 0;
+                $this->totalPotongan = 0; */
             }
             DB::commit();
             $resp = [
@@ -265,7 +284,7 @@ class Pencairan_jasa_headerController extends Controller
 			}
 		}else{
 			if (!empty($data->kode_ptkp)) {
-				$cekPajak = Potongan_statis::find($data->kode_ptkp);
+				$cekPajak = Potongan_statis::where("pot_stat_code",$data->kode_ptkp)->first();
                 if (!$cekPajak) {
                     return false;
                 }
@@ -391,29 +410,37 @@ class Pencairan_jasa_headerController extends Controller
         $data = Pencairan_jasa_header::findOrFail($id);
         DB::beginTransaction();
         try {
-            DB::statement("UPDATE potongan_jasa_individu pi
-			JOIN (
-			SELECT pi.pot_ind_id FROM potongan_jasa_medis pm
-			JOIN pencairan_jasa pj ON pm.pencairan_id = pj.id_cair
-			JOIN kategori_potongan kp on pm.kategori_id = kp.kategori_potongan_id
-			JOIN potongan_jasa_individu pi ON pi.emp_id = pj.emp_id
-			WHERE pj.id_header = $id and pi.pot_status = 't'
-			) x ON x.pot_ind_id = pi.pot_ind_id
-			SET pi.last_angsuran = (pi.last_angsuran-1)");
             Jasa_pelayanan::where("id_cair",$id)->update([
-                "status"    => 1
+                "status"    => 2,
+                "id_cair"   => null
             ]);
+            //potongan penghasilan
+            $dataPotongan = Potongan_penghasilan::where("id_cair_header",$id)->get();
+            foreach ($dataPotongan as $key => $value) {
+                $request = new Request();
+                $request->merge([
+                    'kategori_potongan' => $value->kategori_potongan,
+                    'id_cair'           => $id
+                ]);
+                $potonganPenghasilan = app(\App\Http\Controllers\Potongan_penghasilanController::class);
+                $response = $potonganPenghasilan->destroy_all($request);
+                // Potongan_jasa_medis::where("header_id",$value->id)->delete();
+                // Potongan_penghasilan::find($value->id)->delete();
+            }
+
+            Pencairan_jasa::where("id_header",$id)->delete();
+            
             $data->delete();
             DB::commit();
             $resp = [
                 'success' => true,
-                'message' => 'Data Berhasil Diupdate!'
+                'message' => 'Data Berhasil Dihapus!'
             ];
         } catch (\Exception $e) {
             DB::rollBack();
             $resp = [
                 'success' => false,
-                'message' => 'Data Gagal Diupdate! <br>' . $e->getMessage()
+                'message' => 'Data Gagal Dihapus! <br>' . $e->getMessage()
             ];
         }
         return response()->json($resp);
@@ -451,39 +478,7 @@ class Pencairan_jasa_headerController extends Controller
             $data->update([
                 "is_published" => 1
             ]);
-            $ekseKutif = DB::select("SELECT 'EKSEKUTIF' AS penjamin,
-            SUM(nominal_terima)total
-            FROM jp_byname_medis jm
-            JOIN jasa_pelayanan jp ON jm.jaspel_id = jp.jaspel_id
-            WHERE jp.id_cair = $id AND jm.komponen_id = 9");
-            $percent = $ekseKutif[0]->total/$data->total_nominal*100;
-            $percentase[] = [
-                "penjamin"          => "EKSEKUTIF",
-                "persentase_jasa"   => ($percent),
-                "id_cair"           => $id
-            ];
-            $medisNonEks = DB::select("
-            SELECT dm.nama_penjamin,
-            sum(dm.skor_jasa/10000) as total_skor
-            FROM detail_tindakan_medis dm
-            JOIN jp_byname_medis jm ON jm.jp_medis_id = dm.jp_medis_id
-            JOIN jasa_pelayanan jp ON jm.jaspel_id = jp.jaspel_id
-            WHERE jp.id_cair = $id AND jm.komponen_id = 7
-            GROUP BY dm.nama_penjamin");
-            $bagianNonEks=$data->total_nominal-$ekseKutif[0]->total;
-            $medisArray = array_map(function ($medisNonEks) {
-                return (array)$medisNonEks;
-            }, $medisNonEks);
-            $totalSkor = array_sum(array_column($medisArray,'total_skor'));
-            foreach ($medisNonEks as $key => $value) {
-                $hitungProporsi = ($value->total_skor/$totalSkor*$bagianNonEks)/$bagianNonEks*(100-$percent);
-                $percentase[] = [
-                    "penjamin"          => $value->nama_penjamin,
-                    "persentase_jasa"   => ($hitungProporsi),
-                    "id_cair"           => $id
-                ];
-            }
-            DB::table('persentase_jasa')->insert($percentase);
+            FinalPencairan::dispatch($data);
             DB::commit();
             $resp = [
                 'success' => true,
@@ -504,33 +499,167 @@ class Pencairan_jasa_headerController extends Controller
 	{
 		return Excel::download(new JaspelExport($id), 'THP_'.$id.'.xlsx');
 	}
+    
+    public function statistic_report($id)
+	{
+		$chart['statistik'] = new RemunChart;
+        $pencairan = Pencairan_jasa_header::findOrFail($id);
+        $data =  Pencairan_jasa_header::from('pencairan_jasa_header as ph')
+                 ->join("pencairan_jasa as pj","pj.id_header","=","ph.id_cair_header")
+                 ->join("employee as e","e.emp_id","=","pj.emp_id")
+                 ->join("ms_unit as mu","mu.unit_id","=","e.unit_id_kerja")
+                 ->select("mu.unit_name",DB::raw("sum(pj.total_brutto) as total_jasa"))
+                 ->where([
+                    "ph.id_cair_header" => $id,
+                    "e.is_medis"        => "f"
+                 ])
+                 ->whereNotIn('e.jabatan_type', [16,17])
+                 ->groupBy("mu.unit_name")
+                //  ->limit("10")
+                 ->get();
+        $dataChart=$colors=[];
+        foreach ($data as $key => $value) {
+            $dataChart[$value->unit_name] = $value->total_jasa;
+            $colors[] = '#' . str_pad(dechex(mt_rand(0, 0xFFFFFF)), 6, '0', STR_PAD_LEFT);
+        }
+        $chart['statistik']->labels(array_keys($dataChart));
+        $chart['statistik']->dataset('Jasa Pelayanan', 'bar', array_values($dataChart))
+                            // ->color("rgb(216, 255, 119 )")
+                            ->backgroundcolor($colors);
+        $chart['statistik']->displayLegend(false);
 
-    public function print_pdf($id)
+        $chart['globalPendapatan']  = new RemunChart;
+        $dataPercent   = DB::table("persentase_jasa")->where("id_cair",$id);
+        $dataChart=$background=[];
+        foreach ($dataPercent->get() as $key => $value) {
+            $dataChart[$value->penjamin] = $value->persentase_jasa;
+            $background[] = "rgb(".rand(100,250).",".rand(50,200).", ".rand(10,125).")";
+        }
+        
+        $chart['globalPendapatan']->labels(array_keys($dataChart));
+        $chart['globalPendapatan']->dataset('Pendapatan Global', 'pie', array_values($dataChart))
+            ->color("rgb(216, 255, 119 )")
+            ->backgroundcolor($background);
+
+        return $this->themes("pencairan_jasa_header.printout.statistik",compact('chart'),'Statistik Jasa Pelayanan '.$pencairan->keterangan);
+	}
+
+    /* public function print_pdf($id)
     {
+        set_time_limit(0);
         ini_set("memory_limit",-1);
-        $data['potongan']   = Kategori_potongan::where("potongan_active","t")->get();
-        $data['header']     = Pencairan_jasa_header::find($id);
+        $cacheKey = 'laporan-' . $id;
+        $data = Cache::get($cacheKey);
+        if (!$data) {
+            $data['potongan']   = Kategori_potongan::where("potongan_active","t")->get();
+            $data['header']     = Pencairan_jasa_header::find($id);
 
-        $data['detail'] = DB::select("SELECT x.golongan,x.emp_no,x.emp_name,x.nomor_rekening,
-        x.total_brutto,
-        json_arrayagg(
-            json_object('kategori_id',x.kategori_id, 'potongan', x.total_potongan)
-        )detail
-        FROM (
-            SELECT e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,pm.kategori_id,pj.total_brutto,sum(pm.potongan_value)total_potongan
-            FROM pencairan_jasa pj
-            join employee e on e.emp_id = pj.emp_id
-            JOIN potongan_jasa_medis pm ON pm.pencairan_id = pj.id_cair
-            where pj.id_header = '$id'
-            group by e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,pm.kategori_id,pj.total_brutto
-        )x
-        GROUP BY x.golongan,x.emp_no,x.emp_name,x.nomor_rekening,
-        x.total_brutto");
+            $data['detail'] = DB::select("SELECT x.unit_name,x.golongan,x.emp_no,x.emp_name,x.nomor_rekening,
+            x.total_brutto,
+            json_arrayagg(
+                json_object('kategori_id',x.kategori_potongan, 'potongan', x.total_potongan)
+            )detail
+            FROM (
+                SELECT e.ordering_mode,e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,ph.kategori_potongan,pj.total_brutto,sum(pm.potongan_value)total_potongan,
+                mu.unit_name
+                FROM pencairan_jasa pj
+                join employee e on e.emp_id = pj.emp_id
+                join ms_unit mu on e.unit_id_kerja = mu.unit_id
+                LEFT JOIN potongan_jasa_medis pm ON pm.pencairan_id = pj.id_cair
+                LEFT JOIN potongan_penghasilan ph ON ph.id = pm.header_id
+                where pj.id_header = '$id'
+                group by e.ordering_mode,e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,ph.kategori_potongan,pj.total_brutto,mu.unit_name
+            )x
+            GROUP BY x.ordering_mode,x.golongan,x.emp_no,x.emp_name,x.nomor_rekening,
+            x.total_brutto,x.unit_name
+            order by IFNULL(ordering_mode, '07'),x.unit_name,x.emp_name");
+            Cache::put($cacheKey,$data,60);
+        }
         // return view("pencairan_jasa_header.printout.print_pencairan",compact('data'));
-        $pdf = PDF::loadview("pencairan_jasa_header.printout.print_pencairan",compact('data'))
+        $pdf = PDFDom::loadview("pencairan_jasa_header.printout.print_pencairan",compact('data'))
                ->setPaper([0, 0, 750, 1500], 'landscape');
         // return $pdf->download('laporan-pegawai.pdf');
         return $pdf->stream();
         
+    } */
+
+    public function print_pdf($id) {
+        $cacheKey = 'laporan-' . $id;
+        $data = Cache::get($cacheKey);
+        if (!$data) {
+            $data['potongan'] = Kategori_potongan::where("potongan_active", "t")->get();
+            $data['header'] = Pencairan_jasa_header::find($id);
+            $data['detail'] = DB::select("
+                SELECT x.unit_name, x.golongan, x.emp_no, x.emp_name, x.nomor_rekening,
+                       x.total_brutto,
+                       json_arrayagg(
+                           json_object('kategori_id', x.kategori_potongan, 'potongan', x.total_potongan)
+                       ) detail
+                FROM (
+                    SELECT e.ordering_mode, e.emp_no, e.emp_name, e.golongan, pj.nomor_rekening, ph.kategori_potongan, pj.total_brutto, sum(pm.potongan_value) total_potongan,
+                           mu.unit_name
+                    FROM pencairan_jasa pj
+                    JOIN employee e ON e.emp_id = pj.emp_id
+                    JOIN ms_unit mu ON e.unit_id_kerja = mu.unit_id
+                    LEFT JOIN potongan_jasa_medis pm ON pm.pencairan_id = pj.id_cair
+                    LEFT JOIN potongan_penghasilan ph ON ph.id = pm.header_id
+                    WHERE pj.id_header = '$id'
+                    GROUP BY e.ordering_mode, e.emp_no, e.emp_name, e.golongan, pj.nomor_rekening, ph.kategori_potongan, pj.total_brutto, mu.unit_name
+                ) x
+                GROUP BY x.ordering_mode, x.golongan, x.emp_no, x.emp_name, x.nomor_rekening,
+                         x.total_brutto, x.unit_name
+                ORDER BY IFNULL(ordering_mode, '07'), x.unit_name, x.emp_name
+            ");
+            Cache::put($cacheKey, $data, 60);
+        }
+    
+        $options = [
+            'page-width' => '400mm',
+            'page-height' => '650mm',
+            'orientation' => 'landscape'
+        ];
+        $pdf = SnappyPdf::loadView("pencairan_jasa_header.printout.print_pencairan", compact('data'))->setOptions($options);
+    
+        return $pdf->stream('laporan-pegawai.pdf');
+    }
+    
+    /* public function file_excel($id)
+    {
+        set_time_limit(0);
+        ini_set("memory_limit",-1);
+        $cacheKey = 'laporan-' . $id;
+        $data = Cache::get($cacheKey);
+        if (!$data) {
+            $data['potongan']   = Kategori_potongan::where("potongan_active","t")->get();
+            $data['header']     = Pencairan_jasa_header::find($id);
+
+            $data['detail'] = DB::select("SELECT x.unit_name,x.golongan,x.emp_no,x.emp_name,x.nomor_rekening,
+            x.total_brutto,
+            json_arrayagg(
+                json_object('kategori_id',x.kategori_potongan, 'potongan', x.total_potongan)
+            )detail
+            FROM (
+                SELECT e.ordering_mode,e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,ph.kategori_potongan,pj.total_brutto,sum(pm.potongan_value)total_potongan,
+                e.unit_id_kerja,mu.unit_name
+                FROM pencairan_jasa pj
+                join employee e on e.emp_id = pj.emp_id
+                join ms_unit mu on mu.unit_id = e.unit_id_kerja
+                LEFT JOIN potongan_jasa_medis pm ON pm.pencairan_id = pj.id_cair
+                LEFT JOIN potongan_penghasilan ph ON ph.id = pm.header_id
+                where pj.id_header = '$id'
+                group by e.ordering_mode,e.emp_no,e.emp_name,e.golongan,pj.nomor_rekening,ph.kategori_potongan,pj.total_brutto,e.unit_id_kerja,mu.unit_name
+            )x
+            GROUP BY x.ordering_mode,x.golongan,x.emp_no,x.emp_name,x.nomor_rekening,
+            x.total_brutto,x.unit_id_kerja,x.unit_name
+            order by IFNULL(ordering_mode, '07'),x.unit_id_kerja,x.emp_name");
+            Cache::put($cacheKey,$data,60);
+        }
+        return view("pencairan_jasa_header.printout.file_excel",compact('data'));
+    } */
+
+    public function file_excel($id)
+    {
+        $pencairan =  Pencairan_jasa_header::find($id);
+        return Excel::download(new PencairanExport($id), "".($pencairan->keterangan??"jaspel_$id").".xlsx");
     }
 }

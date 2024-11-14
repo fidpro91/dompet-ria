@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Libraries\Qontak;
+use App\Libraries\Servant;
+use App\Models\Log_messager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
@@ -30,20 +33,24 @@ class LoginController extends Controller
         $data = [
             'email' => $request->input('email_log'),
             'password' => $request->input('password_log'),
-            'captcha' => $request->input('capcha_log'),
+            'g-recaptcha-response' => $request->input('g-recaptcha-response'),
         ];
+        
         $validator = Validator::make($data,[
             'email' => ['required'],
             'password' => ['required'],
-            'captcha' => ['required','captcha'],
+            'g-recaptcha-response' =>  ['required', 'recaptcha'],
         ]);
+
         if ($validator->fails()) {
-            return [
+            return response()->json([
                 "code"      => "202",
                 "message"   => implode('<br>',$validator->errors()->all())
-            ];
+            ]);
         }
-        unset($data['captcha']);
+        
+        // unset($data['captcha']);
+        unset($data['g-recaptcha-response']);
         if (Auth::Attempt($data)) {
             $dataEmp = DB::table("employee AS e")
                        ->join("users as us","us.emp_id","=","e.emp_id")
@@ -54,6 +61,19 @@ class LoginController extends Controller
                        ->leftJoin("potongan_statis as ps","ps.pot_stat_code","=","e.kode_ptkp")
                        ->select(["e.*","mg.*","mu.unit_name","di.detail_name AS jabatan_struktural_name","di2.detail_name AS jabatan_fungsional_name","ps.nama_potongan"])
                        ->where("us.email",$data['email'])->first();
+            /* $query = str_replace(array('?'), array('\'%s\''), $dataEmp->toSql());
+            $query = vsprintf($query, $dataEmp->getBindings());
+            print_r($query);
+            print_r($dataEmp);
+            die; */
+            if (!$dataEmp) {
+                Auth::logout();
+                
+                return response()->json([
+                    "code"      => 203,
+                    "message"   => "Data pengguna belum termapping atau sudah tidak aktif"
+                ]);
+            }
             Session::put('sesLogin',$dataEmp);
             $groupMobile = [4,6];
             if (in_array(Auth::user()->group_id,$groupMobile) ) {
@@ -73,6 +93,51 @@ class LoginController extends Controller
             ];
         }
 
+        return response()->json($resp);
+    }
+
+    public function login_verif(Request $request)
+    {
+        $data = [
+            'email' => $request->input('xusername'),
+            'password' => $request->input('xpasssword'),
+            'captcha' => $request->input('capcha_log'),
+        ];
+        $validator = Validator::make($data,[
+            'email' => ['required'],
+            'password' => ['required'],
+            'captcha' => ['required','captcha'],
+        ],[
+            "captcha.captcha"        => "Kode captcha tidak sesuai",
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                "code"      => "202",
+                "message"   => implode('<br>',$validator->errors()->all())
+            ]);
+        }
+        unset($data['captcha']);
+        if (Auth::Attempt($data)) {
+            $dataEmp = DB::table("employee AS e")
+                       ->join("users as us","us.emp_id","=","e.emp_id")
+                       ->join("ms_group as mg","mg.group_id","=","us.group_id")
+                       ->where("us.email",$data['email'])->first();
+            Session::put('sesLogin',$dataEmp);
+
+            Qontak::sendOTP($dataEmp->phone,$dataEmp->emp_name);
+            
+            $resp = [
+                "code"      => 200,
+                "message"   => "ok",
+                "content"   => view("verifikasi_skor.form_otp")->render()
+            ];
+        }else{
+            $resp = [
+                "code"      => 201,
+                "message"   => "username / password salah"
+            ];
+        }
         return response()->json($resp);
     }
 

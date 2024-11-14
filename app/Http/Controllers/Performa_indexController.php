@@ -46,6 +46,9 @@ class Performa_indexController extends Controller
     {
         $data = Performa_index::from("performa_index as pi")
             ->where("pi.perform_id",$request->performa_id)
+            ->when($request->bulan_update, function ($query) use ($request) {
+                return $query->whereMonth('pi.expired_date', $request->bulan_update);
+            })
             ->join("employee as e","e.emp_id","=","pi.emp_id")
             ->join("detail_indikator as di","di.detail_id","=","pi.perform_skor")
             ->select([
@@ -57,7 +60,7 @@ class Performa_indexController extends Controller
                 'di.detail_name',
                 'di.skor',
             ]);
-
+        
         $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
             /* $button = Create::action("<i class=\"fas fa-edit\"></i>", [
                 "class"     => "btn btn-primary btn-xs",

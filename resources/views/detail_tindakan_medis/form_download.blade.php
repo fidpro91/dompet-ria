@@ -6,45 +6,51 @@ Widget::_init(["select2","datepicker","daterangepicker"]);
 <div class="row">
     <div class="col-xl-12 col-md-6">
         {!!Form::open(["url" => "detail_tindakan_medis/get_data_simrs","id"=>"form_download"])!!}
-        {!!Widget::datepicker("bulan_jasa",[
-        "format" =>"mm-yyyy",
-        "viewMode" => "year",
-        "minViewMode" => "year",
-        "autoclose" =>true
-        ],[
-        "readonly" => true,
-        "value" => date('m-Y')
-        ])->render("group","Bulan Pembagian Jasa")!!}
-        {!!Widget::datepicker("bulan_pelayanan",[
-        "format" =>"mm-yyyy",
-        "viewMode" => "year",
-        "minViewMode" => "year",
-        "autoclose" =>true
-        ],[
-        "readonly" => true,
-        "value" => date('m-Y')
-        ])->render("group")!!}
-        {!!Widget::daterangePicker("periode_tindakan")->render("group")!!}
         {!!
-            Widget::select2("surety_id",[
+            Widget::select2("repo_id",[
                 "data" => [
-                    "model"     => "Ms_reff",
-                    "filter"    => ["reffcat_id" => "5"],
-                    "column"    => ["reff_code","reff_name"]
+                    "model"     => "Repository_download",
+                    "filter"    => ["is_used" => "f"],
+                    "column"    => ["id","download_no"]
                 ],
-                "extra" => [
-                    "name"      => "surety_id[]",
-                    "multiple"  => "true"
-                ]
-            ])->render("group","Penjamin")
+                ""
+            ])->render("group","Repository Download")
         !!}
-        {!!
-            Create::dropDown("jenis_pembayaran",[
-            "data" => [
-                ["1" => "Tunai"],
-                ["2" => "Piutang"]
-            ]
-        ])->render("group")!!}
+        <div id="download_baru">
+            {!!
+                Widget::datepicker("bulan_pelayanan",[
+                    "format" =>"mm-yyyy",
+                    "viewMode" => "year",
+                    "minViewMode" => "year",
+                    "autoclose" =>true
+                ],[
+                    "readonly" => true,
+                    "value" => date('m-Y')
+                ])->render("group")
+            !!}
+            {!!
+                Widget::select2("surety_id",[
+                    "data" => [
+                        "model"     => "Ms_reff",
+                        "filter"    => ["reffcat_id" => "5"],
+                        "column"    => ["reff_code","reff_name"]
+                    ],
+                    "extra" => [
+                        "name"      => "surety_id[]",
+                        "multiple"  => "true"
+                    ]
+                ])->render("group","Penjamin")
+            !!}
+            {!!
+                Create::dropDown("jenis_pembayaran",[
+                    "data" => [
+                        ["1" => "Tunai"],
+                        ["2" => "Piutang"]
+                    ]
+                ])->render("group")
+            !!}
+        </div>
+        {!!Widget::daterangePicker("periode_tindakan")->render("group")!!}
         <button class="btn btn-block btn-success btn-download">Download</button>
         {!!Form::close()!!}
     </div>
@@ -93,5 +99,13 @@ Widget::_init(["select2","datepicker","daterangepicker"]);
             })
             return false;
         });
+
+        $("#repo_id").change(function(){
+            if ($(this).val()) {
+                $("#download_baru").hide();
+            }else{
+                $("#download_baru").show();
+            }
+        })
     })
 </script>

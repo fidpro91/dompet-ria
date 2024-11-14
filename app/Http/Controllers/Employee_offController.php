@@ -4,9 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Employee_off;
+use App\Models\Skor_pegawai;
 use Illuminate\Support\Facades\Validator;
 use DataTables;
 use fidpro\builder\Create;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class Employee_offController extends Controller
 {
@@ -16,32 +20,60 @@ class Employee_offController extends Controller
 
     public $param = [
         'emp_id'            =>  'required',
-        'bulan_skor'        =>  'required',
-        'periode'           =>  'required',
-        'persentase_skor'   =>  'required',
         'keterangan'        =>  '',
-        'user_act'          =>  ''
+        'bulan_skor'        => 'required',
+        'user_act'          => 'required',
+        'periode'           => 'required',
+        'persentase_skor'   => 'required'
     ];
-    public $defaultValue = [
-        'id'            =>  '',
-        'emp_id'        =>  '',
-        'bulan_skor'    =>  '',
-        'periode'       =>  '',
-        'persentase_skor'       =>  '',
-        'keterangan'    =>  '',
-        'user_act'      =>  ''
-    ];
+
     public function index()
     {
+        
         return $this->themes($this->folder . '.index', null, $this);
     }
 
     public function get_dataTable(Request $request)
     {
+        
+        list($tgl1, $tgl2) = explode(' sampai ', $request->period);    
         $data = Employee_off::join("employee","employee.emp_id","=","employee_off.emp_id")
                 ->join("ms_unit","ms_unit.unit_id","=","employee.unit_id_kerja")
-                ->get();
-
+                ->where("bulan_skor", [$request->month_filter])               
+                ->get([
+                    'id',
+                    'emp_no',
+                    'emp_name',
+                    'unit_name',
+                    'bulan_skor',
+                    'periode',
+                    'persentase_skor',
+                    'keterangan'
+                ]);
+               
+                $data = $data->map(function ($item) use ($tgl1, $tgl2) {
+                    $dates = explode(' - ', $item->periode); 
+                    $formattedDates = array_map(function($date) {
+                        return date('Y-m-d', strtotime($date));  
+                    }, $dates);   
+                           
+                    if (count($formattedDates) == 2) {
+                        $item->start_date = $formattedDates[0];
+                        $item->end_date = $formattedDates[1];
+                        $startDate = Carbon::createFromFormat('Y-m-d', $item->start_date);
+                        $endDate = Carbon::createFromFormat('Y-m-d', $item->end_date);
+                        $tgl1Carbon = Carbon::createFromFormat('Y-m-d', $tgl1);
+                        $tgl2Carbon = Carbon::createFromFormat('Y-m-d', $tgl2);
+                        if ($startDate->between($tgl1Carbon, $tgl2Carbon, false) &&
+                            $endDate->between($tgl1Carbon, $tgl2Carbon, false)) {
+                            return $item;
+                        }
+                    }
+                    return null;
+                });
+                $data = $data->filter(function ($item) {
+                    return !is_null($item); 
+                });
         $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
             $button = Create::action("<i class=\"fas fa-edit\"></i>", [
                 "class"     => "btn btn-primary btn-xs",
@@ -64,24 +96,101 @@ class Employee_offController extends Controller
 
     public function create()
     {
-        $employee_off = (object)$this->defaultValue;
+        $defaultValue =  array_fill_keys(array_keys($this->param), null);
+        $defaultValue["id"] = null;
+        $employee_off = (object) $defaultValue;
         return view($this->folder . '.form', compact('employee_off'));
     }
 
     public function store(Request $request)
     {
+        $request['user_act'] = Auth::id();
         $valid = $this->form_validasi($request->all());
         if ($valid['code'] != 200) {
             return response()->json([
                 'success' => false,
-                'message' => $this->form_validasi($request->all())['message']
+                'message' => $valid['message']
             ]);
         }
+        
+        $hitungSkor = $this->hitung_skor($request);
+        if ($hitungSkor["code"] != 200) {
+            return response()->json([
+                'success' => false,
+                'message' => $hitungSkor["message"]
+            ]);
+        }
+
         $save = Employee_off::create($valid['data']);
         return response()->json([
             'success' => true,
             'message' => 'Data Berhasil Disimpan!'
         ]);
+    }
+
+    public function hitung_skor($request) {
+        $dataSkor = Skor_pegawai::where([
+            "bulan_update"  => $request->bulan_skor,
+            "emp_id"        => $request->emp_id
+        ]);
+
+        if (empty($dataSkor->first())) {
+            return([
+                'code' => 202,
+                'message' => "Skor pegawai bulan $request->bulan_skor tidak ditemukan"
+            ]);
+        }
+
+        //kurangi data persentasi skor
+        $valueSkor = $dataSkor->first();
+        $totalSkor = $request->persentase_skor/100*$valueSkor->total_skor;
+        $dataSkor->update([
+            "skor_koreksi"    => $totalSkor
+        ]);
+
+        return([
+            'code'      => 200,
+            'message'   => "OK"
+        ]);
+    }
+
+    public function update_skor(Request $request) {
+
+        $employee = Employee_off::where("bulan_skor",$request->bulan_skor)->get();
+        DB::beginTransaction();
+        try {
+            foreach ($employee as $key => $value) {
+                $dataSkor = Skor_pegawai::where([
+                    "bulan_update"  => $value->bulan_skor,
+                    "emp_id"        => $value->emp_id
+                ]);
+
+                if (empty($dataSkor->first())) {
+                    continue;
+                }
+
+                //kurangi data persentasi skor
+                $valueSkor = $dataSkor->first();
+                $totalSkor = $value->persentase_skor/100*$valueSkor->total_skor;
+                
+                $dataSkor->update([
+                    "skor_koreksi"    => $totalSkor
+                ]);
+            }
+            DB::commit();
+            $resp = [
+                'code'      => 200,
+                'message'   => "Skor berhasil diupdate"
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $resp = [
+                'code'      => 201,
+                'message'   => "Skor gagal diupdate"
+            ];
+        }
+
+        return response()->json($resp);
     }
 
     private function form_validasi($data)
@@ -91,7 +200,7 @@ class Employee_offController extends Controller
         if ($validator->fails()) {
             return [
                 "code"      => "201",
-                "message"   => $validator->errors()
+                "message"   => implode("<br>", $validator->errors()->all())
             ];
         }
         //filter
@@ -113,14 +222,23 @@ class Employee_offController extends Controller
     }
     public function update(Request $request, Employee_off $employee_off)
     {
+        $request['user_act'] = Auth::id();
         $valid = $this->form_validasi($request->all());
         if ($valid['code'] != 200) {
             return response()->json([
                 'success' => false,
-                'message' => $this->form_validasi($request->all())['message']
+                'message' => $valid['message']
             ]);
         }
 
+        $hitungSkor = $this->hitung_skor($request);
+        if ($hitungSkor["code"] != 200) {
+            return response()->json([
+                'success' => false,
+                'message' => $hitungSkor["message"]
+            ]);
+        }
+        
         $data = Employee_off::findOrFail($employee_off->id);
         $data->update($valid['data']);
         return response()->json([
@@ -132,6 +250,12 @@ class Employee_offController extends Controller
     public function destroy($id)
     {
         $data = Employee_off::findOrFail($id);
+        Skor_pegawai::where([
+            "emp_id"        => $data->emp_id,
+            "bulan_update"  => $data->bulan_skor
+        ])->update([
+            "skor_koreksi"  => null
+        ]);
         $data->delete();
         return response()->json([
             'success' => true,

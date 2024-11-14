@@ -13,12 +13,11 @@ class Employee_off extends Model
     // protected $primaryKey = 'id';
     protected $table = 'employee_off';
     protected $fillable = [
-        'id',
         'emp_id',
         'bulan_skor',
-        'periode',
-        'persentase_skor',
         'keterangan',
-        'user_act'
+        'user_act',
+        'periode',
+        'persentase_skor'
     ];
 }

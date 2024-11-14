@@ -19,7 +19,8 @@ class Ms_unitController extends Controller
         'is_active'   =>  'required',
         'resiko_infeksi'   =>  'required',
         'resiko_admin'   =>  'required',
-        'emergency_id'   =>  'required'
+        'emergency_id'   =>  'required',
+        'ka_unit'   =>  'required'
     ];
     public $defaultValue = [
         'unit_id'   =>  '',
@@ -27,7 +28,8 @@ class Ms_unitController extends Controller
         'is_active'   =>  '',
         'resiko_infeksi'   =>  '',
         'resiko_admin'   =>  '',
-        'emergency_id'   =>  ''
+        'emergency_id'   =>  '',
+        'ka_unit'   =>  ''
     ];
     public function index()
     {
@@ -43,8 +45,10 @@ class Ms_unitController extends Controller
                 ->leftJoin("indikator as i","i.id","=","di.indikator_id")
                 ->leftJoin("indikator as i2","i2.id","=","di2.indikator_id")
                 ->leftJoin("indikator as i3","i3.id","=","di3.indikator_id")
+                ->leftJoin("employee as e","e.emp_id","=","mu.ka_unit")
                 ->selectRaw("
                     mu.unit_id,
+                    coalesce(e.emp_name,'<i>(Kosong)</i>') as kepala_unit,
                     mu.unit_name,
                     mu.is_active,
                     (di.skor*i.bobot) as resiko,
@@ -68,7 +72,7 @@ class Ms_unitController extends Controller
                 "data-url"  => route($this->route . ".destroy", $data->unit_id),
             ]);
             return $button;
-        })->rawColumns(['action']);
+        })->rawColumns(['action','kepala_unit']);
         return $datatables->make(true);
     }
 

@@ -1,6 +1,7 @@
 <?php
 use \fidpro\builder\Create;
 use \fidpro\builder\Widget;
+use \fidpro\builder\Bootstrap;
 
 Widget::_init(["select2","datepicker"]);
 ?>
@@ -44,6 +45,17 @@ Widget::_init(["select2","datepicker"]);
         !!}
     </div>
 </div>
+{{
+    Bootstrap::modal('modal_skor',[
+        "title"   => 'Perhitungan Skor',
+        "size"    => "modal-md",
+        "body"    => [
+            "content" => function() {
+                return view("skor_pegawai.v_skor");
+            }
+        ]
+    ])
+}}
 <script>
     $(document).ready(()=>{
         $('#form_download').parsley().on('field:validated', function() {
@@ -74,6 +86,10 @@ Widget::_init(["select2","datepicker"]);
                         'url'   : '{{url("skor_pegawai/generate_skor")}}',
                         'success': function(data) {
                             if (data.success) {
+                                /* Swal.close();
+                                $("#modal_skor").modal({
+                                    backdrop: "static"
+                                }); */
                                 Swal.fire("Sukses!", data.message, "success").then(() => {
                                     location.href = "{{url('skor_pegawai/hasil_skor')}}";
                                 });

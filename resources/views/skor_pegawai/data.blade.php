@@ -14,6 +14,18 @@ Widget::_init(["datepicker"]);
                         "data-url" => route("skor_pegawai.create")
                     ])
                 !!}
+                {!!
+                    Form::button("Clear All Data",[
+                        "class"     => "btn btn-danger",
+                        "onclick"   => "clear_data()"
+                    ])
+                !!}
+                {!!
+                    Form::button("Publish Skor",[
+                        "class"     => "btn btn-secondary",
+                        "onclick"   => "publish_skor()"
+                    ])
+                !!}
             </div>
             <div class="col-md-3">
                 {!! 
@@ -86,6 +98,10 @@ Widget::_init(["datepicker"]);
                         'total_skor' => [
                             "data"  => "total_skor",
                             "name"  => "sp.total_skor"
+                        ],
+                        'skor_koreksi' => [
+                            "data"  => "skor_koreksi",
+                            "name"  => "sp.skor_koreksi"
                         ]
                     ]
                 ])
@@ -99,4 +115,76 @@ Widget::_init(["datepicker"]);
             tb_table_skor.draw();
         });
     })
+
+    function clear_data() {
+        var bulanSkor = $("#bulan_filter").val();
+        Swal.fire({
+            title: 'Hapus Data?',
+            text : `Hapus semua data di bulan ${bulanSkor}?`,
+            type: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes'
+        }).then((result) => {
+            if (result.value) {
+                $.ajax({
+                    'data': {
+                        bulan_skor : bulanSkor
+                    },
+                    'headers': {
+                        'X-CSRF-TOKEN': "<?=csrf_token()?>"
+                    },
+                    'url' : '{{url("skor_pegawai/clear_all_data")}}',
+                    'type' : 'post',
+                    'dataType': 'json',
+                    'success': function(data) {
+                        if (data.success) {
+                            Swal.fire("Sukses!", data.message, "success").then(() => {
+                                tb_table_skor.draw();
+                            });
+                        } else {
+                            Swal.fire("Oopss...!!", data.message, "error");
+                        }
+                    }
+                });
+            }
+        })
+    }
+
+    function publish_skor() {
+        var bulanSkor = $("#bulan_filter").val();
+        Swal.fire({
+            title: 'Kirim Notifikasi Skor?',
+            text : `Notifikasi Skor Akan Dikirimkan Ke Verifikator Skor Lewat Pesan Whatsapp`,
+            type: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes'
+        }).then((result) => {
+            if (result.value) {
+                $.ajax({
+                    'data': {
+                        bulan_skor : bulanSkor
+                    },
+                    'headers': {
+                        'X-CSRF-TOKEN': "<?=csrf_token()?>"
+                    },
+                    'url' : '{{url("skor_pegawai/send_to_verifikator")}}',
+                    'type' : 'post',
+                    'dataType': 'json',
+                    'success': function(data) {
+                        if (data.code == 200) {
+                            Swal.fire("Sukses!", data.message, "success").then(() => {
+                                tb_table_skor.draw();
+                            });
+                        } else {
+                            Swal.fire("Oopss...!!", data.message, "error");
+                        }
+                    }
+                });
+            }
+        })
+    }
 </script>

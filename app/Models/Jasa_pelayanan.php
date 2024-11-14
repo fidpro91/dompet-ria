@@ -9,7 +9,7 @@ class Jasa_pelayanan extends Model
 {
     use HasFactory;
 
-    public $timestamps = false;
+    // public $timestamps = false;
     protected $primaryKey = 'jaspel_id';
     protected $table = 'jasa_pelayanan';
     protected $fillable = [
@@ -24,10 +24,10 @@ class Jasa_pelayanan extends Model
         'percentase_jaspel',
         'nominal_jaspel',
         'created_by',
-        'created_at',
         'status',
         'keterangan',
         'id_cair',
+        'repo_id',
         'no_jasa'
     ];
 }

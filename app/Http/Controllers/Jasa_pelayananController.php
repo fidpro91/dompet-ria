@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\JaspelExport;
+use App\Jobs\HitungJaspel;
 use App\Libraries\Servant;
 use App\Models\Detail_tindakan_medis;
 use App\Models\Employee;
@@ -11,6 +12,7 @@ use App\Models\Jasa_pelayanan;
 use App\Models\Komponen_jasa;
 use App\Models\Komponen_jasa_sistem;
 use App\Models\Proporsi_jasa_individu;
+use App\Models\Repository_download;
 use App\Models\Skor_pegawai;
 use Illuminate\Support\Facades\Validator;
 use DataTables;
@@ -21,6 +23,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Maatwebsite\Excel\Facades\Excel;
 use PDF;
+use Barryvdh\Snappy\Facades\SnappyPdf;
 
 class Jasa_pelayananController extends Controller
 {
@@ -43,8 +46,10 @@ class Jasa_pelayananController extends Controller
         'status'   =>  '',
         'keterangan'   =>  '',
         'id_cair'   =>  '',
+        'repo_id'   =>  '',
         'no_jasa'   =>  ''
     ];
+
     public $defaultValue = [
         'jaspel_id'   =>  '',
         'tanggal_jaspel'   =>  '',
@@ -75,6 +80,8 @@ class Jasa_pelayananController extends Controller
 
     public function get_dataTable(Request $request)
     {
+
+        list($bulan,$tahun)=explode('-',$request->bulan);
         $data = Jasa_pelayanan::select([
             'jaspel_id',
             'tanggal_jaspel',
@@ -91,12 +98,20 @@ class Jasa_pelayananController extends Controller
             'status',
             'keterangan',
             'id_cair',
-            'no_jasa'
+            'no_jasa',
+            'repo_id'
         ])->orderBy("jaspel_id","desc");
 
         if ($request->status) {
             $data->where("status",$request->status);
         }
+        if ($request->id_cair) {
+            $data->where("id_cair",$request->id_cair);
+        }
+        $data->where("jaspel_bulan",$bulan);
+        $data->where("jaspel_tahun",$tahun);
+
+        
 
         $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
             /* $button = Create::link("<i class=\"far fa-file-pdf\"></i>", [
@@ -113,6 +128,11 @@ class Jasa_pelayananController extends Controller
                 "onclick"   => "open_print(".$data->jaspel_id.")"
             ]);
             if (!$data->id_cair) {
+                $button .= Create::action("<i class=\"fas fa-edit\"></i>", [
+                    "class"     => "btn btn-primary btn-xs",
+                    "onclick"   => "set_editable($data->jaspel_id)",
+                ]);
+                
                 $button .= Create::action("<i class=\"fas fa-trash\"></i>", [
                     "class"     => "btn btn-danger btn-xs",
                     "onclick"   => "delete_row(this)",
@@ -125,7 +145,7 @@ class Jasa_pelayananController extends Controller
             $jaspelBulan = get_namaBulan($data->jaspel_bulan).' '.$data->jaspel_tahun;
             return $jaspelBulan;
         })->addColumn('penjamin', function ($data) {
-            $repo = DB::table('repository_download')->where("jaspel_id",$data->jaspel_id)->get();
+            $repo = DB::table('repository_download')->where("id",$data->repo_id)->get();
             $groupPenjamin=[];
             foreach ($repo as $key => $value) {
                 $penjamin = ["ALL"];
@@ -136,6 +156,9 @@ class Jasa_pelayananController extends Controller
                 $groupPenjamin[$key] = implode("<br>",$penjamin);
             }
             $groupPenjamin = implode('<br>',array_unique($groupPenjamin,SORT_REGULAR));
+            $groupPenjamin .= "
+            <br>
+            <small>$data->keterangan</small>";
             return $groupPenjamin;
         })->rawColumns(['action','penjamin']);
         return $datatables->make(true);
@@ -168,10 +191,10 @@ class Jasa_pelayananController extends Controller
                 ->orderBy("kj.komponen_kode","ASC")
                 ->get();
         $data['detail'] = DB::select("SELECT x.kode_komponen,x.nama_komponen,json_arrayagg(
-            json_object('nip',x.emp_no, 'nama', x.emp_name,'unit',x.unit_name,'skor',x.skor,'nominal',x.nominal_terima)
+            json_object('nomor_rekening',x.nomor_rekening,'nip',x.emp_no, 'nama', x.emp_name,'unit',x.unit_name,'skor',x.skor,'nominal',x.nominal_terima)
         )detail
         FROM (
-            SELECT ks.kode_komponen,ks.nama_komponen,e.emp_no,e.emp_name,mu.unit_name,jm.*
+            SELECT ks.kode_komponen,ks.nama_komponen,e.nomor_rekening,e.emp_no,e.emp_name,mu.unit_name,jm.*
             FROM jp_byname_medis jm
             join employee e on e.emp_id = jm.emp_id
             JOIN ms_unit mu ON e.unit_id_kerja = mu.unit_id
@@ -180,26 +203,30 @@ class Jasa_pelayananController extends Controller
         )x
         GROUP BY x.nama_komponen,x.kode_komponen
         ORDER BY x.kode_komponen");
-        return view("jasa_pelayanan.printout.print_jaspel",compact('data'));
-        // $pdf = PDF::loadview("jasa_pelayanan.printout.print_jaspel",compact('data'));
-        // return $pdf->download('laporan-pegawai.pdf');
-        // return $pdf->stream();
+        // return view("jasa_pelayanan.printout.print_jaspel",compact('data'));
+
+        $pdf = SnappyPdf::loadView("jasa_pelayanan.printout.print_jaspel", compact('data'));
+        return $pdf->stream('laporan jasa pelayanan.pdf');
         
     }
 
     public function print_struktural($id)
     {
-        $data = DB::select("
+        $data['data'] = DB::select("
             SELECT e.emp_no,e.emp_name,mu.unit_name,
             json_arrayagg(json_object('id',ks.id,'komponen',ks.nama_komponen,'skor',jm.skor,'nominal',jm.nominal_terima))detail
             FROM jp_byname_medis jm
             join employee e on e.emp_id = jm.emp_id
             JOIN ms_unit mu ON e.unit_id_kerja = mu.unit_id
             JOIN komponen_jasa_sistem ks ON ks.id = jm.komponen_id
-            where jm.jaspel_id = '$id' AND e.jabatan_type = 17 and jm.komponen_id in (3,4,5)
+            where jm.jaspel_id = '$id' and jm.komponen_id in (3,4,5)
             GROUP BY e.emp_no,e.emp_name,mu.unit_name
         ");
-        return view("jasa_pelayanan.printout.print_struktural",compact('data'));
+        $data['header']  = Komponen_jasa_sistem::whereIn('id',[3,4,5])->get();
+        // return view("jasa_pelayanan.printout.print_struktural",compact('data'));
+        $pdf = SnappyPdf::loadView("jasa_pelayanan.printout.print_struktural", compact('data')) 
+               ->setOrientation('landscape');
+        return $pdf->inline('laporan jasa pelayanan.pdf');
         
     }
 
@@ -208,22 +235,26 @@ class Jasa_pelayananController extends Controller
         $data = DB::select("
             SELECT e.emp_no,e.emp_name,mu.unit_name,
             json_arrayagg(json_object('id',ks.id,'komponen',ks.nama_komponen,'skor',jm.skor,'nominal',jm.nominal_terima))detail
-            FROM jp_byname_medis jm
-            join employee e on e.emp_id = jm.emp_id
-            JOIN ms_unit mu ON e.unit_id_kerja = mu.unit_id
-            JOIN komponen_jasa_sistem ks ON ks.id = jm.komponen_id
+            FROM komponen_jasa_sistem ks
+            left JOIN jp_byname_medis jm ON ks.id = jm.komponen_id
+            left join employee e on e.emp_id = jm.emp_id
+            left JOIN ms_unit mu ON e.unit_id_kerja = mu.unit_id
             where jm.jaspel_id = '$id' AND e.is_medis = 't' and jm.komponen_id in (7,8,9)
             GROUP BY e.emp_no,e.emp_name,mu.unit_name
             ORDER BY e.emp_name
         ");
-        return view("jasa_pelayanan.printout.print_medis",compact('data'));
+        $header = Komponen_jasa_sistem::whereIn('id',[7,8,9])->get();
+        // return view("jasa_pelayanan.printout.print_medis",compact('data','header'));
+        $pdf = SnappyPdf::loadView("jasa_pelayanan.printout.print_medis", compact('data','header')) 
+        ->setOrientation('landscape');
+
+        return $pdf->inline('laporan jasa pelayanan.pdf');
         
     }
 
     public function get_dataTableEmployee(Request $request)
     {
         $data = Employee::from("employee as e")
-                ->where("e.emp_active",$request->emp_active)
                 ->join("ms_unit as mu","mu.unit_id","=","e.unit_id_kerja")
                 ->select([
                     'emp_id',
@@ -269,18 +300,36 @@ class Jasa_pelayananController extends Controller
             "number"	=> "-1",
         ]);
         $dataJasa = [
-            'tanggal_jaspel'   =>  $input['tanggal_jaspel'],
-            'jaspel_bulan'   =>  $bulan,
-            'jaspel_tahun'   =>  $tahun,
-            'nominal_pendapatan'   =>  $input['nominal_pendapatan'],
-            'percentase_jaspel'   =>  $input['percentase_jaspel'],
-            'nominal_jaspel'   =>  $input['nominal_pembagian'],
-            'created_by'   =>  Auth::user()->id,
-            'created_at'   =>  date("Y-m-d H:i:s"),
-            'status'   =>  '1',
-            'keterangan'   =>  ($input['keterangan']??null),
-            'no_jasa'   =>  $nomor
+            'tanggal_jaspel'        =>  date_db($input['tanggal_jaspel']),
+            'jaspel_bulan'          =>  $bulan,
+            'jaspel_tahun'          =>  $tahun,
+            'nominal_pendapatan'    =>  $input['nominal_pendapatan'],
+            'percentase_jaspel'     =>  $input['percentase_jaspel'],
+            'nominal_jaspel'        =>  $input['nominal_pembagian'],
+            'created_by'            =>  Auth::user()->id,
+            'status'                =>  '1',
+            'keterangan'            =>  ($input['keterangan']??null),
+            'no_jasa'               =>  $nomor,
+            "repo_id"               => $input["repo_id"]
         ];
+
+        //check sudah pernah disimpan
+        $saved = Jasa_pelayanan::where([
+            'tanggal_jaspel'        =>  date_db($input['tanggal_jaspel']),
+            'jaspel_bulan'          =>  $bulan,
+            'jaspel_tahun'          =>  $tahun,
+            'nominal_pendapatan'    =>  $input['nominal_pendapatan'],
+            'percentase_jaspel'     =>  $input['percentase_jaspel'],
+            'nominal_jaspel'        =>  $input['nominal_pembagian'],
+            "repo_id"               =>  $input["repo_id"]
+        ])->first();
+        if ($saved) {
+            return response()->json([
+                'success' => false,
+                'message' => "Jasa pelayanan sudah disimpan. silahkan checkout proporsi jasa!"
+            ]);
+        }
+
         $valid = $this->form_validasi($dataJasa);
         if ($valid['code'] != 200) {
             return response()->json([
@@ -315,6 +364,105 @@ class Jasa_pelayananController extends Controller
                     }
                 }
             }
+
+            /* foreach ($allJasa as $key => $value) {
+                if (empty($value['detail'])) {
+                    continue;
+                }
+                $dataJasa=[];
+                foreach ($value['detail'] as $x => $rs) {
+                    $dataJasa = [
+                        'komponen_id'       =>  $value['komponen_id'],
+                        'emp_id'            =>  $rs['emp_id'],
+                        'jaspel_id'         =>  $jaspelId,
+                        'skor'              =>  $rs['skor'],
+                        'nominal_terima'    =>  $rs['jasa']
+                    ];
+                    $jpMedisId = DB::table('jp_byname_medis')->insertGetId($dataJasa);
+                    if (!empty($rs['id_tindakan'])) {
+                        $billing_id = json_decode($rs['id_tindakan'],true);
+                        DB::table('point_medis')
+                        ->whereIn('id',$billing_id)
+                        ->whereIn('repo_id',$input['repo_id'])
+                        ->update([
+                            "jp_medis_id"   => $jpMedisId,
+                            "jaspel_id"     => $jaspelId,
+                            "is_usage"      => 't'
+                        ]);
+                    }
+
+                    if (!empty($rs['id_skor'])) {
+                        $skor = json_decode($rs['id_skor'],true); 
+                        $jasaSkor=[];
+                        foreach ($skor as $y => $sk) {
+                            $jasaSkor[$y] = [
+                                "skor_id"       => $sk,
+                                "jp_medis_id"   => $jpMedisId,
+                                "jaspel_id"     => $jaspelId
+                            ];
+                        }
+                        Skor_pegawai::whereIn("id",$skor)->update([
+                            "prepare_remun"   => "f"
+                        ]);
+                        DB::table("jasa_by_skoring")->insert($jasaSkor);
+                    }
+                }
+            } */
+
+            DB::table('repository_download')
+            ->where('id',$input['repo_id'])
+            ->update([
+                "is_used"       => 't'
+            ]);
+            DB::table('proporsi_jasa_individu')
+            ->where([
+                "is_used"       => "f",
+                "jasa_bulan"    => $input['jaspel_bulan']
+            ])
+            ->update([
+                "is_used"       => 't',
+                "id_jaspel"     => $jaspelId
+            ]);
+
+            DB::commit();
+            HitungJaspel::dispatch($jaspelId,$input["repo_id"]);
+            $resp = [
+                'success'   => true,
+                'message'   => 'Data Berhasil Disimpan!',
+                'response'  => [
+                    "jaspel_id"     => $jaspelId
+                ]
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $resp = [
+                'success' => false,
+                'message' => 'Data Gagal Disimpan! <br>' . $e->getMessage()." line ".$e->getLine()
+            ];
+        }
+        return response()->json($resp);
+    }
+
+    public function simpan_per_proporsi($jaspelId,$komponen_id)
+    {
+        $allJasa    = Cache::get("cacheJasaMerger");
+        $allJasa = array_filter($allJasa, function ($var) use($komponen_id) {
+            return ($var['komponen_id'] == $komponen_id);
+        });
+
+        if (empty($allJasa)) {
+            return response()->json([
+                "code"      => 202,
+                "message"   => "Data tidak ditemukan"
+            ]);
+        }
+        DB::beginTransaction();
+        try {
+            DB::table('jp_byname_medis')->where([
+                "komponen_id"   => $komponen_id,
+                "jaspel_id"     => $jaspelId
+            ])->delete();
+
             foreach ($allJasa as $key => $value) {
                 if (empty($value['detail'])) {
                     continue;
@@ -331,11 +479,12 @@ class Jasa_pelayananController extends Controller
                     $jpMedisId = DB::table('jp_byname_medis')->insertGetId($dataJasa);
                     if (!empty($rs['id_tindakan'])) {
                         $billing_id = json_decode($rs['id_tindakan'],true);
-                        DB::table('detail_tindakan_medis')
-                        ->whereIn('tindakan_id',$billing_id)
-                        ->whereIn('repo_id',$input['repo_id'])
+                        DB::table('point_medis')
+                        ->whereIn('id',$billing_id)
                         ->update([
-                            "jp_medis_id"   => $jpMedisId
+                            "jp_medis_id"   => $jpMedisId,
+                            "jaspel_id"     => $jaspelId,
+                            "is_usage"      => 't'
                         ]);
                     }
 
@@ -356,34 +505,44 @@ class Jasa_pelayananController extends Controller
                     }
                 }
             }
-            DB::table('repository_download')
-            ->whereIn('id',$input['repo_id'])
-            ->update([
-                "is_used"       => 't',
-                "jaspel_id"     => $jaspelId
-            ]);
-            DB::table('proporsi_jasa_individu')
-            ->where([
-                "is_used"       => "f",
-                "jasa_bulan"    => $input['jaspel_bulan']
-            ])
-            ->update([
-                "is_used"       => 't',
-                "id_jaspel"     => $jaspelId
-            ]);
             DB::commit();
             $resp = [
-                'success' => true,
-                'message' => 'Data Berhasil Disimpan!'
+                'code'      => 200,
+                'message'   => 'Proposi berhasil dicheckout'
             ];
         } catch (\Exception $e) {
             DB::rollBack();
             $resp = [
-                'success' => false,
+                'code' => 201,
                 'message' => 'Data Gagal Disimpan! <br>' . $e->getMessage()." line ".$e->getLine()
             ];
         }
         return response()->json($resp);
+    }
+
+    public function finish_jaspel(Request $request)
+    {
+        $input      = Cache::get('cacheInputJasa');
+        $repo       = Repository_download::find($input["repo_id"]);
+
+        //skor pegawai
+        Skor_pegawai::where("bulan_update",$repo->bulan_pelayanan)->update([
+            "prepare_remun"             => "f",
+            "prepare_remun_month"       => null,
+        ]);
+
+        cache::forget('cacheInputJasa');
+        cache::forget('cacheJasaHeader');
+        cache::forget('cacheJasaProporsi');
+        cache::forget('cacheJasaMerger');
+        Jasa_pelayanan::findOrFail($request->jaspel_id)->update([
+            "status"    => 2
+        ]);
+
+        return response()->json([
+            "code"      => 200,
+            "message"   => "OK"
+        ]);
     }
 
     public function hitung_jasa(Request $request)
@@ -434,7 +593,7 @@ class Jasa_pelayananController extends Controller
         } catch (\Exception $e) {
             $resp = [
                 'success' => false,
-                'message' => 'Gagal Hitung Jasa! <br>' . $e->getMessage()
+                'message' => 'Gagal Hitung Jasa! <br>' . $e->getMessage(). $e->getLine()
             ];
         }
         return response()->json($resp);
@@ -443,6 +602,7 @@ class Jasa_pelayananController extends Controller
     public function hitung_penerima_by_skor($request)
     {
         $proporsi = Komponen_jasa_sistem::all();
+        $repoDownload = Repository_download::find($request->repo_id);
         $dataJasa = [];
         $totalMedis=0;
         foreach ($proporsi as $key => $value) {
@@ -464,8 +624,8 @@ class Jasa_pelayananController extends Controller
                         ->join("employee as e","e.emp_id","=","pi.employee_id")
                         ->where([
                             "pi.komponen_id"       => $value->id,
-                            "pi.jasa_bulan"     => $request->jaspel_bulan,
-                            "pi.is_used"        => 'f',
+                            "pi.jasa_bulan"        => $request->jaspel_bulan,
+                            "pi.is_used"           => 'f',
                         ]);
                 $penerima = $data->count();
                 $dataJasa[$key]["total_skor"] = $penerima;
@@ -483,44 +643,65 @@ class Jasa_pelayananController extends Controller
                 }
                 $dataJasa[$key]['total_jasa'] = $totalJasa;
             }elseif ($value->type_jasa == 2) {
-                $data = Detail_tindakan_medis::from("detail_tindakan_medis as dm")
-                ->join("employee as e","e.emp_nip","=","dm.nip")
-                ->groupBy(["e.emp_no","e.emp_id","e.emp_name"])
-                ->select(["e.emp_id","e.emp_no","e.emp_name",DB::raw('SUM((dm.skor_jasa/10000)) AS total_skor'),DB::raw('json_arrayagg(dm.tindakan_id) AS id_tindakan')])
-                ->whereRaw("(unit_vip = 'f' or (unit_vip = 't' and status_bayar='piutang'))")
-                ->whereIn("repo_id",$request->repo_id);
-                /* $query = str_replace(array('?'), array('\'%s\''), $data->toSql());
-                $query = vsprintf($query, $data->getBindings());
-                print_r($query); */
-                $dataArray=$data->get()->toArray();
-                $totalSkor=array_sum(array_column($dataArray,'total_skor'));
-                $dataJasa[$key]["total_skor"] = $totalSkor;
-                $totalJasa=0;
-                foreach ($data->get() as $x => $v) {
-                    $jasa = $v->total_skor/$totalSkor*$jasaAsal;
-                    $dataJasa[$key]['detail'][$x] = [
-                        "emp_id"    => $v->emp_id,
-                        "nip"       => $v->emp_nip,
-                        "name"      => $v->emp_name,
-                        "skor"      => $v->total_skor,
-                        "jasa"      => $jasa,
-                        "id_tindakan"   => $v->id_tindakan
-                    ];
-                    $totalJasa += $jasa;
-                }
+                $totalSkor = 0;
+                $totalJasa = 0;
+                $details = [];
+                // Menghitung total skor sekaligus mengambil data dengan chunk
+                DB::table('point_medis as pm')
+                ->join('employee as e', 'e.emp_id', '=', 'pm.employee_id')
+                ->join('proporsi_jasa_individu as pi', 'e.emp_id', '=', 'pi.employee_id')
+                ->groupBy('e.emp_no', 'e.emp_id', 'e.emp_name')
+                ->select([
+                    'e.emp_id',
+                    'e.emp_nip',
+                    'e.emp_no',
+                    'e.emp_name',
+                    DB::raw('SUM(pm.skor / 10000) AS total_skor'),
+                    DB::raw('json_arrayagg(pm.id) AS id_tindakan')
+                ])
+                ->whereRaw("(is_eksekutif = '0' OR (is_eksekutif = '1' AND jenis_tagihan = '2'))")
+                ->where([
+                    'repo_id' => $request->repo_id,
+                    'pi.komponen_id' => $value->id,
+                    'pm.is_usage' => 'f',
+                    'pi.is_used' => 'f',
+                    'pi.jasa_bulan' => $request->jaspel_bulan
+                ])
+                ->orderBy('e.emp_id')
+                ->chunk(1000, function ($data) use (&$totalSkor, &$totalJasa, &$details, $jasaAsal) {
+                    $chunkTotalSkor = $data->sum('total_skor');
+                    $totalSkor += $chunkTotalSkor;
+
+                    $data->each(function ($item) use (&$totalJasa, &$details, $chunkTotalSkor, $jasaAsal, &$totalSkor) {
+                        $jasa = ($item->total_skor / $totalSkor) * $jasaAsal;
+                        $totalJasa += $jasa;
+                        $details[] = [
+                            'emp_id' => $item->emp_id,
+                            'nip' => $item->emp_nip,
+                            'name' => $item->emp_name,
+                            'skor' => $item->total_skor,
+                            'jasa' => $jasa,
+                            'id_tindakan' => $item->id_tindakan
+                        ];
+                    });
+                });
+
+                $dataJasa[$key]['total_skor'] = $totalSkor;
+                $dataJasa[$key]['detail'] = $details;
                 $dataJasa[$key]['total_jasa'] = $totalJasa;
             }elseif ($value->type_jasa == 3) {
-                $data = Skor_pegawai::from("skor_pegawai as sp")
+                /* $data = Skor_pegawai::from("skor_pegawai as sp")
                         ->join("employee as e","e.emp_id","=","sp.emp_id")
                         ->join("proporsi_jasa_individu as pi","e.emp_id","=","pi.employee_id")
                         ->groupBy(["e.emp_nip","e.emp_name","e.emp_id"])
-                        ->select(["e.emp_id","e.emp_nip","e.emp_name",DB::raw('SUM(sp.total_skor) AS total_skor'),DB::raw('json_arrayagg(sp.id) AS id_skor')])
+                        ->select(["e.emp_id","e.emp_nip","e.emp_name",DB::raw('SUM(coalesce(sp.skor_koreksi,sp.total_skor)) AS total_skor'),DB::raw('json_arrayagg(sp.id) AS id_skor')])
                         ->where([
                             "prepare_remun_month"   => $request->jaspel_bulan,
                             "pi.jasa_bulan"         => $request->jaspel_bulan,
+                            "sp.bulan_update"       => $repoDownload->bulan_pelayanan,
                             "pi.is_used"            => 'f',
                             "pi.komponen_id"        => $value->id,
-                            "prepare_remun"         => "t",
+                            // "prepare_remun"         => "t",
                             "is_medis"              => ''.($value->for_medis??'f').'',
                         ]);
                 $dataArray=$data->get()->toArray();
@@ -539,6 +720,48 @@ class Jasa_pelayananController extends Controller
                         "id_skor"   => $v->id_skor
                     ];
                 }
+                $dataJasa[$key]['total_jasa'] = $totalJasa; */
+                // Mengambil data dan menghitung total skor dalam satu query
+                $data = DB::table('skor_pegawai as sp')
+                ->join('employee as e', 'e.emp_id', '=', 'sp.emp_id')
+                ->join('proporsi_jasa_individu as pi', 'e.emp_id', '=', 'pi.employee_id')
+                ->groupBy('e.emp_nip', 'e.emp_name', 'e.emp_id')
+                ->select([
+                    'e.emp_id',
+                    'e.emp_nip',
+                    'e.emp_name',
+                    DB::raw('SUM(coalesce(sp.skor_koreksi, sp.total_skor)) AS total_skor'),
+                    DB::raw('json_arrayagg(sp.id) AS id_skor')
+                ])
+                ->where([
+                    'prepare_remun_month'   => $request->jaspel_bulan,
+                    'pi.jasa_bulan'         => $request->jaspel_bulan,
+                    'sp.bulan_update'       => $repoDownload->bulan_pelayanan,
+                    'pi.is_used'            => 'f',
+                    'pi.komponen_id'        => $value->id,
+                    'is_medis'              => ''.($value->for_medis ?? 'f').'',
+                ])
+                ->get();
+
+                $totalSkor = $data->sum('total_skor');
+
+                $dataJasa[$key]['total_skor'] = $totalSkor;
+
+                $details = $data->map(function ($item) use ($totalSkor, $jasaAsal) {
+                $jasa = ($item->total_skor / $totalSkor) * $jasaAsal;
+                return [
+                    'emp_id' => $item->emp_id,
+                    'nip' => $item->emp_nip,
+                    'name' => $item->emp_name,
+                    'skor' => $item->total_skor,
+                    'jasa' => $jasa,
+                    'id_skor' => $item->id_skor
+                ];
+                });
+
+                $totalJasa = $details->sum('jasa');
+
+                $dataJasa[$key]['detail'] = $details->toArray();
                 $dataJasa[$key]['total_jasa'] = $totalJasa;
             }
         }
@@ -550,25 +773,26 @@ class Jasa_pelayananController extends Controller
         $jasaHeader=[];
         Cache::forget('cacheEksekutif');
         //hitung pelayanan eksekutif
-        $data = Detail_tindakan_medis::from("detail_tindakan_medis as dm")
-                ->join("employee as e","e.emp_nip","=","dm.nip")
+        $data = DB::table("point_medis as pm")
+                ->join("employee as e","e.emp_id","=","pm.employee_id")
+                ->join("proporsi_jasa_individu as pi","e.emp_id","=","pi.employee_id")
                 ->groupBy(["e.emp_no","e.emp_id","e.emp_name"])
-                ->select(["e.emp_id","e.emp_no","e.emp_name",DB::raw('SUM(dm.skor_jasa) AS total_skor'),DB::raw('json_arrayagg(dm.tindakan_id) AS id_tindakan')])
-                ->whereIn("repo_id",$request->repo_id)
+                ->select(["e.emp_id","e.emp_no","e.emp_name",DB::raw('SUM(pm.skor) AS total_skor'),DB::raw('json_arrayagg(pm.id) AS id_tindakan')])
+                ->where("repo_id",$request->repo_id)
                 ->where([
-                    "unit_vip"              => "t",
-                    "jenis_tagihan"         => "1"
+                    "is_eksekutif"          => "1",
+                    "is_usage"              => "f",
+                    "jenis_tagihan"         => "1",
+                    "pi.komponen_id"        => 9,
+                    "pi.is_used"            => "f",
+                    "pi.jasa_bulan"         => $request->jaspel_bulan
                 ]);
-        /* $query = str_replace(array('?'), array('\'%s\''), $data->toSql());
-        $query = vsprintf($query, $data->getBindings());
-        print_r($query);
-        die; */
         $dataEksekutif  = [];
         $totalEksekutif=0;
         foreach ($data->get() as $key => $value) {
             $dataEksekutif['detail'][$key] = [
                 "emp_id"    => $value->emp_id,
-                "nip"       => $value->emp_nip,
+                "nip"       => $value->emp_no,
                 "name"      => $value->emp_name,
                 "skor"      => $value->total_skor,
                 "jasa"      => $value->total_skor,
@@ -667,35 +891,34 @@ class Jasa_pelayananController extends Controller
         $data = Jasa_pelayanan::findOrFail($id);
         DB::beginTransaction();
         try {
-            $repoDownload = DB::table("repository_download")->where("jaspel_id",$id);
-            $repoDownload->update([
-                "is_used"       => "f",
-                "jaspel_id"     => null
+            DB::table("repository_download")->where("id",$data->repo_id)->update([
+                "is_used"   => "f"
             ]);
-            DB::table("repository_download")->where("jaspel_id",$id)
-            ->update([
-                "is_used"   => "f",
-                "jaspel_id" => null
-            ]);
+
             DB::table("proporsi_jasa_individu")->where("id_jaspel",$id)
             ->update([
                 "is_used"   => "f",
                 "id_jaspel" => null
             ]);
-            foreach ($repoDownload->get() as $key => $value) {
-                DB::table("detail_tindakan_medis")->where("repo_id",$value->id)
-                ->update([
-                    "jp_medis_id"  => null,
-                    "status_jasa"  => 1
-                ]);
-            }
+
+            DB::table("point_medis")->where("jaspel_id",$id)
+            ->update([
+                "jp_medis_id"   => null,
+                "jaspel_id"     => null,
+                "is_usage"      => 'f'
+            ]);
+
             $dataSkor = DB::table("jasa_by_skoring")->where("jaspel_id",$id);
             foreach ($dataSkor->get() as $key => $value) {
                 DB::table("skor_pegawai")->where("id",$value->skor_id)
                 ->update([
-                    "prepare_remun"  => "t"
+                    "prepare_remun"         => "t",
+                    "prepare_remun_month"   => $data->jaspel_bulan."-".$data->jaspel_tahun,
                 ]);
             }
+            DB::table("jp_byname_medis")->where("jaspel_id",$id)->delete();
+            DB::table("jasa_pelayanan_detail")->where("jaspel_id",$id)->delete();
+
             $data->delete();
             DB::commit();
             $resp = [
@@ -707,6 +930,53 @@ class Jasa_pelayananController extends Controller
             $resp = [
                 'success' => false,
                 'message' => 'Data Gagal Dihapus! <br>' . $e->getMessage()
+            ];
+        }
+        return response()->json($resp);
+    }
+
+    public function remove_jaspel($id)
+    {
+        $data = Jasa_pelayanan::findOrFail($id);
+        DB::beginTransaction();
+        try {
+            $repoDownload = DB::table("repository_download")->where("id",$data->repo_id);
+            $repoDownload->update([
+                "is_used"       => "f"
+            ]);
+
+            DB::table("proporsi_jasa_individu")->where("id_jaspel",$id)
+            ->update([
+                "is_used"   => "f",
+                "id_jaspel" => null
+            ]);
+
+            DB::table("point_medis")->where("jaspel_id",$id)
+            ->update([
+                "jp_medis_id"   => null,
+                "jaspel_id"     => null,
+                "is_usage"      => 'f'
+            ]);
+
+            $dataSkor = DB::table("jasa_by_skoring")->where("jaspel_id",$id);
+            foreach ($dataSkor->get() as $key => $value) {
+                DB::table("skor_pegawai")->where("id",$value->skor_id)
+                ->update([
+                    "prepare_remun"         => "t",
+                    "prepare_remun_month"   => $data->jaspel_bulan."-".$data->jaspel_tahun,
+                ]);
+            }
+            $data->delete();
+            DB::commit();
+            $resp = [
+                'success' => true,
+                'message' => 'Perhitungan berhasil dibatalkan!'
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $resp = [
+                'success' => false,
+                'message' => 'Data gagl dibatalkan! <br>' . $e->getMessage()
             ];
         }
         return response()->json($resp);

@@ -2,7 +2,7 @@
 
 use \fidpro\builder\Create;
 use \fidpro\builder\Widget;
-Widget::_init(["select2","datepicker","daterangepicker","inputmask"]);
+Widget::_init(["select2","datepicker","daterangepicker"]);
 ?>
 {!! Form::open(['route' => 'employee_off.store','id'=>'form_employee_off']) !!}
 <div class="card-body">
@@ -26,28 +26,18 @@ Widget::_init(["select2","datepicker","daterangepicker","inputmask"]);
         ],[
             "required"      => true,
             "readonly"      => true,
-            "value"         => date('m-Y')
-        ])->render("group","Bulan Awal Off")
+            "value"         => ($employee_off->bulan_skor??date('m-Y'))
+        ])->render("group","Bulan Skor Pegawai")
     !!}
+    {!!Widget::daterangePicker("periode")->render("group")!!}
     {!! 
-        Widget::daterangepicker("periode")->render("group","Periode OFF")
-    !!}
-    {!! 
-        Widget::inputMask("persentase_skor",[
-            "prop"      => [
-                "required"  => true,
-            ],
-            "mask"      => [
-                "IDR",[
-                    "rightAlign"    => false,
-                ]
-            ]
-        ])->render("group","Persentase Skor(%)");
+        Create::input("persentase_skor",[
+            "value" => $employee_off->persentase_skor
+        ])->render("group");
     !!}
     {!! 
         Create::input("keterangan",[
-        "value" => $employee_off->keterangan,
-
+            "value" => $employee_off->keterangan
         ])->render("group");
     !!}
 </div>
@@ -82,7 +72,7 @@ Widget::_init(["select2","datepicker","daterangepicker","inputmask"]);
                                         location.reload();
                                     });
                                 }else{
-                                    Swal.fire("Oopss..!", data.message, "error");
+                                    Swal.fire("Oopss..!!!", data.message, "error");
                                 }
                             }
                         });

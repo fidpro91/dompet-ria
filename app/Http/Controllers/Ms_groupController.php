@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\ms_group;
+use App\Models\Ms_group;
 use App\Models\Ms_menu;
 use Illuminate\Support\Facades\Validator;
 use DataTables;

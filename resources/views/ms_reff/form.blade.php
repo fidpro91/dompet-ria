@@ -63,11 +63,17 @@ use \fidpro\builder\Create;
                             'dataType': 'json',
                             'success': function(data) {
                                 if (data.success) {
-                                    Swal.fire("Sukses!", data.message, "success").then(() => {
-                                        if (btnType == 2) {
-                                            location.reload();
-                                        }else{
-                                            $('#form_ms_reff')[0].reset();
+                                    Swal.fire({
+                                        title: "Sukses!",
+                                        text: data.message,
+                                        type: "success",
+                                        timer: 1500,  // Waktu dalam milidetik sebelum SweetAlert ditutup otomatis,
+                                        onClose : () => {
+                                            if (btnType == 2) {
+                                                location.reload();
+                                            }else{
+                                                $('#form_ms_reff')[0].reset();
+                                            }
                                         }
                                     });
                                 } else {

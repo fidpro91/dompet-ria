@@ -118,14 +118,24 @@ body {
             $row="";
             foreach ($data['detail'] as $key => $value) {
                 $detail = json_decode($value->detail);
+                usort($detail, function ($a, $b) {
+                    $compareUnit = strcmp($a->unit, $b->unit);
+                    if ($compareUnit === 0) {
+                        // Jika unit sama, sortir berdasarkan nama
+                        return strcmp($a->nama, $b->nama);
+                    }
+                    return $compareUnit;
+                });
                 $row .= "
                     <tr>
-                        <th colspan='5' style='text-align:center'>$value->nama_komponen</th>
+                        <th colspan='7' style='text-align:center; padding:10px; background-color: #c7c5bf; font-size:14pt;'>$value->nama_komponen</th>
                     </tr>
                     <tr>
                         <th>NO</th>
                         <th>NIP</th>
+                        <th>NO REK</th>
                         <th>NAMA</th>
+                        <th>UNIT KERJA</th>
                         <th>SKOR</th>
                         <th>NOMINAL</th>
                     </tr>
@@ -137,7 +147,9 @@ body {
                         <tr>
                             <td>".($x+1)."</td>
                             <td>$v->nip</td>
+                            <td>$v->nomor_rekening</td>
                             <td>$v->nama</td>
+                            <td>$v->unit</td>
                             <td>$v->skor</td>
                             <td>".convert_currency2($v->nominal)."</td>
                         </tr>";
@@ -145,7 +157,7 @@ body {
                 $row .= "
                 <tr>
                     <th></th>
-                    <th colspan=\"3\">TOTAL</th>
+                    <th colspan=\"5\">TOTAL</th>
                     <th>".convert_currency2($totalRow)."</th>
                 </tr>";
             }

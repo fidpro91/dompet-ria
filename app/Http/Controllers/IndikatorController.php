@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\UpdateSkor;
+use App\Models\Employee;
 use Illuminate\Http\Request;
 use App\Models\Indikator;
 use Illuminate\Support\Facades\Validator;
 use DataTables;
 use fidpro\builder\Create;
+use Illuminate\Support\Facades\DB;
 
 class IndikatorController extends Controller
 {
@@ -127,6 +130,7 @@ class IndikatorController extends Controller
     {
         return view($this->folder . '.form', compact('indikator'));
     }
+    
     public function update(Request $request, Indikator $indikator)
     {
         $request['status'] = $request->status_indikator;
@@ -137,14 +141,20 @@ class IndikatorController extends Controller
                 'message' => $this->form_validasi($request->all())['message']
             ]);
         }
+        DB::beginTransaction();
         try {
             $data = Indikator::findOrFail($indikator->id);
             $data->update($valid['data']);
+            //update pegawai
+            UpdateSkor::dispatch();
+            
+            DB::commit();
             $resp = [
                 'success' => true,
                 'message' => 'Data Berhasil Diupdate!'
             ];
         }catch(\Exception $e){
+            DB::rollBack();
             $resp = [
                 'success' => false,
                 'message' => 'Data Gagal Diupdate! <br>'.$e->getMessage()

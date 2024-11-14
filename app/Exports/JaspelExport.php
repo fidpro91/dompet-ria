@@ -31,10 +31,10 @@ class JaspelExport implements FromView
                 ->orderBy("kj.komponen_kode","ASC")
                 ->get();
         $data['detail'] = DB::select("SELECT x.kode_komponen,x.nama_komponen,json_arrayagg(
-            json_object('nip',x.emp_no, 'nama', x.emp_name,'unit',x.unit_name,'skor',x.skor,'nominal',x.nominal_terima)
+            json_object('nomor_rekening',x.nomor_rekening,'nip',x.emp_no, 'nama', x.emp_name,'unit',x.unit_name,'skor',x.skor,'nominal',x.nominal_terima)
         )detail
         FROM (
-            SELECT ks.kode_komponen,ks.nama_komponen,e.emp_no,e.emp_name,mu.unit_name,jm.*
+            SELECT ks.kode_komponen,ks.nama_komponen,e.nomor_rekening,e.emp_no,e.emp_name,mu.unit_name,jm.*
             FROM jp_byname_medis jm
             join employee e on e.emp_id = jm.emp_id
             JOIN ms_unit mu ON e.unit_id_kerja = mu.unit_id
@@ -43,7 +43,6 @@ class JaspelExport implements FromView
         )x
         GROUP BY x.nama_komponen,x.kode_komponen
         ORDER BY x.kode_komponen");
-
         return view('jasa_pelayanan.printout.tes', [
             'data' => $data
         ]);

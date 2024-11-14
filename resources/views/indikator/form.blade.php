@@ -69,6 +69,9 @@ use \fidpro\builder\Create;
                         $.ajax({
                             'data': $('#form_indikator').serialize(),
                             'dataType': 'json',
+                            'beforeSend': function() {
+                                showLoading();
+                            },
                             'success': function(data) {
                                 if (data.success) {
                                     Swal.fire("Sukses!", data.message, "success").then(() => {

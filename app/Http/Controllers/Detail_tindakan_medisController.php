@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Libraries\Servant;
+use App\Models\Data_simrs;
 use Illuminate\Http\Request;
 use App\Models\Detail_tindakan_medis;
 use App\Models\Repository_download;
@@ -21,60 +22,51 @@ class Detail_tindakan_medisController extends Controller
     public $route   = "detail_tindakan_medis";
 
     public $param = [
-        'jp_medis_id'   =>  '',
-        'tanggal_tindakan'   =>  '',
-        'nama_tindakan'   =>  '',
-        'tarif_tindakan'   =>  '',
-        'id_klasifikasi_jasa'   =>  '',
-        'klasifikasi_jasa'   =>  '',
-        'percentase_jasa'   =>  '',
-        'skor_jasa'   =>  '',
-        'qty_tindakan'   =>  '',
-        'px_norm'   =>  '',
-        'px_name'   =>  '',
-        'unit_layanan'   =>  '',
-        'unit_layanan_id'   =>  '',
-        'visit_id'   =>  '',
-        'nip'   =>  '',
-        'nama_dokter'   =>  '',
-        'unit_vip'   =>  '',
-        'penjamin_id'   =>  '',
-        'nama_penjamin'   =>  '',
-        'status_bayar'   =>  '',
-        'tanggal_import'   =>  '',
-        'billing_id'   =>  '',
-        'status_jasa'   =>  '',
-        'jasa_tindakan_bulan'   =>  '',
-        'repo_id'   => 'required'
+        'tindakan_id'           => '',
+        'tanggal_tindakan'      => '',
+        'nama_tindakan'         => '',
+        'tarif_tindakan'        => '',
+        'id_klasifikasi_jasa'   => '',
+        'klasifikasi_jasa'      => '',
+        'percentase_jasa'       => '',
+        'skor_jasa'             => '',
+        'qty_tindakan'          => '',
+        'unit_layanan'          => '',
+        'unit_layanan_id'       => '',
+        'visit_id'              => '',
+        'nama_dokter'           => '',
+        'unit_vip'              => '',
+        'penjamin_id'           => '',
+        'nama_penjamin'         => '',
+        'status_bayar'          => '',
+        'billing_id'            => '',
+        'jenis_tagihan'         => '',
+        'repo_id'               => '',
+        'id_dokter'             => ''
     ];
 
     public $defaultValue = [
-        'tindakan_id'   =>  '',
-        'jp_medis_id'   =>  '',
-        'tanggal_tindakan'   =>  '',
-        'nama_tindakan'   =>  '',
-        'tarif_tindakan'   =>  '',
-        'id_klasifikasi_jasa'   =>  '',
-        'klasifikasi_jasa'   =>  '',
-        'percentase_jasa'   =>  '',
-        'skor_jasa'   =>  '',
-        'qty_tindakan'   =>  '',
-        'px_norm'   =>  '',
-        'px_name'   =>  '',
-        'unit_layanan'   =>  '',
-        'unit_layanan_id'   =>  '',
-        'visit_id'   =>  '',
-        'nip'   =>  '',
-        'nama_dokter'   =>  '',
-        'unit_vip'   =>  '',
-        'penjamin_id'   =>  '',
-        'nama_penjamin'   =>  '',
-        'status_bayar'   =>  '',
-        'tanggal_import'   =>  '',
-        'billing_id'   =>  '',
-        'status_jasa'   =>  '3',
-        'jasa_tindakan_bulan'   =>  '',
-        'repo_id'   => ''
+        'tindakan_id'           => '',
+        'tanggal_tindakan'      => '',
+        'nama_tindakan'         => '',
+        'tarif_tindakan'        => '',
+        'id_klasifikasi_jasa'   => '',
+        'klasifikasi_jasa'      => '',
+        'percentase_jasa'       => '',
+        'skor_jasa'             => '',
+        'qty_tindakan'          => '',
+        'unit_layanan'          => '',
+        'unit_layanan_id'       => '',
+        'visit_id'              => '',
+        'nama_dokter'           => '',
+        'unit_vip'              => '',
+        'penjamin_id'           => '',
+        'nama_penjamin'         => '',
+        'status_bayar'          => '',
+        'billing_id'            => '',
+        'jenis_tagihan'         => '',
+        'repo_id'               => '',
+        'id_dokter'             => ''
     ];
     
     public function index()
@@ -82,47 +74,31 @@ class Detail_tindakan_medisController extends Controller
         return $this->themes($this->folder . '.index', null, $this);
     }
 
+    public function data()
+    {
+        return view($this->folder . '.list_tindakan', null, $this);
+    }
+
     public function get_dataTable(Request $request)
     {
-        $data = Detail_tindakan_medis::select([
-            'tindakan_id',
-            'jp_medis_id',
-            'tanggal_tindakan',
-            'nama_tindakan',
-            'tarif_tindakan',
-            'id_klasifikasi_jasa',
-            'klasifikasi_jasa',
-            'percentase_jasa',
-            'skor_jasa',
-            'qty_tindakan',
-            'px_norm',
-            'px_name',
-            'unit_layanan',
-            'unit_layanan_id',
-            'visit_id',
-            'nip',
-            'nama_dokter',
-            'unit_vip',
-            'penjamin_id',
-            'nama_penjamin',
-            'status_bayar',
-            'tanggal_import',
-            'billing_id',
-            'status_jasa',
-            'jasa_tindakan_bulan'
-        ]);
+        $data = Detail_tindakan_medis::select(['*'])
+                ->when($request->dokter_id,function($query,$dokter){
+                    return $query->where('id_dokter', $dokter);
+                });
+
+        $data->where('repo_id',$request->repo_id);
 
         $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
-            $button = Create::action("<i class=\"fas fa-edit\"></i>", [
+            /* $button = Create::action("<i class=\"fas fa-edit\"></i>", [
                 "class"     => "btn btn-primary btn-sm",
                 "onclick"   => "set_edit(this)",
                 "data-url"  => route($this->route . ".edit", $data->tindakan_id),
                 "ajax-url"  => route($this->route . '.update', $data->tindakan_id),
                 "data-target"  => "page_detail_tindakan_medis"
-            ]);
+            ]); */
 
-            $button .= Create::action("<i class=\"fas fa-trash\"></i>", [
-                "class"     => "btn btn-danger btn-sm",
+            $button = Create::action("<i class=\"fas fa-trash\"></i>", [
+                "class"     => "btn btn-danger btn-xs",
                 "onclick"   => "delete_row(this)",
                 "x-token"   => csrf_token(),
                 "data-url"  => route($this->route . ".destroy", $data->tindakan_id),
@@ -141,47 +117,79 @@ class Detail_tindakan_medisController extends Controller
     public function store(Request $request)
     {
         ini_set('max_execution_time', -1);
+        ini_set('memory_limit', -1);
         DB::beginTransaction();
         try {
             DB::disableQueryLog();
             $input = Cache::get('inputCache'); 
             $bill = Cache::get('billCache');
-            list($tanggal1,$tanggal2) = explode('-',$input['periode_tindakan']);
-            $tanggal1 = date("Y-m-d",strtotime($tanggal1));
-            $tanggal2 = date("Y-m-d",strtotime($tanggal2));
-            $penjamin = "";
-            if (!empty($input['surety_id'])) {
-                $penjamin = json_encode($input['surety_id']);
+            if (empty($input["id"])) {
+                list($tanggal1,$tanggal2) = explode('-',$input['periode_tindakan']);
+                $tanggal1 = date("Y-m-d",strtotime($tanggal1));
+                $tanggal2 = date("Y-m-d",strtotime($tanggal2));
+                $penjamin = "";
+                if (!empty($input['surety_id'])) {
+                    $penjamin = json_encode($input['surety_id']);
+                }
+                $nomor = Servant::generate_code_transaksi([
+                    "text"	=> "DOWNLOAD/NOMOR/".date("d.m.Y"),
+                    "table"	=> "repository_download",
+                    "column"	=> "download_no",
+                    "delimiterFirst" => "/",
+                    "delimiterLast" => "/",
+                    "limit"	=> "2",
+                    "number"	=> "-1",
+                ]);
+                $repoDownload = [
+                    'download_date'     =>  date('Y-m-d'),
+                    'bulan_pelayanan'   =>  $input['bulan_pelayanan'],
+                    'periode_awal'      =>  $tanggal1,
+                    'periode_akhir'     =>  $tanggal2,
+                    'group_penjamin'    =>  $penjamin,
+                    'jenis_pembayaran'  =>  $input['jenis_pembayaran'],
+                    'download_by'       =>  Auth::user()->id,
+                    "download_no"       => $nomor
+                ];
+                Repository_download::create($repoDownload);
+                $repoId = Repository_download::latest()->first()->id;
+                $totalEksekutif=$totalNonEksekutif=0;
+                $totalData = count($bill);
+            }else{
+                $repoId = $input["id"];
+                $totalEksekutif     = $input["skor_eksekutif"];
+                $totalNonEksekutif  = $input["skor_non_eksekutif"];
+                $totalData          = $input["total_data"] + count($bill);
             }
-            $nomor = Servant::generate_code_transaksi([
-                "text"	=> "DOWNLOAD/NOMOR/".date("d.m.Y"),
-                "table"	=> "repository_download",
-                "column"	=> "download_no",
-                "delimiterFirst" => "/",
-                "delimiterLast" => "/",
-                "limit"	=> "2",
-                "number"	=> "-1",
-            ]);
-            $repoDownload = [
-                'download_date'     =>  date('Y-m-d'),
-                'bulan_jasa'        =>  $input['bulan_jasa'],
-                'bulan_pelayanan'   =>  $input['bulan_pelayanan'],
-                'periode_awal'      =>  $tanggal1,
-                'periode_akhir'     =>  $tanggal2,
-                'group_penjamin'    =>  $penjamin,
-                'jenis_pembayaran'  =>  $input['jenis_pembayaran'],
-                'download_by'       =>  Auth::user()->id,
-                "download_no"       => $nomor
-            ];
-            Repository_download::create($repoDownload);
-            $repoId = Repository_download::latest()->first()->id;
             $bill = array_map(function ($arr) use ($repoId) {
 				return $arr + ['repo_id' => $repoId];
 			}, $bill);
+            
             foreach (array_chunk($bill,1000) as $t)  
             {
-                DB::table('detail_tindakan_medis')->insert($t); 
+                foreach ($t as $key => $value) {
+                    if ($value["unit_vip"] == '1' && $value["jenis_tagihan"] == 1) {
+                        $totalEksekutif     += $value["skor_jasa"];
+                    }else{
+                        $totalNonEksekutif  += $value["skor_jasa"];
+                    }
+                } 
+                Detail_tindakan_medis::insert($t);
             }
+
+            Repository_download::find($repoId)->update([
+                "skor_eksekutif"        => $totalEksekutif,
+                // "periode_akhir"         => $tanggal2,
+                "total_data"            => $totalData,
+                "skor_non_eksekutif"    => $totalNonEksekutif
+            ]);
+            
+            /* $resp = [
+                'success' => false,
+                'message' => 'Data Berhasil Disimpan!'
+            ];
+            DB::rollBack();
+            return $resp;
+            die; */
             // DB::table("Detail_tindakan_medis")->insert();
             /* $skor = Cache::get('skorCache');
             DB::table('skor_per_bulan')->where([
@@ -190,17 +198,23 @@ class Detail_tindakan_medisController extends Controller
                 "is_used"			=> 'f'
             ])->delete();
             DB::table('skor_per_bulan')->insert($skor); */
-            $dataSkor = DB::select("
+            /* $dataSkor = DB::select("
                 select sp.* from skor_pegawai sp
                 left join employee_off eo on sp.emp_id = eo.emp_id and ('".$input['bulan_pelayanan']."' between eo.bulan_jasa_awal and eo.bulan_jasa_akhir)
                 WHERE sp.bulan_update = '".$input['bulan_pelayanan']."' AND eo.emp_id IS NULL
             ");
+            
             foreach ($dataSkor as $key => $value) {
                 DB::table("skor_pegawai")->where("id",$value->id)->update([
                     "prepare_remun"         => "t",
                     "prepare_remun_month"   => $input['bulan_jasa']
                 ]);
-            }
+            } */
+
+            /* DB::table("skor_pegawai")->where("bulan_update",$input['bulan_pelayanan'])->update([
+                "prepare_remun"         => "t",
+                "prepare_remun_month"   => $input['bulan_jasa']
+            ]); */
             $resp = [
                 'success' => true,
                 'message' => 'Data Berhasil Disimpan!'
@@ -210,7 +224,7 @@ class Detail_tindakan_medisController extends Controller
             DB::rollback();
             $resp = [
                 'success' => false,
-                'message' => 'Data gagal disimpan! <br>'.$e->getMessage()
+                'message' => 'Data gagal disimpan! <br> '.$e->getMessage().$e->getLine()
             ];
         }
         return response()->json($resp);
@@ -289,15 +303,20 @@ class Detail_tindakan_medisController extends Controller
 	{
         ini_set('max_execution_time', -1);
         ini_set('memory_limit', -1);
-        $input = (array) $request->all();
+        if ($request->repo_id) {
+            $input = Repository_download::findOrFail($request->repo_id)->toArray();
+            $penjamin = json_decode($input["group_penjamin"],true);
+        }else{
+            $input = (array) $request->all();
+            $penjamin = $request->surety_id;
+        }
+        list($tanggal1,$tanggal2) = explode('-',$request->periode_tindakan);
         Cache::forget('inputCache');
         Cache::forget('billCache');
         Cache::forget('skorCache');
         Cache::forget('employeeOffCache');
         Cache::forget('errorDownloadCache');
         Cache::add('inputCache', $input, 6000);
-        list($tanggal1,$tanggal2) = explode('-',$input['periode_tindakan']);
-		$penjamin = $request->surety_id;
 		$filter = [
 			"tanggalawal"		=> date("Y-m-d",strtotime($tanggal1)),
 			"tanggalakhir"		=> date("Y-m-d",strtotime($tanggal2)),
@@ -308,8 +327,16 @@ class Detail_tindakan_medisController extends Controller
 				"surety_id" => $penjamin
 			]);
 		}
-		$datajaspelDetail  	= Servant::connect_simrs("POST",'get_tindakan',json_encode($filter));
-		$datajaspelDetail	= json_decode($datajaspelDetail);
+		// $datajaspelDetail  	= Servant::connect_simrs("POST",'get_tindakan',json_encode($filter));
+		// $datajaspelDetail	= json_decode($datajaspelDetail);
+        $ehosCon = app(\App\Http\Controllers\Api\EhosController::class);
+        if ($input['jenis_pembayaran'] == 1) {
+            $datajaspelDetail = $ehosCon->get_tindakan_medis_tunai($filter);
+            $data2 = $ehosCon->get_tindakan_medis_naikKelas($filter);
+            $datajaspelDetail = array_merge_recursive($datajaspelDetail,$data2);
+        }else{
+            $datajaspelDetail = $ehosCon->get_tindakan_medis_piutang($filter);
+        }
 		DB::beginTransaction();
         $dokterFail=$billFail=[];
         try {
@@ -319,9 +346,9 @@ class Detail_tindakan_medisController extends Controller
                 "jp_medis_id"           => null
             ])->delete(); */
             $tindakanMedis=[];
-            foreach ($datajaspelDetail->response as $xx => $r) {
+            foreach ($datajaspelDetail as $xx => $r) {
                 //cek apakah dokter ada di sistem
-                $isDokter=DB::table('employee')->where("emp_nip",trim($r->employee_nip))->count();
+                /* $isDokter=DB::table('employee')->where("emp_nip",trim($r->employee_nip))->count();
                 if($isDokter == 0){
                     $dokterFail[$xx] = [
                         "nip"   => trim($r->employee_nip),
@@ -329,40 +356,33 @@ class Detail_tindakan_medisController extends Controller
                         "unit_layanan"          => $r->unit_name,
                         "id_kunjungan"          => $r->visit_id
                     ];
+                } */
+                if ($r->tarif < 1) {
+                    continue;
                 }
                 $tindakanMedis[$xx] = [
                     "tanggal_tindakan"		=> date("Y-m-d",strtotime($r->visit_end_date)),
-                    "tanggal_import"		=> date('Y-m-d'),
-                    "jasa_tindakan_bulan"	=> $input['bulan_jasa'],
-                    "nama_tindakan"			=> addslashes($r->bill_name),
+                    "nama_tindakan"			=> addslashes($r->bill_name.'|'.$r->px_norm.'|'.$r->unit_name.'|'.$r->surety_name),
                     "tarif_tindakan"		=> $r->tarif,
                     "id_klasifikasi_jasa"	=> $r->id_klasifikasi_jasa,
                     "klasifikasi_jasa"		=> $r->klasifikasi_jasa,
-                    "percentase_jasa"		=> (($r->is_vip=='t')?$r->percentase_eksekutif:$r->percentase_non_eksekutif),
-                    "skor_jasa"				=> (($r->is_vip=='t')?$r->skor_eksekutif:$r->skor_noneksekutif),
+                    "percentase_jasa"		=> (($r->is_vip=='1')?$r->percentase_eksekutif:$r->percentase_non_eksekutif),
+                    "skor_jasa"				=> (($r->is_vip=='1')?$r->skor_eksekutif:$r->skor_noneksekutif),
                     "qty_tindakan"			=> $r->billing_qty,
-                    "px_norm"				=> $r->px_norm,
-                    "px_name"				=> addslashes($r->px_name),
-                    "unit_layanan"			=> $r->unit_name,
-                    "unit_layanan_id"		=> $r->unit_id,
                     "visit_id"				=> $r->visit_id,
-                    "nip"					=> trim($r->employee_nip),
+                    "id_dokter"			    => trim($r->kode_remun),
                     "nama_dokter"			=> trim($r->namapelaksana),
                     "unit_vip"				=> $r->is_vip,
                     "penjamin_id"			=> $r->surety_id,
                     "billing_id"			=> $r->billing_id,
-                    "nama_penjamin"			=> $r->surety_name,
                     "status_bayar"			=> $r->status_bayar,
-                    "bulan_pelayanan"		=> $input["bulan_pelayanan"],
                     "jenis_tagihan"			=> $input["jenis_pembayaran"],
                 ];
             }
-            
             Cache::add('billCache', $tindakanMedis, 6000);
             $dataSkor = DB::select("
                 select sp.* from skor_pegawai sp
-                left join employee_off eo on sp.emp_id = eo.emp_id and ('".$input['bulan_pelayanan']."' between eo.bulan_jasa_awal and eo.bulan_jasa_akhir)
-                WHERE sp.bulan_update = '".$input['bulan_pelayanan']."' AND eo.emp_id IS NULL
+                WHERE sp.bulan_update = '".$input['bulan_pelayanan']."'
             ");
             if ($dataSkor) {
                 $skor=[];
@@ -370,17 +390,21 @@ class Detail_tindakan_medisController extends Controller
                     $skor[$x] = [
                         "employee_id" => $value->emp_id,
                         "skor"		  => $value->total_skor,
-                        "bulan"		  => $value->bulan_update,
-                        "bulan_jasa_cair"	=> $input['bulan_jasa']
+                        "bulan"		  => $value->bulan_update
                     ];
                 }
                 Cache::add('skorCache', $skor, 6000);
                 Cache::remember('employeeOffCache', 6000, function () use($input){
-                    return DB::table("employee_off as eo")
-                    ->join("employee as e","e.emp_id","=","eo.emp_id")
+                    return DB::table("employee as e")
+                    // ->join("skor_pegawai as sp","sp.emp_id","=","e.emp_id")
+                    ->leftJoin('skor_pegawai as sp', function($join) use($input) {
+                        $join->on('sp.emp_id', '=', 'e.emp_id');
+                        $join->where("sp.bulan_update","=",$input['bulan_pelayanan']);
+                    })
                     ->join("ms_unit as mu","e.unit_id_kerja","=","mu.unit_id")
                     ->select(["e.emp_nip","e.emp_name","mu.unit_name as unit_kerja"])
-                    ->whereRaw("('".$input['bulan_pelayanan']."' between bulan_jasa_awal and bulan_jasa_akhir)")->get();
+                    ->whereRaw("sp.emp_id is null AND e.emp_active = 't'")
+                    ->get();
                 });
             }else{
                 $resp = [

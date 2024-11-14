@@ -58,9 +58,9 @@
   };
   var showLoading = function() {
         Swal.fire({
-            html: '<div class="spinner-border text-primary m-2 text-center" role="status"><span class="sr-only ">Loading...</span></div>',
+            html: 'Mohon tunggu...',
             allowOutsideClick: false,
-            showConfirmButton: false
+            showConfirmButton: false,
         });
   };
   $(document).ready(() => {

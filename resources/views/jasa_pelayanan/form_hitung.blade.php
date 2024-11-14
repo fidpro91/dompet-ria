@@ -15,22 +15,24 @@ Widget::_init(["select2","datepicker","inputmask"]);
                     "class" => "table table-hover"
                 ],[
                     "url"       => "repository_download/get_dataTable",
-                    "filter"    => ["is_used" => "'f'"],
+                    "filter"    => [
+                        "is_used"   => "'f'"
+                    ],
                     "raw"       => [
+                        'no' => [
+                            "data" => "DT_RowIndex",
+                            "orderable" => "false", 
+                            "searchable" => "false"
+                        ],'download_date','download_no','group_penjamin',
                         'id'  => [
                             "data"      => "id",
                             "name"      => "id",
                             "settings"  => [
                                 "render"  => "function (data, type, full, meta){
-                                            return '<input required type=\"checkbox\" name=\"repo_id[]\" value=\"' + $('<div/>').text(data).html() + '\">';
+                                            return '<input required type=\"radio\" name=\"repo_id\" value=\"' + $('<div/>').text(data).html() + '\">';
                                 }"
                             ]
-                        ],
-                        'no' => [
-                            "data" => "DT_RowIndex",
-                            "orderable" => "false", 
-                            "searchable" => "false"
-                        ],'download_date','download_no','group_penjamin'
+                        ]
                     ],
                     "dataTable"  => [
                         "paging"    => "false",

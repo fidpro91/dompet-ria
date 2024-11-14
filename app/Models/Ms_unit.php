@@ -18,6 +18,7 @@ class Ms_unit extends Model
         'is_active',
         'resiko_infeksi',
         'resiko_admin',
-        'emergency_id'
+        'emergency_id',
+        'ka_unit'
     ];
 }

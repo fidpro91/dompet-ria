@@ -12,7 +12,6 @@ class Repository_download extends Model
     protected $table = 'repository_download';
     protected $fillable = [
         'download_date',
-        'bulan_jasa',
         'bulan_pelayanan',
         'periode_awal',
         'periode_akhir',
@@ -20,5 +19,16 @@ class Repository_download extends Model
         'jenis_pembayaran',
         'download_by',
         'download_no',
+        'is_used',
+        'total_data',
+        'skor_eksekutif',
+        'skor_non_eksekutif'
     ];
+
+    public function hasCopy()
+    {
+        return $this->hasMany(Jasa_pelayanan::class, 'repo_id')
+                ->select('repo_id','jaspel_id')
+                ->distinct();
+    }
 }

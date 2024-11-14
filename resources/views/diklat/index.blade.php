@@ -13,6 +13,12 @@ use \fidpro\builder\Bootstrap;
             "data-url" => route("diklat.create")
             ])
         !!}
+        <a href="{{url('diklat/verifikasi_diklat')}}" class="btn btn-purple">
+            <span class="badge badge-danger rounded-circle">
+                {{$totalPengajuan}}
+            </span>
+            Verifikasi Skor Diklat
+        </a>
     </div>
     <div class="card-body">
         <div class="table-responsive">

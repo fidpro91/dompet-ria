@@ -19,8 +19,14 @@ class Diklat extends Model
         'peserta_id',
         'lokasi_pelatihan',
         'sertifikat_file',
+        'sertifikat_no',
         'created_by',
         'created_at',
         'updated_at'
     ];
+
+    public function detailIndikator()
+    {
+        return $this->belongsTo(Detail_indikator::class, 'indikator_skor', 'detail_id');
+    }
 }

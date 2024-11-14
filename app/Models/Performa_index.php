@@ -19,4 +19,14 @@ class Performa_index extends Model
         'created_by',
         'expired_date'
     ];
+
+    public function detailIndikator()
+    {
+        return $this->belongsTo(Detail_indikator::class, 'perform_skor', 'detail_id');
+    }
+
+    public function detailPerform()
+    {
+        return $this->hasOne(Ms_reff::class, 'reff_id', 'perform_id');
+    }
 }

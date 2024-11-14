@@ -40,6 +40,10 @@ use \fidpro\builder\Bootstrap;
                             "data"  => "unit_name",
                             "name"  => "mu.unit_name"
                         ],
+                        'kepala_unit' => [
+                            "data"  => "kepala_unit",
+                            "name"  => "e.emp_name"
+                        ],
                         'is_active' => [
                             "data"  => "is_active",
                             "name"  => "mu.is_active",
