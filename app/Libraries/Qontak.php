@@ -30,7 +30,7 @@ class Qontak
         return $content;
     }
 
-    public static function sendOTP($number,$name){
+    public static function sendOTP($number,$name,$code){
         $client = new Client();
 
         $number = self::validNumber($number);
@@ -43,7 +43,7 @@ class Qontak
         try {
             $token = self::get_token();
             $token = $token->access_token;
-            $otpCode = rand(100000, 999999);
+            $otpCode = $code;
             $url = env("QONTAK_URL")."api/open/v1/broadcasts/whatsapp/direct";
             $data = [
                 "to_number" => "$number",
