@@ -192,7 +192,7 @@ class Rekap_ijinController extends Controller
         if ($data) {
             $dataResp=[];
             foreach ($data as $key => $value) {
-                if ($value->employee->emp_id) {
+                if (!empty($value->employee->emp_id)) {
                     $start  = Carbon::parse($value->tgl_mulai);
                     $end    = Carbon::parse($value->tgl_selesai);
                     // Menentukan apakah cuti dalam bulan yang sama atau lintas bulan
