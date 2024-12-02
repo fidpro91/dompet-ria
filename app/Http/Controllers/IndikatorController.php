@@ -22,6 +22,7 @@ class IndikatorController extends Controller
         'indikator'   =>  'required',
         'bobot'   =>  'required',
         'group_index'   =>  '',
+        'deskripsi'    => '',
         'status'   =>  'required'
     ];
     public $defaultValue = [

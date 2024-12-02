@@ -21,7 +21,7 @@ Widget::_init(["datepicker"]);
                         "autoclose"		=> true
                     ],[
                         "readonly"      => true,
-                        "value"         => date('m-Y')
+                        "value"         => date('m-Y',strtotime('-1 month'))
                     ])->render()
                 !!}
             </div>
