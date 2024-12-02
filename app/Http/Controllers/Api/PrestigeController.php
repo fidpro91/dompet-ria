@@ -53,7 +53,7 @@ class PrestigeController extends Controller
         $url = env('PRESTIGE_URL').'api/list_rekap_absen';
         $client = new Client();
         $token = self::get_valid_token();
-        
+
         list($bulan,$tahun) = explode('-',$request->bulan_update);
         $auth = [
             "tahun"             => $tahun,
@@ -72,7 +72,6 @@ class PrestigeController extends Controller
             'json' => $auth
         ]);
         $body = $response->getBody();
-
         //insert into table rekap absensi
         $content = json_decode($body);
         Table_rekap_absen::where([
