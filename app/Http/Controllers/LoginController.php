@@ -125,7 +125,7 @@ class LoginController extends Controller
                        ->where("us.email",$data['email'])->first();
             Session::put('sesLogin',$dataEmp);
 
-            Qontak::sendOTP($dataEmp->phone,$dataEmp->emp_name);
+            Qontak::sendOTP($dataEmp->phone,$dataEmp->emp_name,$code);
             
             $resp = [
                 "code"      => 200,
