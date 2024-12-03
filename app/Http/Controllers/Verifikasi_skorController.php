@@ -32,7 +32,7 @@ class Verifikasi_skorController extends Controller
     {
         $login = Session::get("sesLogin");
         $skorPegawai    = DB::select("
-            SELECT sp.id,e.emp_no,emp_name,mu.unit_name,sp.total_skor,
+            SELECT sp.id,e.emp_no,emp_name,mu.unit_name,sp.total_skor,sp.id_komplain,sp.skor_koreksi,eo.keterangan,
             json_arrayagg(
                     json_object('kode',ds.kode_skor, 'skor', ds.skor,'keterangan',ds.detail_skor)
             )detail
@@ -40,8 +40,9 @@ class Verifikasi_skorController extends Controller
             JOIN skor_pegawai sp ON ds.skor_id = sp.id
             JOIN employee as e on ds.emp_id = e.emp_id
             JOIN ms_unit mu ON e.unit_id_kerja = mu.unit_id
+            left join employee_off eo on eo.bulan_skor = sp.bulan_update and eo.emp_id = e.emp_id
             where 0=0 and mu.ka_unit = '".$login->emp_id."' and sp.bulan_update = '$bulan'
-            GROUP BY sp.id,e.emp_no,emp_name,mu.unit_name,ordering_mode,sp.total_skor
+            GROUP BY sp.id,e.emp_no,emp_name,mu.unit_name,ordering_mode,sp.total_skor,sp.id_komplain,sp.skor_koreksi,eo.keterangan
             ORDER BY ordering_mode,mu.unit_name
         ");
         if (!$skorPegawai) {
@@ -106,13 +107,17 @@ class Verifikasi_skorController extends Controller
     {
         $skor = Skor_pegawai::find($request->id);
 
-        Komplain_skor::insert([
+        $komplaiSkor = Komplain_skor::create([
             'tanggal'           => date("Y-m-d H:i:s"),
             'id_skor'           => $request->id,
             'employee_id'       => $skor->emp_id,  
             'isi_komplain'          => $request->alasan,
             'status_komplain'       => "1",
             'user_komplain'         => Auth::id(),
+        ]);
+
+        $skor->update([
+            "id_komplain"   => $komplaiSkor->id_komplain
         ]);
 
         return response()->json([

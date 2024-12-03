@@ -124,7 +124,7 @@ class LoginController extends Controller
                        ->join("ms_group as mg","mg.group_id","=","us.group_id")
                        ->where("us.email",$data['email'])->first();
             Session::put('sesLogin',$dataEmp);
-
+            $code = rand(1000,5000);
             Qontak::sendOTP($dataEmp->phone,$dataEmp->emp_name,$code);
             
             $resp = [
