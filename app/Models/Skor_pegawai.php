@@ -32,6 +32,7 @@ class Skor_pegawai extends Model
         'created_by',
         'skor_type',
         'skor_koreksi',
-        'skor_note'
+        'skor_note',
+        'id_komplain'
     ];
 }

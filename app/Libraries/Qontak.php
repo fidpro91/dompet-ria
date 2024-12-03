@@ -105,5 +105,64 @@ class Qontak
             return '+62' . substr($phoneNumber, 1);
         }
     }
+
+    public static function sendInfoSkor($number,$name,$penerima){
+        $client = new Client();
+
+        $number = self::validNumber($number);
+        if (!$number) {
+            return response()->json([
+                "code"      => 202,
+                "message"   => "Nomor WA tidak valid"
+            ]);
+        }
+        try {
+            $token = self::get_token();
+            $token = $token->access_token;
+            $url = env("QONTAK_URL")."api/open/v1/broadcasts/whatsapp/direct";
+            $data = [
+                "to_number" => "$number",
+                "to_name" => "$name",
+                "message_template_id" => "705fe9df-0f28-4842-9d26-c30ab4934f4d",
+                "channel_integration_id" => "141d140b-813e-4df5-99a3-557e0322d831",
+                "language" => [
+                    "code" => "id"
+                ],
+                "parameters" => [
+                    "body" => [
+                        [
+                            "key" => "1",
+                            "value" => "penerima",
+                            "value_text" => "".$penerima["penerima"].""
+                        ],
+                        [
+                            "key" => "2",
+                            "value" => "unitkerja",
+                            "value_text" => "".$penerima["unit"].""
+                        ]
+                    ]
+                ]
+            ];
+            Log_messager::create([
+                'param'             => json_encode($data),
+                'phone_number'      => $number,
+                'message_status'    => 2,
+                'message_type'      => 1,
+            ]);
+            $response = $client->request('POST', $url, [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $token,
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ],
+                'json' => $data
+            ]);
+            $body = $response->getBody();
+            $content = json_decode($body, true);
+            return $content;
+        } catch (RequestException $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
     
 }

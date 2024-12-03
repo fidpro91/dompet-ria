@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Libraries\Qontak;
 use App\Libraries\Servant;
 use App\Models\Detail_indikator;
 use App\Models\Diklat;
@@ -73,25 +74,26 @@ class Skor_pegawaiController extends Controller
     public function send_to_verifikator(Request $request)
     {
         $dataUnit = Ms_unit::from("ms_unit as mu")
-                    ->join("employee as e","e.emp_id","=","mu.ka_unit")
+                    ->join("employee as e", "e.emp_id", "=", "mu.ka_unit")
+                    ->select([
+                        'e.emp_name',
+                        'e.phone',
+                        'e.emp_id',
+                        DB::raw('GROUP_CONCAT(mu.unit_name) as unit_kerja')
+                    ])
+                    ->whereIn("mu.unit_id", [180, 197, 99, 181])
+                    ->groupBy('e.emp_name', 'e.phone', 'e.emp_id')
                     ->get();
         $sentMessage=$failedMessage=0;
         foreach ($dataUnit as $key => $value) {
-            $message = [
-                "message"   => "Assalamu'alaikum. Silahkan verifikasi skor individu pegawai lewat link dibawah ini.".url("192.168.1.27/verifikasi_skor/login"),
-                "number"    => $value->phone
-            ];
-            $wa = Servant::send_wa("POST",$message);
-            if ($wa["response"]["status"] != false) {
+            $waInfo = Qontak::sendInfoSkor($value->phone,$value->emp_name,[
+                "penerima"  => $value->emp_name,
+                "unit"      => $value->unit_kerja
+            ]);
+            
+            if ($waInfo["status"] == "success") {
                 $sentMessage++;
-                //insert log_messager
-                Log_messager::create([
-                    'param'             => $wa["param"],
-                    'phone_number'      => $request->phone,
-                    'message_status'    => 2,
-                    'message_type'      => 2,
-                ]);
-            }else{
+            }else {
                 $failedMessage++;
             }
         }

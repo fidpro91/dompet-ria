@@ -18,6 +18,8 @@ $header = json_decode($getHeader->current()->detail);
             }
             ?>
             <th rowspan="2">TOTAL SKOR</th>
+            <th rowspan="2">SKOR REVISI</th>
+            <th rowspan="2">KETERANGAN</th>
         </tr>
         <tr>
             <?php
@@ -37,10 +39,12 @@ $header = json_decode($getHeader->current()->detail);
                 "onclick"   => "konfirmasi_skor($value->id)",
             ]);
 
-            $button .= Create::action("<i class=\"mdi mdi-wechat\"></i>", [
-                "class"     => "btn btn-secondary btn-xs",
-                "onclick"   => "keluhan_skor($value->id)",
-            ]);
+            if (!$value->id_komplain) {
+                $button .= Create::action("<i class=\"mdi mdi-wechat\"></i>", [
+                    "class"     => "btn btn-secondary btn-xs",
+                    "onclick"   => "keluhan_skor($value->id)",
+                ]);
+            }
             $row .= '
                     <tr>
                         <td>' . $button . '</td>
@@ -61,6 +65,8 @@ $header = json_decode($getHeader->current()->detail);
                         ';
             }
             $row .= '<td>' . $value->total_skor . '</td>';
+            $row .= '<td>' . $value->skor_koreksi . '</td>';
+            $row .= '<td>' . $value->keterangan . '</td>';
             $row .= '</tr>';
             $totalSkor += $value->total_skor;
         }
@@ -70,8 +76,10 @@ $header = json_decode($getHeader->current()->detail);
     <tfoot>
         <tr>
             <td></td>
-            <td colspan="19">TOTAL SKOR</td>
+            <td colspan="20">TOTAL SKOR</td>
             <td><?= $totalSkor ?></td>
+            <td></td>
+            <td></td>
         </tr>
     </tfoot>
 </table>
