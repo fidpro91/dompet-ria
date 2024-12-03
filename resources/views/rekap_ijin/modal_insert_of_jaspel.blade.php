@@ -117,7 +117,7 @@ Widget::_init(["datepicker","daterangepicker"]);
                     let row = `
                         <tr>
                             <td>${index + 1}</td>
-                            <td><input type="checkbox" class="pegawaiCheckbox" data-id="${pegawai.emp_id}" /></td>
+                            <td><input type="checkbox" class="pegawaiCheckbox" data-id="${pegawai.id}" /></td>
                             <td>${pegawai.nama_pegawai}</td>
                             <td>${pegawai.alasan_cuti}</td>
                             <td>${pegawai.lama_cuti}</td>
