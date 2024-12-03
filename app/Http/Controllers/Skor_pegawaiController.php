@@ -74,9 +74,15 @@ class Skor_pegawaiController extends Controller
     public function send_to_verifikator(Request $request)
     {
         $dataUnit = Ms_unit::from("ms_unit as mu")
-                    ->join("employee as e","e.emp_id","=","mu.ka_unit")
-                    ->select('e.emp_name,e.phone,e.emp_id', DB::raw('GROUP_CONCAT(mu.unit_name) as unit_kerja'))
-                    ->groupBy('e.emp_name,e.phone,e.emp_id')
+                    ->join("employee as e", "e.emp_id", "=", "mu.ka_unit")
+                    ->select([
+                        'e.emp_name',
+                        'e.phone',
+                        'e.emp_id',
+                        DB::raw('GROUP_CONCAT(mu.unit_name) as unit_kerja')
+                    ])
+                    ->whereIn("mu.unit_id", [180, 197, 99, 181])
+                    ->groupBy('e.emp_name', 'e.phone', 'e.emp_id')
                     ->get();
         $sentMessage=$failedMessage=0;
         foreach ($dataUnit as $key => $value) {

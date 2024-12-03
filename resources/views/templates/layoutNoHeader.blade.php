@@ -25,17 +25,23 @@
   };
 </script>
 <?php
-$name = explode(' ',Auth::user()->name);
-if (count($name)>1) {
-    $name = $name[0].' '.$name[1];
-}else{
-    $name = Auth::user()->name;
+
+use Illuminate\Support\Facades\Auth;
+$name="";
+if (Auth::check()) {
+    $name = explode(' ',Auth::user()->name);
+    if (count($name)>1) {
+        $name = $name[0].' '.$name[1];
+    }else{
+        $name = Auth::user()->name;
+    }
 }
 ?>
 <header id="topnav">
 <!-- Topbar Start -->
 <div class="navbar-custom">
     <div class="container-fluid">
+        @if(Auth::check())
         <ul class="list-unstyled topnav-menu float-right mb-0">
             <li class="dropdown notification-list">
                 <a class="nav-link dropdown-toggle nav-user mr-0 waves-effect" data-toggle="dropdown" href="/#" role="button" aria-haspopup="false" aria-expanded="false">
@@ -64,6 +70,7 @@ if (count($name)>1) {
                 </div>
             </li>
         </ul>
+        @endif
         <!-- LOGO -->
         <div class="logo-box">
             <a href="{{url('/')}}" class="logo text-center">
