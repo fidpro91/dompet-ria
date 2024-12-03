@@ -35,9 +35,10 @@ class Qontak
 
         $number = self::validNumber($number);
         if (!$number) {
-            return response()->json([
+            return ([
                 "code"      => 202,
-                "message"   => "Nomor WA tidak valid"
+                "message"   => "Nomor WA tidak valid",
+                "number"    => $number
             ]);
         }
         try {
@@ -111,9 +112,10 @@ class Qontak
 
         $number = self::validNumber($number);
         if (!$number) {
-            return response()->json([
-                "code"      => 202,
-                "message"   => "Nomor WA tidak valid"
+            return ([
+                "status"    => "failed",
+                "message"   => "Nomor WA tidak valid",
+                "number"    => $number
             ]);
         }
         try {

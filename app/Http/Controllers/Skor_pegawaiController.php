@@ -81,18 +81,21 @@ class Skor_pegawaiController extends Controller
                         'e.emp_id',
                         DB::raw('GROUP_CONCAT(mu.unit_name) as unit_kerja')
                     ])
-                    ->whereIn("mu.unit_id", [180, 197, 99, 181])
                     ->groupBy('e.emp_name', 'e.phone', 'e.emp_id')
                     ->get();
         $sentMessage=$failedMessage=0;
         foreach ($dataUnit as $key => $value) {
-            $waInfo = Qontak::sendInfoSkor($value->phone,$value->emp_name,[
-                "penerima"  => $value->emp_name,
-                "unit"      => $value->unit_kerja
-            ]);
-            
-            if ($waInfo["status"] == "success") {
-                $sentMessage++;
+            if ($value->phone) {
+                $waInfo = Qontak::sendInfoSkor($value->phone,$value->emp_name,[
+                    "penerima"  => $value->emp_name,
+                    "unit"      => $value->unit_kerja
+                ]);
+                
+                if ($waInfo["status"] == "success") {
+                    $sentMessage++;
+                }else {
+                    $failedMessage++;
+                }
             }else {
                 $failedMessage++;
             }

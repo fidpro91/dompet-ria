@@ -80,7 +80,7 @@ class Verifikasi_skorController extends Controller
 
         //validasi OTP
         $otp = Log_messager::where([
-            "phone_number"  => $sess->phone,
+            "phone_number"  => "+".$sess->phone,
             "otp_verified"  => '1',
             "kode_otp"      => $request->kodeotp
         ])->whereDate("created_at","=",date("Y-m-d"))->first();
