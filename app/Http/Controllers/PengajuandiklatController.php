@@ -84,8 +84,8 @@ class PengajuandiklatController extends Controller
                 "message"   => "Pengajuan kode OTP lebih dari 3x. Silahkan coba kembali esok hari"
             ]);
         }
-
-        Qontak::sendOTP($request->phone,"Karyawan");
+        $code = rand(10000,50000);
+        Qontak::sendOTP($request->phone,"Karyawan",$code);
         $resp = [
             "code"      => 200,
             "message"   => "Kode OTP berhasil dikirim, silahkankan cek whatsapp anda"
