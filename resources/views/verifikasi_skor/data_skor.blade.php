@@ -4,6 +4,11 @@ use fidpro\builder\Create;
 $getHeader = new ArrayIterator($skorPegawai);
 $header = json_decode($getHeader->current()->detail);
 ?>
+<style>
+    .row-success {
+        background-color: #6df792;
+    }
+</style>
 <table class="table table-hover">
     <thead>
         <tr>
@@ -34,19 +39,26 @@ $header = json_decode($getHeader->current()->detail);
         $row = '';
         $totalSkor = 0;
         foreach ($skorPegawai as $key => $value) {
-            $button = Create::action("<i class=\"fas fa-check\"></i>", [
-                "class"     => "btn btn-success btn-xs",
-                "onclick"   => "konfirmasi_skor($value->id)",
-            ]);
-
-            if (!$value->id_komplain) {
-                $button .= Create::action("<i class=\"mdi mdi-wechat\"></i>", [
-                    "class"     => "btn btn-secondary btn-xs",
-                    "onclick"   => "keluhan_skor($value->id)",
+            $button="";
+            if ($value->is_confirm != "t") {
+                $button = Create::action("<i class=\"fas fa-check\"></i>", [
+                    "class"     => "btn btn-success btn-xs",
+                    "onclick"   => "konfirmasi_skor($value->id)",
                 ]);
+    
+                if (!$value->id_komplain) {
+                    $button .= Create::action("<i class=\"mdi mdi-wechat\"></i>", [
+                        "class"     => "btn btn-secondary btn-xs",
+                        "onclick"   => "keluhan_skor($value->id)",
+                    ]);
+                }
+            }
+            $class="";
+            if ($value->is_confirm == "t") {
+                $class = "row-success";
             }
             $row .= '
-                    <tr>
+                    <tr class="'.$class.'">
                         <td>' . $button . '</td>
                         <td>' . ($key + 1) . '</td>
                         <td>' . $value->emp_no . '</td>

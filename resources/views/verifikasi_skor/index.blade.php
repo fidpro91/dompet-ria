@@ -65,7 +65,7 @@ Widget::_init(["datepicker"]);
         }).then((result) => {
             if (result.value) {
                 $.get('{{url("verifikasi_skor/konfirmasi_skor")}}/'+id,function(resp){
-                    resp.success(response.message, "Message : ");
+                    Swal.fire("Sukses!", resp.message, "success");
                     location.reload();
                 },'json');
             }

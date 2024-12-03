@@ -32,7 +32,7 @@ class Verifikasi_skorController extends Controller
     {
         $login = Session::get("sesLogin");
         $skorPegawai    = DB::select("
-            SELECT sp.id,e.emp_no,emp_name,mu.unit_name,sp.total_skor,sp.id_komplain,sp.skor_koreksi,eo.keterangan,
+            SELECT sp.id,e.emp_no,emp_name,mu.unit_name,sp.total_skor,sp.id_komplain,sp.skor_koreksi,eo.keterangan,sp.is_confirm,
             json_arrayagg(
                     json_object('kode',ds.kode_skor, 'skor', ds.skor,'keterangan',ds.detail_skor)
             )detail
@@ -42,7 +42,7 @@ class Verifikasi_skorController extends Controller
             JOIN ms_unit mu ON e.unit_id_kerja = mu.unit_id
             left join employee_off eo on eo.bulan_skor = sp.bulan_update and eo.emp_id = e.emp_id
             where 0=0 and mu.ka_unit = '".$login->emp_id."' and sp.bulan_update = '$bulan'
-            GROUP BY sp.id,e.emp_no,emp_name,mu.unit_name,ordering_mode,sp.total_skor,sp.id_komplain,sp.skor_koreksi,eo.keterangan
+            GROUP BY sp.id,e.emp_no,emp_name,mu.unit_name,ordering_mode,sp.total_skor,sp.id_komplain,sp.skor_koreksi,eo.keterangan,sp.is_confirm
             ORDER BY ordering_mode,mu.unit_name
         ");
         if (!$skorPegawai) {
