@@ -304,7 +304,7 @@ class Rekap_ijinController extends Controller
         $employeeOff=[];
         foreach ($potonganSkor as $key => $value) {
             $employeeOff[] = [
-                'emp_id'        => $value["id"],
+                'emp_id'        => $value["emp_id"],
                 'bulan_skor'    => $value["bulan_potonganSkor"],
                 'keterangan'    => $value["alasan_cuti"],
                 'user_act'      => Auth::id(),
