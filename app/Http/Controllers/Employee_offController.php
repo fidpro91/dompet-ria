@@ -35,8 +35,6 @@ class Employee_offController extends Controller
 
     public function get_dataTable(Request $request)
     {
-        
-        list($tgl1, $tgl2) = explode(' sampai ', $request->period);    
         $data = Employee_off::join("employee","employee.emp_id","=","employee_off.emp_id")
                 ->join("ms_unit","ms_unit.unit_id","=","employee.unit_id_kerja")
                 ->where("bulan_skor", [$request->month_filter])               
@@ -50,30 +48,6 @@ class Employee_offController extends Controller
                     'persentase_skor',
                     'keterangan'
                 ]);
-               
-                $data = $data->map(function ($item) use ($tgl1, $tgl2) {
-                    $dates = explode(' - ', $item->periode); 
-                    $formattedDates = array_map(function($date) {
-                        return date('Y-m-d', strtotime($date));  
-                    }, $dates);   
-                           
-                    if (count($formattedDates) == 2) {
-                        $item->start_date = $formattedDates[0];
-                        $item->end_date = $formattedDates[1];
-                        $startDate = Carbon::createFromFormat('Y-m-d', $item->start_date);
-                        $endDate = Carbon::createFromFormat('Y-m-d', $item->end_date);
-                        $tgl1Carbon = Carbon::createFromFormat('Y-m-d', $tgl1);
-                        $tgl2Carbon = Carbon::createFromFormat('Y-m-d', $tgl2);
-                        if ($startDate->between($tgl1Carbon, $tgl2Carbon, false) &&
-                            $endDate->between($tgl1Carbon, $tgl2Carbon, false)) {
-                            return $item;
-                        }
-                    }
-                    return null;
-                });
-                $data = $data->filter(function ($item) {
-                    return !is_null($item); 
-                });
         $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
             $button = Create::action("<i class=\"fas fa-edit\"></i>", [
                 "class"     => "btn btn-primary btn-xs",

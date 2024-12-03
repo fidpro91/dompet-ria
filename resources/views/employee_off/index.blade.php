@@ -41,33 +41,14 @@ Widget::_init(["datepicker","daterangepicker"]);
        
     </div>
     <div class="card-body">
-    <div class="row">
-    <?php
-        $firstDay = date('Y-m-d', strtotime('first day of this month'));
-        $lastDay = date('Y-m-d', strtotime('last day of this month'));
-        $defaultRange = $firstDay . ' sampai ' . $lastDay;
-        ?>
-        <div class="col-md-1">
-            </div>
-            <div class="col-md-3">
-                 <div class="input-group">
-                    <input id="periode_pegawai" class="form-control" type="text" name="periode_pegawai" placeholder="Periode Hari" value="<?= $defaultRange ?>">
-                    <div class="input-group-append">
-                        <span class="input-group-text">
-                            <span class="ti-calendar"></span>
-                        </span>
-                    </div>
-                 </div>
-            </div>
-    </div>
         <div class="table-responsive">
             {{
                 Bootstrap::DataTable("table-data",[
                     "class" => "table table-hover"
                 ],[
                     "url"   => "employee_off/get_dataTable",
-                    "filter" => ["month_filter" => "$('#bulan_skor').val()",
-                                 "period" => "$('#periode_pegawai').val()"
+                    "filter" => [
+                                    "month_filter" => "$('#bulan_skor').val()",
                                  ],
                     "raw"   => [
                         '#'     => [
