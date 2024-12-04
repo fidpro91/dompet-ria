@@ -215,7 +215,10 @@ class Rekap_ijinController extends Controller
             }
             if ($request->bulan_skor) {
                 $dataResp = array_values(array_filter($dataResp, function($value) use ($request) {
-                    return $value['bulan_potonganSkor'] == $request->bulan_skor;
+                    $bulanSkor          = Carbon::createFromFormat('m-Y', $request->bulan_skor);
+                    $tanggalMulai       = Carbon::parse($value['tgl_mulai']);
+                    $tanggalSelesai     = Carbon::parse($value['tgl_selesai']);
+                    return $bulanSkor->between($tanggalMulai, $tanggalSelesai);
                 }));
             }
 
@@ -289,32 +292,28 @@ class Rekap_ijinController extends Controller
 
     public function insertPotonganSkor(Request $request)
     {
-        $idIjin = $request->id_ijin;
-        if (count($idIjin) <= 0) {
-            return response()->json([
-                "code"      => "204",
-                "message"   => "Id ijin tidak terdaftar. Pastikan mengisi checkbox pada tabel ijin pegawai"
-            ]);
-        }
         $potonganSkor = Cache::get('potonganSkor');
-        $potonganSkor = array_filter($potonganSkor, function($item) use ($idIjin) {
-            return in_array($item['id'], $idIjin);
-        });
-
         $employeeOff=[];
-        foreach ($potonganSkor as $key => $value) {
+        foreach ($request->pegawai_skor as $key => $value) {
+            if (empty($value["id"])) {
+                continue;
+            }
+            $potonganSkor = array_filter($potonganSkor, function($item) use ($value) {
+                return $item['id'] == $value["id"];
+            });
+            $potonganSkor = array_shift($potonganSkor);
             $employeeOff[] = [
-                'emp_id'        => $value["emp_id"],
-                'bulan_skor'    => $value["bulan_potonganSkor"],
-                'keterangan'    => $value["alasan_cuti"],
+                'emp_id'        => $potonganSkor["emp_id"],
+                'bulan_skor'    => $value["bulan_skor"],
+                'keterangan'    => $potonganSkor["alasan_cuti"],
                 'user_act'      => Auth::id(),
-                'periode'           => Carbon::parse($value["tgl_mulai"])->format("m/d/Y")." - ".Carbon::parse($value["tgl_selesai"])->format("m/d/Y"),
-                'persentase_skor'   => $value["persentase_skor"],
+                'periode'           => Carbon::parse($potonganSkor["tgl_mulai"])->format("m/d/Y")." - ".Carbon::parse($potonganSkor["tgl_selesai"])->format("m/d/Y"),
+                'persentase_skor'   => $potonganSkor["persentase_skor"],
                 'created_at'        => Carbon::now(),
                 'updated_at'        => Carbon::now()
             ];
         }
-        
+
         Employee_off::insert($employeeOff);
         $resp = [
             "code"          => 200,

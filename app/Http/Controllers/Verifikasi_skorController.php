@@ -61,6 +61,24 @@ class Verifikasi_skorController extends Controller
         return response()->json($resp);
     }
 
+    public function get_keluhan_respon($bulan)
+    {
+        $login = Session::get("sesLogin");
+        $unitKerja = Ms_unit::where("ka_unit", $login->emp_id)->pluck('unit_id')->toArray();
+        if (!$unitKerja) {
+            return "Unit kerja tidak ditemukan";
+        }
+        $results = Komplain_skor::whereHas('skorPegawai', function ($query) use($unitKerja,$bulan) {
+            $query->where('bulan_update', $bulan)
+                  ->whereHas('employee', function ($subQuery) use($unitKerja) {
+                      $subQuery->whereIn('unit_id_kerja', $unitKerja);
+                  });
+        })->get();
+
+        return view("verifikasi_skor.response_verifikator",compact('results'));
+
+    }
+
     public function konfirmasi_skor($id)
     {
         Skor_pegawai::find($id)->update([

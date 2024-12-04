@@ -55,6 +55,7 @@ Route::group(['middleware' => ['verifikator']], function (){
     Route::get('verifikasi_skor','Verifikasi_skorController@index');
     Route::get('verifikasi_skor/get_data/{bulan?}','Verifikasi_skorController@get_data');
     Route::post('verifikasi_skor/validasi_otp','Verifikasi_skorController@validasi_otp');
+    Route::get('verifikasi_skor/get_keluhan_respon/{bulan?}','Verifikasi_skorController@get_keluhan_respon');
     Route::post('verifikasi_skor/save_keluhan','Verifikasi_skorController@save_keluhan');
     Route::get('verifikasi_skor/konfirmasi_skor/{id?}','Verifikasi_skorController@konfirmasi_skor');
 });
