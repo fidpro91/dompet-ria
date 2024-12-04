@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\PublishSkor;
 use App\Libraries\Qontak;
 use App\Libraries\Servant;
 use App\Models\Detail_indikator;
@@ -73,36 +74,10 @@ class Skor_pegawaiController extends Controller
 
     public function send_to_verifikator(Request $request)
     {
-        $dataUnit = Ms_unit::from("ms_unit as mu")
-                    ->join("employee as e", "e.emp_id", "=", "mu.ka_unit")
-                    ->select([
-                        'e.emp_name',
-                        'e.phone',
-                        'e.emp_id',
-                        DB::raw('GROUP_CONCAT(mu.unit_name) as unit_kerja')
-                    ])
-                    ->groupBy('e.emp_name', 'e.phone', 'e.emp_id')
-                    ->get();
-        $sentMessage=$failedMessage=0;
-        foreach ($dataUnit as $key => $value) {
-            if ($value->phone) {
-                $waInfo = Qontak::sendInfoSkor($value->phone,$value->emp_name,[
-                    "penerima"  => $value->emp_name,
-                    "unit"      => $value->unit_kerja
-                ]);
-                
-                if ($waInfo["status"] == "success") {
-                    $sentMessage++;
-                }else {
-                    $failedMessage++;
-                }
-            }else {
-                $failedMessage++;
-            }
-        }
+        event(new PublishSkor());
         return response()->json([
             "code"      => 200,
-            "message"   => "Terkirim : $sentMessage. Gagal : $failedMessage"
+            "message"   => "Notifikasi skor berhasil dikirim"
         ]);
     }
 
