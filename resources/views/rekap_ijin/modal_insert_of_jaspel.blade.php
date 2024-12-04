@@ -3,7 +3,7 @@
 use fidpro\builder\Bootstrap;
 use fidpro\builder\Widget;
 
-Widget::_init(["datepicker", "daterangepicker"]);
+Widget::_init(["datepicker", "daterangepicker","inputmask"]);
 ?>
 <div class="card-body">
     <div class="row align-items-center">
@@ -127,6 +127,7 @@ Widget::_init(["datepicker", "daterangepicker"]);
                     `;
                 pegawaiList.append(row);
             });
+            $(".bulan_skor").inputmask("99-9999");
         } else {
             pegawaiList.append("<tr class='text-center'><td colspan='10'>Tidak ada data pegawai ditemukan</td></tr>");
         }
