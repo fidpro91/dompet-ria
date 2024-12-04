@@ -35,4 +35,8 @@ class Skor_pegawai extends Model
         'skor_note',
         'id_komplain'
     ];
+
+    public function employee() {
+        return $this->hasOne(Employee::class,"emp_id","emp_id");
+    }
 }

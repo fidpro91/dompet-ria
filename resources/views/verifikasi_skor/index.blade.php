@@ -5,6 +5,20 @@ use fidpro\builder\Bootstrap;
 use fidpro\builder\Widget;
 Widget::_init(["datepicker"]);
 ?>
+<style>
+    /* Floating chat button styles */
+    .chat-button {
+        position: fixed;
+        bottom: 20px;
+        right: 20px; /* Change from left to right */
+        z-index: 1050; /* Higher than modal backdrop */
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+</style>
 <h4>UNIT KERJA : {{$unit_kerja}}</h4>
 <div class="card border-0 shadow rounded" id="page_potongan_statis">
     <div class="card-header">
@@ -33,6 +47,9 @@ Widget::_init(["datepicker"]);
         </div>
     </div>
 </div>
+<button type="button" class="btn btn-primary btn-lg chat-button" data-bs-toggle="modal" data-bs-target="#modal_log">
+    <i class="mdi mdi-chat-processing"></i>
+</button>
 {{
     Bootstrap::modal('modal_info',[
         "title"   => 'Informasi Indikator Skor Pegawai',
@@ -44,12 +61,22 @@ Widget::_init(["datepicker"]);
         ]
     ])
 }}
+{{
+    Bootstrap::modal('modal_log',[
+        "title"   => 'Log Informasi Pengaduan Skor',
+        "size"    => "modal-lg"
+    ])
+}}
 <script>
     $(document).ready(()=>{
         loadTable();
-
         $("#btn-info").click(()=>{
             $("#modal_info").modal("show");
+        });
+        $(".chat-button").click(()=>{
+            let bulan_skor = $("#bulan_skor").val();
+            $("#modal_log").find(".modal-body").load(`{{ url('verifikasi_skor/get_keluhan_respon') }}/${bulan_skor}`);
+            $("#modal_log").modal("show");
         })
     })
 

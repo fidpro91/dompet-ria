@@ -23,4 +23,16 @@ class Komplain_skor extends Model
         'user_komplain',
         'user_approve'
     ];
+
+    public function skorPegawai() {
+        return $this->hasOne(Skor_pegawai::class,"id","id_skor");
+    }
+
+    public function employee() {
+        return $this->hasOne(Employee::class,"emp_id","employee_id");
+    }
+
+    public function userReport() {
+        return $this->hasOne(User::class,"id","user_komplain");
+    }
 }
