@@ -147,6 +147,15 @@ return [
             'database' => env('REDIS_DB', '0'),
         ],
 
+        'database' => [
+            'driver' => 'database',
+            'table' => 'jobs',
+            'queue' => 'default',
+            'retry_after' => 90,
+            'after_commit' => false,
+            'timeout' => 180
+        ],
+        
         'cache' => [
             'url' => env('REDIS_URL'),
             'host' => env('REDIS_HOST', '127.0.0.1'),
