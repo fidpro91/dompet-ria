@@ -15,7 +15,6 @@ use Illuminate\Support\Facades\Log;
 class UpdateSkor implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-    public $timeout = 300;
 
     public function __construct()
     {
