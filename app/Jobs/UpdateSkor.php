@@ -16,10 +16,12 @@ class UpdateSkor implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public $timeout = 120000;
+    public $failOnTimeout = false;
+
     public function __construct()
     {
         //
-        ini_set("memory_limit",-1);
     }
 
     public function handle()
