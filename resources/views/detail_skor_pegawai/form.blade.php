@@ -4,31 +4,22 @@ use \fidpro\builder\Create;
     {!! Form::open(['route' => 'detail_skor_pegawai.store','id'=>'form_detail_skor_pegawai']) !!}
     <div class="card-body">
         {!! Form::hidden('det_skor_id', $detail_skor_pegawai->det_skor_id, array('id' => 'det_skor_id')) !!}
-        {!! Create::input("skor_id",[
-                    "value"     => $detail_skor_pegawai->skor_id,
-                    "required"  => "true"
-                    ])->render("group"); 
-                !!}
-{!! Create::input("emp_id",[
-                    "value"     => $detail_skor_pegawai->emp_id,
-                    "required"  => "true"
-                    ])->render("group"); 
-                !!}
-{!! Create::input("kode_skor",[
-                    "value"     => $detail_skor_pegawai->kode_skor,
-                    "required"  => "true"
-                    ])->render("group"); 
-                !!}
-{!! Create::input("detail_skor",[
-                    "value"     => $detail_skor_pegawai->detail_skor,
-                    
-                    ])->render("group"); 
-                !!}
-{!! Create::input("skor",[
-                    "value"     => $detail_skor_pegawai->skor,
-                    
-                    ])->render("group"); 
-                !!}
+        {!! Form::hidden('emp_id', $detail_skor_pegawai->emp_id, array('id' => 'emp_id')) !!}
+        {!! Form::hidden('skor_id', $detail_skor_pegawai->skor_id, array('id' => 'skor_id')) !!}
+        {!! Create::input("kode_skor",[
+                "value"     => $detail_skor_pegawai->kode_skor,
+                "required"  => "true",
+                "readonly"  => "true"
+            ])->render("group"); 
+        !!}
+        {!! Create::text("detail_skor",[
+                "value"     => $detail_skor_pegawai->detail_skor,
+            ])->render("group"); 
+        !!}
+        {!! Create::input("skor",[
+            "value"     => $detail_skor_pegawai->skor,
+            ])->render("group"); 
+        !!}
     </div>
     <div class="card-footer text-center">
         {!! Form::submit('Save',['class' => 'btn btn-success']); !!}

@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Komplain_skor;
+use App\Models\Ms_reff;
 use App\Models\Skor_pegawai;
 use Illuminate\Support\Facades\Validator;
 use DataTables;
 use fidpro\builder\Create;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class Komplain_skorController extends Controller
 {
@@ -63,21 +66,23 @@ class Komplain_skorController extends Controller
             $data->where("ks.status_komplain",$request->status_komplain);
         }
         
-        $datatables = DataTables::of($data)->addIndexColumn()->addColumn('action', function ($data) {
-            $button = Create::action("<i class=\"fas fa-edit\"></i>", [
-                "class"     => "btn btn-primary btn-xs",
-                "onclick"   => "set_edit(this)",
-                "data-url"  => route($this->route . ".edit", $data->id_komplain),
-                "ajax-url"  => route($this->route . '.update', $data->id_komplain),
-                "data-target"  => "page_komplain_skor"
-            ]);
-
-            $button .= Create::action("<i class=\"fas fa-eye\"></i>", [
-                "class"     => "btn btn-danger btn-xs",
+        $datatables = DataTables::of($data)->addIndexColumn()
+        ->editColumn('isi_komplain', function ($data) {
+            $template = Cache::rememberForever('template_chat', function () {
+                return Ms_reff::where('reffcat_id', 10)->get();
+            });
+            $html = view("komplain_skor.v_response_komplain",compact('data','template'));
+            return $html;
+        })->editColumn('emp_name', function ($data) {
+            $html = $data->emp_no."<br>".$data->emp_name."<br><b>".$data->employee->unit->unit_name."<b>";
+            return $html;
+        })->editColumn('total_skor', function ($data) {
+            $html = Create::action("<i class=\"fas fa-eye\"></i> $data->total_skor", [
+                "class"     => "btn btn-danger",
                 "onclick"   => "get_info(this,$data->id_komplain,$data->id_skor)",
             ]);
-            return $button;
-        })->rawColumns(['action']);
+            return $html;
+        })->rawColumns(['action','isi_komplain','emp_name','total_skor']);
         return $datatables->make(true);
     }
 
@@ -161,18 +166,15 @@ class Komplain_skorController extends Controller
         return view($this->folder . '.data_skor',compact('data'));
     }
 
-    public function update(Request $request, Komplain_skor $komplain_skor)
+    public function update(Request $request)
     {
-        $valid = $this->form_validasi($request->all());
-        if ($valid['code'] != 200) {
-            return response()->json([
-                'success' => false,
-                'message' => $this->form_validasi($request->all())['message']
-            ]);
-        }
         try {
-            $data = Komplain_skor::findOrFail($komplain_skor->id_komplain);
-            $data->update($valid['data']);
+            $data = Komplain_skor::findOrFail($request->id_komplain);
+            $data->update([
+                "user_approve"          => Auth::id(),
+                "status_komplain"       => 2,
+                "tanggapan_komplain"    => $request->tanggapan_komplain
+            ]);
             $resp = [
                 'success' => true,
                 'message' => 'Data Berhasil Diupdate!'

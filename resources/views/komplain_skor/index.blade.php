@@ -7,6 +7,16 @@ use \fidpro\builder\Create;
 
 Widget::_init(["datepicker","select2"]);
 ?>
+<style>
+.badge-lg {
+    font-size: 0.85rem; /* Ukuran teks */
+    padding: 0.2rem 0.25rem; /* Padding vertikal dan horizontal */
+    border-radius: 0.2rem; /* Opsional: untuk sudut lebih membulat */
+}
+hr {
+    border: 1px solid;
+}
+</style>
 <div class="card border-0 shadow rounded" id="page_komplain_skor">
     <div class="card-header">
         <div class="row">
@@ -66,18 +76,23 @@ Widget::_init(["datepicker","select2"]);
                         "bulan_skor"        => '$("#bulan_skor").val()'
                     ],
                     "raw"   => [
-                        '#'     => [
-                            "data" => "action", 
-                            "name" => "action", 
-                            "orderable" => "false", 
-                            "searchable" => "false"
-                        ],
                         'no'    => [
-                            "data" => "DT_RowIndex",
-                            "orderable" => "false", 
-                            "searchable" => "false"
+                            "data"          => "DT_RowIndex",
+                            "width"         => "5%",
+                            "orderable"     => "false", 
+                            "searchable"    => "false"
                         ],
-                        'tanggal','emp_no','emp_name','isi_komplain','tanggapan_komplain','status_komplain','total_skor'
+                        'nama pegawai' => [
+                            "data"          => "emp_name",
+                            "width"         => "25%",
+                        ],
+                        'isi_komplain' => [
+                            "data"          => "isi_komplain",
+                            "width"         => "55%",
+                            "orderable"     => "false", 
+                            "searchable"    => "false"
+                        ]
+                        ,'total_skor'
                     ]
                 ])
             }}
@@ -93,6 +108,30 @@ Widget::_init(["datepicker","select2"]);
 <script>
     function loadData() {
         tb_table_data.draw();
+    }
+
+    function set_temp(row) {
+        let template = $.trim($(row).text());
+        $(row).closest('td').find(".tanggapan_komplain").text(template);
+        $(row).closest('td').find(".tanggapan_komplain").focus();
+    }
+    
+    function send_response(row) {
+        const data = $(row).closest('td').find(".form_komplain_skor").serialize()
+        $.ajax({
+            'data': data,
+            'method' : 'POST',
+            'url'  : '{{route("komplain_skor.update_data")}}',
+            'dataType': 'json',
+            'success': function(data) {
+                if (data.success) {
+                    toastr.success(data.message, 'Berhasil');
+                    loadData();
+                }else{
+                    Swal.fire("Oopss...!!", data.message, "error");
+                }
+            }
+        });
     }
 
     function get_info(row,idkompain,idskor) {
