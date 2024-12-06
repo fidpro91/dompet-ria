@@ -3,15 +3,6 @@ use \fidpro\builder\Bootstrap;
 ?>
  {!! Form::hidden('kodeskor', $kodeskor, array('id' => 'kodeskor')) !!}
 <div class="card border-0 shadow rounded" id="page_detail_skor_pegawai">
-    <div class="card-header">
-        {!!
-            Form::button("Tambah",[
-                "class" => "btn btn-primary add-form",
-                "data-target" => "page_detail_skor_pegawai",
-                "data-url" => route("detail_skor_pegawai.create")
-            ])
-        !!}
-    </div>
     <div class="card-body">
         <div class="table-responsive">
             {{

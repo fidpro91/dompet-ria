@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Detail_skor_pegawai;
+use App\Models\Skor_pegawai;
 use Illuminate\Support\Facades\Validator;
 use DataTables;
 use fidpro\builder\Create;
@@ -21,6 +22,7 @@ class Detail_skor_pegawaiController extends Controller
         'detail_skor'   =>  '',
         'skor'   =>  ''
     ];
+
     public $defaultValue = [
         'det_skor_id'   =>  '',
         'skor_id'   =>  '',
@@ -147,6 +149,12 @@ class Detail_skor_pegawaiController extends Controller
         try {
             $data = Detail_skor_pegawai::findOrFail($detail_skor_pegawai->det_skor_id);
             $data->update($valid['data']);
+            $sumSkor = Detail_skor_pegawai::where("skor_id",$request->skor_id)->sum("skor");
+            Skor_pegawai::find($request->skor_id)->update([
+                "total_skor"    => $sumSkor,
+                "skor_type"     => 2
+            ]);
+
             $resp = [
                 'success' => true,
                 'message' => 'Data Berhasil Diupdate!'

@@ -106,7 +106,6 @@ function set_edit(row) {
   if ($(row).attr("data-method")) {
     method = $(row).attr("data-method");
   }
-  console.log(method);
   $.ajaxSetup({
     "type": method,
     "url": $(row).attr("ajax-url")

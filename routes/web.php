@@ -244,6 +244,7 @@ Route::group(['middleware' => ['auth','admin']], function (){
     Route::resource('activity_log', activity_logController::class);
 
     Route::get('komplain_skor/get_data_skor/{id_skor?}','Komplain_skorController@get_data_skor');
+    Route::post('komplain_skor/update','Komplain_skorController@update')->name("komplain_skor.update_data");
     Route::get('komplain_skor/get_dataTable','Komplain_skorController@get_dataTable');
     Route::resource('komplain_skor', Komplain_skorController::class);
     
