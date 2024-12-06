@@ -23,3 +23,5 @@ Route::post('prestige/get_rekap_presensi_absen','PrestigeController@get_rekap_pr
 Route::post('prestige/insert_kedisiplinan','PrestigeController@insert_kedisiplinan');
 Route::post('prestige/rekap_ijin',"PrestigeController@get_ijin_pegawai");
 Route::post('qontak/send_otp',"QontakController@send_otp");
+
+Route::get('/get_pegawai',"DompetController@get_pegawai");
