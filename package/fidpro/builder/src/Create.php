@@ -79,7 +79,7 @@ class Create
         if (isset($attr['option'])) {
             $defaultAttr=array_merge($defaultAttr,$attr['option']);
         }
-        $form = "<textarea ".self::array_to_attr($defaultAttr).">".$attr["value"]."</textarea>";
+        $form = "<textarea ".self::array_to_attr($defaultAttr).">".($attr['value']??"")."</textarea>";
         return self::_set_output($form,$name);
     }
 
